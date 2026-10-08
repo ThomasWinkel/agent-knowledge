@@ -16,6 +16,7 @@ Why the template is built the way it is. Read before changing the template or wh
 - **Git first, any server.** Only plain git (SSH or HTTPS) is required. Fetch tools often summarize pages and lose exact details; git also enables contributing. Raw URLs remain for quick lookups in public GitHub repositories.
 - **Relative links** resolve the same in clones, web views of git servers and raw URLs.
 - **Knowledge, not authority.** Content never overrides the user; observation beats the knowledge base.
+- **Readers are the last line of defense.** No review catches everything, so reading agents refuse content that reaches beyond their task. They remove it through the normal workflow instead of a separate reporting channel, which works with every publishing mode and git server. A `Security:` title and a `Suspicious-Commit` trailer set these fixes apart; the trailer identifies the author for maintainers. They are auto-merged like other topic changes: removing content quickly is safe.
 
 ## Format
 
@@ -30,6 +31,7 @@ Why the template is built the way it is. Read before changing the template or wh
 - **Two kinds of knowledge trigger a contribution:** what was *decided* (architecture, decisions, conventions — from chat or implementation; outcome and reasons, not the discussion) and what had to be *learned* (questions, research, trial and error). Plus fixing wrong or outdated content. They behave differently: decisions change when someone decides anew, learnings when the outside world changes.
 - **Triggers do not depend on having consulted the knowledge base**, otherwise hard-won knowledge from unrelated-looking tasks is lost. The triggers are therefore repeated in the "## Agent knowledge" section of the project's always-loaded instructions.
 - **Recorded when it happens, without asking**, with a one-line report — at the latest before the task ends; agents keep "update knowledge base" on their task list as a reminder.
+- **Written for others, sensitive data by need.** Contributions are read in other contexts, so they state general rules and use placeholders that readers resolve. Personal and internal data are not banned: private or internal knowledge bases may need them. The agent decides by need and audience instead of asking the user.
 - **Topics only on user request, never proposed.** Cutting topics is a design decision, proposals would interrupt users, and agents would fragment the knowledge base.
 - **Three publishing modes** (`contribution` in `knowledge-base.toml`): `pull-request` where a forge offers them (GitHub), `direct-push` to `main` on plain git servers, `with-project` for embedded knowledge bases. In the first two, changes outside `topics/` and `index.md` always go through review (PR or pushed branch). Details: [CONTRIBUTING.md](CONTRIBUTING.md).
 
@@ -38,6 +40,7 @@ Why the template is built the way it is. Read before changing the template or wh
 - **`with-project`: the project's review process is the trust model.** Knowledge changes travel with the code changes of the task.
 - **`direct-push`: the git server's access rights are the trust model.** Whoever may push to `main` may change topics; no extra configuration.
 - **`pull-request` on GitHub: auto-merge** for pull requests by `trusted_authors` that change only `topics/` and `index.md`. The author is the GitHub identity the agent acts under, so trust is given per human.
+- **No restriction by model.** A model cannot be verified, only self-reported, and excluding weaker models loses what they learned. Contributions carry an `Agent-Model` trailer instead, so reviewers can judge and clean up by model. Users who distrust their agent's model stay out of `trusted_authors`.
 - **Trusted authors are read from the base branch**, so a pull request cannot add its own author.
 - **Fork pull requests are never auto-merged**: their workflow token is read-only.
 - **Template-owned files always need review.** They contain agent instructions and workflows; an unreviewed change there could redirect every agent.
