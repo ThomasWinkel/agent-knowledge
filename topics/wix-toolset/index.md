@@ -9,6 +9,8 @@ description: "WiX Toolset v4+ (v7) MSI builds: SDK-style projects, HeatWave VS i
 
 WiX Toolset v4+ builds MSI packages and bundles from SDK-style `.wixproj` projects; Visual Studio integration is FireGiant's HeatWave extension. Read before creating, migrating or debugging a WiX installer. General WiX syntax is assumed known; this topic holds version facts, gotchas and verified recipes.
 
+**Installer for a VSTO/Office add-in: also read [vsto-addins](../vsto-addins/index.md).** Registration, manifest dependencies and signing live there, and the add-in fails silently without them.
+
 ## Key facts
 
 - **Current versions** (checked 2026-10-08): WiX 7.0.0 (2026-04-06), HeatWave 1.0.8. Check for newer: `https://api.nuget.org/v3-flatcontainer/wixtoolset.sdk/index.json`, https://github.com/wixtoolset/wix/releases.
@@ -17,7 +19,6 @@ WiX Toolset v4+ builds MSI packages and bundles from SDK-style `.wixproj` projec
 - v3 and v4+ differ in project format, schema namespace, extensions and VS extension; `wix convert` migrates v3 sources: [versions-and-project-format](versions-and-project-format.md).
 - Packages default to x86; per-machine registry values then land in `WOW6432Node`: [package-bitness](package-bitness.md).
 - `<Files>` with zero matches is only warning WIX8600. Treat it as an error.
-- Packaging a VSTO/Office add-in (registration, manifest dependencies, signing, load failures): [vsto-addins](../vsto-addins/index.md).
 - Verified with WiX 7.0.0, HeatWave 1.0.8, VS2022 17.14 (2026-07). Statements marked _Unverified_ are untested.
 
 <!-- BEGIN GENERATED CONTENTS: do not edit, run `python .knowledge-base/manage.py index` -->
