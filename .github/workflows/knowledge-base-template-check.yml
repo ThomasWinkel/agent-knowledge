@@ -1,0 +1,39 @@
+# Owned by the knowledge base template; replaced on upgrade.
+name: Knowledge base template check
+
+on:
+  schedule:
+    - cron: "17 6 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.x"
+      - id: check
+        run: python .knowledge-base/manage.py check-template
+      - if: steps.check.outputs.update_available == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          CURRENT: ${{ steps.check.outputs.current }}
+          LATEST: ${{ steps.check.outputs.latest }}
+          UPGRADE_GUIDE: ${{ github.server_url }}/${{ github.repository }}/blob/${{ github.ref_name }}/.knowledge-base/UPGRADE.md
+        run: |
+          open=$(gh issue list --repo "$GITHUB_REPOSITORY" --state open --search 'in:title "Template update available"' --json number --jq 'length')
+          if [ "$open" != "0" ]; then
+            echo "An open template update issue already exists."
+            exit 0
+          fi
+          gh issue create --repo "$GITHUB_REPOSITORY" \
+            --title "Template update available: $CURRENT -> $LATEST" \
+            --body "A new version of the knowledge base template is available ($CURRENT -> $LATEST).
+
+          An agent can perform the upgrade by following [.knowledge-base/UPGRADE.md]($UPGRADE_GUIDE)."

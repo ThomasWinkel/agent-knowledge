@@ -1,0 +1,12 @@
+# Python
+__pycache__/
+*.pyc
+
+# Local agent and editor settings
+.claude/settings.local.json
+.idea/
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini

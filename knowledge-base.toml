@@ -1,0 +1,16 @@
+# Configuration of this knowledge base. Owned by the knowledge base; template upgrades never touch it.
+
+name = "Agent Knowledge"
+description = "Shared knowledge for AI agents: internal processes, private APIs, conventions and verified recipes."
+repository = "https://github.com/ThomasWinkel/agent-knowledge"
+
+# How agents publish changes:
+#   "pull-request" - pull requests; auto-merged for trusted_authors (GitHub), otherwise reviewed
+#   "direct-push"  - push to main; the git server's access rights decide who may write
+#   "with-project" - embedded in a project repository; changes go with the project's own commits
+contribution = "pull-request"
+
+[auto_merge]
+# Only for contribution = "pull-request": GitHub logins whose pull requests are merged
+# automatically when lint passes and only files under topics/ or index.md change.
+trusted_authors = ["ThomasWinkel"]
