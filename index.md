@@ -8,4 +8,5 @@ Shared knowledge for AI agents: internal processes, private APIs, conventions an
 
 ## Topics
 
-_No topics yet._
+- [VSTO Office add-ins](topics/vsto-addins/index.md) — VSTO Office add-ins (incl. Visio): registration, MSI deployment, signing, load failures, user settings.
+- [WiX Toolset](topics/wix-toolset/index.md) — WiX Toolset v4+ (v7) MSI builds: SDK-style projects, HeatWave VS integration, OSMF EULA, file harvesting, package bitness.
