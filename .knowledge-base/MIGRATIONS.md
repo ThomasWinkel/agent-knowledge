@@ -2,6 +2,18 @@
 
 Steps an agent applies to a knowledge base during an upgrade, in addition to the file replacement done by `manage.py upgrade`. One `## <version>` section per template version (headings are parsed by the script). Write "None." when a version needs no steps.
 
+## 0.8.0
+
+None. Reading agents refuse content that reaches beyond their task and remove it as a security fix (`Security:` title, `Suspicious-Commit` trailer).
+
+## 0.7.0
+
+None. Contributions carry an `Agent-Model` trailer in commit messages and pull request descriptions.
+
+## 0.6.0
+
+None. Contribution rules now cover writing for other readers and handling sensitive data.
+
 ## 0.5.0
 
 Only for embedded knowledge bases (`contribution = "with-project"`); otherwise none. Projects that use a shared knowledge base update their pointer themselves (see Projects in `AGENTS.md`).
