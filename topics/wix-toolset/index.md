@@ -11,6 +11,8 @@ WiX Toolset v4+ builds MSI packages and bundles from SDK-style `.wixproj` projec
 
 **Installer for a VSTO/Office add-in: also read [vsto-addins](../vsto-addins/index.md).** Registration, manifest dependencies and signing live there, and the add-in fails silently without them.
 
+**Installer shipping Visio stencils/templates:** read [visio-content-deployment](../visio-content-deployment/index.md).
+
 ## Key facts
 
 - **Current versions** (checked 2026-10-08): WiX 7.0.0 (2026-04-06), HeatWave 1.0.8. Check for newer: `https://api.nuget.org/v3-flatcontainer/wixtoolset.sdk/index.json`, https://github.com/wixtoolset/wix/releases.
