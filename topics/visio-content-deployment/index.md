@@ -14,7 +14,8 @@ Copying `.vssx`/`.vstx` files to disk is not enough: Visio shows stencils under 
 - Two mechanisms:
   - **Publishing** (Solution Publishing): rows in the MSI `PublishComponent` table, machine-wide, the Microsoft-recommended way: [publish-component](publish-component.md).
   - **Path discovery**: Visio file-path options (Options → Advanced → File Locations) = per-user registry values. Unfit for per-machine installs.
-- Microsoft documents publishing only for Visio 2003/2007. Behavior with Visio 2016+/Microsoft 365 Click-to-Run is community knowledge and partly contradictory. Test on the target Visio.
+- Microsoft documents publishing only for Visio 2003/2007. **Visio 2016+ reads only the undocumented `...B30x` GUIDs** (verified on 2019 C2R); the "version-neutral" IDs from the docs are ignored.
+- The installer must change `ConfigChangeID` after install and uninstall, or Visio keeps its old cache. MSI cannot do this without a custom action.
 - Visio caches installed content per user in `%LocalAppData%\Microsoft\Visio\content16.dat` (thumbnails: `thumbs.dat`). Rebuilt when `HKLM\Software\Microsoft\Office\Visio\ConfigChangeID` changes; deleting the file with Visio closed forces a rebuild.
 - Statements marked _Unverified_ are untested.
 
