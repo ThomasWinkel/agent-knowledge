@@ -30,7 +30,8 @@ Verified with WiX 7.0.0, Visio and Excel 2019 C2R x64, Windows 11 (2026-10): ins
    "$MSB" My.Setup/My.Setup.wixproj -restore -v:m -nologo
    ```
 8. **Check the MSI tables, then test** (below).
-9. Release builds: sign add-in assemblies, custom action DLL and MSI: [vsto-addins/signing](../vsto-addins/signing.md).
+9. One version number for assemblies, VSTO manifests and package: [single-version-source](single-version-source.md).
+10. Release builds: sign add-in assemblies, custom action DLL and MSI: [vsto-addins/signing](../vsto-addins/signing.md).
 
 ## Example
 
