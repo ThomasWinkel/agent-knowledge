@@ -9,6 +9,8 @@ description: "WiX Toolset v4+ (v7) MSI builds: SDK-style projects, HeatWave VS i
 
 WiX Toolset v4+ builds MSI packages and bundles from SDK-style `.wixproj` projects; Visual Studio integration is FireGiant's HeatWave extension. Read before creating, migrating or debugging a WiX installer. General WiX syntax is assumed known; this topic holds version facts, gotchas and verified recipes.
 
+**Installer for a Visio/Excel solution (add-ins, stencils, templates): start with [office-solution-installer](office-solution-installer.md)**, the steps in order with a complete example.
+
 **Installer for a VSTO/Office add-in: also read [vsto-addins](../vsto-addins/index.md).** Registration, manifest dependencies and signing live there, and the add-in fails silently without them.
 
 **Installer shipping Visio stencils/templates:** read [visio-content-deployment](../visio-content-deployment/index.md).
@@ -30,6 +32,7 @@ WiX Toolset v4+ builds MSI packages and bundles from SDK-style `.wixproj` projec
 - [Harvesting project output](harvesting-project-output.md) — Read when adding another project's build output to a WiX v4+ package - ProjectReference, bindpath, <Files> syntax, Exclude, WIX8600, and checking the built MSI's contents.
 - [HeatWave templates missing in New Project dialog](heatwave-templates-missing.md) — Read when HeatWave is installed but WixMsiPackage/WixBundle templates do not appear in Visual Studio's "Create a new project" dialog.
 - [Managed custom actions (DTF)](managed-custom-actions.md) — Read when writing a C# custom action for a WiX v4+ MSI - WixToolset.Dtf.CustomAction project, .CA.dll, OSMF EULA, shim bitness, deferred action as SYSTEM, logging.
+- [Installer for a Visio/Excel solution](office-solution-installer.md) — Read first when building an MSI for an Office solution with WiX v7 - VSTO add-ins (Visio, Excel), Visio stencils and templates - steps in order, complete example, test procedure.
 - [OSMF EULA acceptance (WiX v7)](osmf-eula.md) — Read when a WiX v7 build or wix.exe command fails with WIX7015 "You must accept the Open Source Maintenance Fee (OSMF) EULA", or when setting up WiX v7 in CI.
 - [Package bitness and registry redirection](package-bitness.md) — Read when choosing x86 vs x64 for a WiX package, when per-machine registry values land in WOW6432Node, or when Platform=x64 breaks a ProjectReference build.
 - [Versions and project format](versions-and-project-format.md) — Read when choosing between WiX v3 and v4+, migrating a v3 project, picking the Visual Studio extension, or replacing heat.exe.

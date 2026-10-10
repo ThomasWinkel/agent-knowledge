@@ -78,7 +78,30 @@ Pattern: last digit = content type (`0` template, `1` stencil, `2` help, `3` add
 - **Required.** After install and after uninstall, change `HKLM\Software\Microsoft\Office\Visio\ConfigChangeID` (REG_DWORD); Visio then rebuilds its content cache on next start. Verified on 2019: after install without a change, Visio did not rewrite the cache; after changing the value it did, and the content appeared. Same for removal after uninstall.
 - Visio 2019 C2R x64 reads the native (64-bit) view; the value existed there (`0`), nothing under `WOW6432Node` or the C2R virtual registry. _Unverified:_ which view 32-bit Visio reads.
 - MSI cannot increment a value: needs a deferred, non-impersonated custom action (old tools: VBScript `VisSolPublish_BumpVisioChangeId`; Windows is phasing out VBScript, use a compiled custom action).
-- Verified recipe: C# custom action ([wix-toolset/managed-custom-actions](../wix-toolset/managed-custom-actions.md)) that reads the DWORD, adds 1 and writes it back, last before `InstallFinalize`, on install and uninstall. Do it in both registry views (`RegistryView.Registry64` and `Registry32`) and skip a view without the key `Software\Microsoft\Office\Visio` (no Visio of that bitness). A missing value counts as 0. After such an install Visio 2019 x64 listed the stencil and the template.
+- Verified recipe: C# custom action ([wix-toolset/managed-custom-actions](../wix-toolset/managed-custom-actions.md)), last before `InstallFinalize`, on install and uninstall. Count up in both registry views; a view without the key means no Visio of that bitness. After such an install Visio 2019 x64 listed the stencil and the template.
+
+  ```csharp
+  // using Microsoft.Win32;
+  const string KeyPath = @"Software\Microsoft\Office\Visio";
+  const string ValueName = "ConfigChangeID";
+
+  public static void BumpAllViews(Action<string> log)
+  {
+      foreach (var view in new[] { RegistryView.Registry64, RegistryView.Registry32 })
+      {
+          using var hklm = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, view);
+          using var key = hklm.OpenSubKey(KeyPath, writable: true);
+          if (key is null) { log($"{ValueName}: no Visio key in {view}, skipped."); continue; }
+
+          var oldValue = key.GetValue(ValueName) as int? ?? 0;   // missing or wrong type counts as 0
+          var newValue = unchecked(oldValue + 1);                // 0xFFFFFFFF wraps to 0
+          key.SetValue(ValueName, newValue, RegistryValueKind.DWord);
+          log($"{ValueName}: set to {newValue} in {view}.");
+      }
+  }
+  ```
+
+  Unit-testable: pass a throwaway `HKCU` key to the inner part instead of the Visio key.
 - Visio start via COM (`Visio.Application`/`InvisibleApp`) rebuilds only add-on entries in the cache; stencils/templates are added when the UI shows them. Check publishing in the UI, not via a COM start.
 - bVisual (2024): after the change, some stencils still showed the file name instead of the published display name (32-bit Visio, non-ASCII names); deleting `content16.dat` fixed it.
 
