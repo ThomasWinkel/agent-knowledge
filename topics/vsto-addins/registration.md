@@ -64,7 +64,7 @@ Microsoft recommends both registry views for all-users installs, because Office 
 - AnyCPU check: PE `Machine = 0x14C` and COR20 flag `32BITREQUIRED` not set. `0x8664` = 64-bit only; then skip the 32-bit registration.
 - HKCU `LoadBehavior` (e.g. user disabled the add-in) overrides the HKLM value per user.
 - _Unverified:_ the 32-bit branch was only checked in the MSI tables, never loaded in a 32-bit Office.
-- _Unverified:_ the `Office\<App>` path for apps other than Visio. It is documented but was not tested here.
+- The `Office\<App>` path is verified for Excel 2019 C2R x64 (per-machine MSI, `Connect=True`). _Unverified:_ other apps.
 
 ## Related
 

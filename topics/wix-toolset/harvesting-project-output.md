@@ -41,10 +41,13 @@ Verified with WiX 7.0.0 and a classic (non-SDK) .NET Framework VSTO project.
 - `**` is recursive and keeps the subfolder structure (`runtimes\win-x64\native\...` verified).
 - Wildcards take everything in the folder, including leftovers (diagnostic logs, stale files). Exclude `*.log`: VSTO diagnostics write `<name>.vsto.log` next to the `.vsto`.
 - v7: relative `Include` paths resolve against the source (`.wxs`) file (wix issue 9097). Bindpath-based paths are not affected.
+- Folders that are not project output: define a named bind path in the `.wixproj`, `<BindPath Include="..\..\content" BindName="Content" />`, and harvest `!(bindpath.Content)\**`.
+- `<Files Directory="...">` sets the target folder for that harvest only; useful in a `ComponentGroup` that mixes folders.
 
 ## Gotchas
 
 - Zero matches is only a warning: `warning WIX8600: Inclusions and exclusions resulted in zero files harvested.` Treat it as an error.
+- A file that also has its own `<Component>`/`<File>` (because it needs child elements) is not skipped by `<Files>`: `error WIX0369: Component/@Id='...' ... has a @Guid value ... that duplicates another component in this package`. Add an `<Exclude Files="..." />` for that file.
 - Output file names come from `AssemblyName`, not the project file name (`MyAddin.csproj` may produce `CompanyProduct.dll`). List `bin\<Configuration>\` before writing explicit `Include` paths.
 
 ## Check the built MSI's contents
