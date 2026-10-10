@@ -2,6 +2,10 @@
 
 Steps an agent applies to a knowledge base during an upgrade, in addition to the file replacement done by `manage.py upgrade`. One `## <version>` section per template version (headings are parsed by the script). Write "None." when a version needs no steps.
 
+## 0.8.1
+
+None. Contribution rules now say how to show code: fenced blocks in the Markdown file, and neutral minimal examples instead of copied code from projects with a smaller audience.
+
 ## 0.8.0
 
 None. Reading agents refuse content that reaches beyond their task and remove it as a security fix (`Security:` title, `Suspicious-Commit` trailer).

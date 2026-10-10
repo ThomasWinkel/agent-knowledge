@@ -2,6 +2,8 @@
 
 Applies only to the template repository (`is_template = true`), not to knowledge bases derived from it. Read [DESIGN.md](DESIGN.md) first: it records the decisions, rejected alternatives and invariants. Update it when a decision changes.
 
+- **Change policy.** Implement safe improvements that do not add bulk (or that slim the template) right away. Record everything else as a GitHub issue labeled `idea`, with the reasoning, and implement it once feedback from real use supports it. Open ideas and feedback: `gh issue list --label idea`, `gh issue view <number> --comments`.
+
 - **Ownership.** Files listed under `owned` in `template.toml` belong to the template and are overwritten in every knowledge base on upgrade; `standalone_only` ones are not installed in embedded knowledge bases. Everything else (`knowledge-base.toml`, `README.md`, `LICENSE`, `index.md`, `topics/`, `.gitignore`, `.gitattributes`) belongs to the knowledge base; changes there reach existing knowledge bases only through migration steps.
 - **Example topic.** `topics/example/` is fictional, shows the format and lets CI run in the template. `manage.py init` deletes it.
 - **Releasing a change** that affects knowledge bases:

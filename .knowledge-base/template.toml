@@ -2,7 +2,7 @@
 
 # Any git URL. Releases are tags vMAJOR.MINOR.PATCH; `version` is the release this copy came from.
 repository = "https://github.com/ThomasWinkel/agent-knowledge-template"
-version = "0.8.0"
+version = "0.8.1"
 
 # Paths owned by the template. `manage.py upgrade` deletes and re-copies them.
 # A trailing "/" denotes a whole directory; other entries may be glob patterns.
