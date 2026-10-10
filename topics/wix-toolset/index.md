@@ -35,6 +35,7 @@ WiX Toolset v4+ builds MSI packages and bundles from SDK-style `.wixproj` projec
 - [Installer for a Visio/Excel solution](office-solution-installer.md) — Read first when building an MSI for an Office solution with WiX v7 - VSTO add-ins (Visio, Excel), Visio stencils and templates - steps in order, complete example, test procedure.
 - [OSMF EULA acceptance (WiX v7)](osmf-eula.md) — Read when a WiX v7 build or wix.exe command fails with WIX7015 "You must accept the Open Source Maintenance Fee (OSMF) EULA", or when setting up WiX v7 in CI.
 - [Package bitness and registry redirection](package-bitness.md) — Read when choosing x86 vs x64 for a WiX package, when per-machine registry values land in WOW6432Node, or when Platform=x64 breaks a ProjectReference build.
+- [One version number for assemblies, VSTO manifests and MSI](single-version-source.md) — Read when a solution with SDK-style projects, classic VSTO add-in projects and a WiX v4+ setup should take its version from one MSBuild property.
 - [Versions and project format](versions-and-project-format.md) — Read when choosing between WiX v3 and v4+, migrating a v3 project, picking the Visual Studio extension, or replacing heat.exe.
 - [Visual Studio extension diagnostics](vs-extension-diagnostics.md) — Read when a Visual Studio extension (e.g. HeatWave) or its project templates misbehave - log locations, template caches, ActivityLog, correct vswhere workload check.
 <!-- END GENERATED CONTENTS -->
