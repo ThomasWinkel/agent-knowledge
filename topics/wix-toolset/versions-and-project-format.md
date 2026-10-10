@@ -15,6 +15,8 @@ WiX v3 and v4+ are different toolsets. v4, v5, v6 and v7 share the same project 
 | CLI | `candle`, `light`, `heat` | `wix.exe` (.NET tool `wix`: `dotnet tool install --global wix`) |
 | VS extension | "WiX Toolset Visual Studio 2022 Extension", ID `WixToolset.VisualStudioExtension.Dev17`, v3 only | HeatWave (FireGiant, free), Marketplace ID `FireGiant.FireGiantHeatWaveDev17`, one extension for VS2022 and VS2026 |
 
+- `.slnx` solutions do not build a `.wixproj` by default (`The project "X" is not selected for building in solution configuration "Debug|Any CPU"`, visible with `-v:n`). Add `<Build />` inside its `<Project Path="...wixproj">` element (verified with MSBuild 18).
+
 ## Migration from v3
 
 - `wix convert <file.wxs>` rewrites v3 source to the v4+ schema (`wix format` normalizes formatting). The `.wixproj` must be rewritten to SDK style by hand or with HeatWave.

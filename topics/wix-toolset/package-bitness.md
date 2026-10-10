@@ -19,6 +19,7 @@ A WiX v4+ package builds as x86 unless set otherwise (HeatWave template: `Debug|
 
 With x64, `ProgramFiles6432Folder` and `HKLM`/`HKMU` resolve to the native 64-bit locations; no other change needed.
 
+- Alternative: `<InstallerPlatform>x64</InstallerPlatform>` instead of `<Platform>`. The package is x64 (`Template` = `x64;1033`), but `Platform` stays AnyCPU: ProjectReferences need no `SetPlatform` (see below) and the output stays in `bin\<Configuration>\`.
 - An x64 package does not cover 32-bit consumers (e.g. 32-bit Office). For keys both bitnesses must read, write two registry components with `Bitness="always64"` and `Bitness="always32"`: recipe and ICE80 fix in [vsto-addins/registration](../vsto-addins/registration.md).
 - Searching a 32-bit key from an x64 package needs `Bitness="always32"` on the `RegistrySearch`.
 - `HKCU\Software` is not redirected; per-user packages need no second component.

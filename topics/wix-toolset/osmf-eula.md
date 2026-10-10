@@ -29,5 +29,6 @@ error WIX7015: You must accept the Open Source Maintenance Fee (OSMF) EULA to us
 | Per command | `wix build -acceptEula wix7 ...` |
 
 - The MSBuild check is target `CheckLicenseAcceptance` (before `CoreCompile`). It is skipped when `AcceptEula` is set to any value, otherwise it requires the acceptance file.
+- `WixToolset.Dtf.CustomAction` (C# custom action projects) runs the same check before `CoreCompile`: that `.csproj` fails with WIX7015 too and takes the same `AcceptEula` property.
 - CI agents run under another user profile: use the project property or `-p:AcceptEula=wix7` there.
 - Source: `src/wix/WixToolset.Sdk/tools/wix.targets` and `src/wix/WixToolset.Core/CommandLine/EulaCommand.cs` in tag `v7.0.0`.

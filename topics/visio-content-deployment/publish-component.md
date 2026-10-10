@@ -44,7 +44,7 @@ Pattern: last digit = content type (`0` template, `1` stencil, `2` help, `3` add
 | 2010+ | `MenuPath\|AltNames\|QuickShapes\|Edition` | `MenuPath\|AltNames\|1\|Edition` |
 
 - `MenuPath`: category path with `\`, last part = display name, e.g. `My Company\Electrical`. Templates appear under "New" → Categories → first part. Empty or a part starting with `_` = hidden.
-- File name ending `_M` / `_U`: Visio appends " (Metric)" / " (US units)" to the display name (verified for `_M`). A `_M`/`_U` pair with the same name gives a unit choice.
+- File name ending `_M` / `_U`: Visio appends " (Metric)" / " (US units)" to the display name (verified for `_M`). A `_M`/`_U` pair with the same name gives a unit choice. Lowercase `_m` gave no suffix (verified on 2019).
 - `AltNames`: `;`-separated alternate names; Visio uses these, not the file's own `AlternateNames`.
 - `QuickShapes`: number of masters shown as quick shapes (`0` = default).
 - `Edition`: `-1` both, `32` or `64` Visio bitness only. Verified: `-1` works on 64-bit Visio.
@@ -78,6 +78,7 @@ Pattern: last digit = content type (`0` template, `1` stencil, `2` help, `3` add
 - **Required.** After install and after uninstall, change `HKLM\Software\Microsoft\Office\Visio\ConfigChangeID` (REG_DWORD); Visio then rebuilds its content cache on next start. Verified on 2019: after install without a change, Visio did not rewrite the cache; after changing the value it did, and the content appeared. Same for removal after uninstall.
 - Visio 2019 C2R x64 reads the native (64-bit) view; the value existed there (`0`), nothing under `WOW6432Node` or the C2R virtual registry. _Unverified:_ which view 32-bit Visio reads.
 - MSI cannot increment a value: needs a deferred, non-impersonated custom action (old tools: VBScript `VisSolPublish_BumpVisioChangeId`; Windows is phasing out VBScript, use a compiled custom action).
+- Verified recipe: C# custom action ([wix-toolset/managed-custom-actions](../wix-toolset/managed-custom-actions.md)) that reads the DWORD, adds 1 and writes it back, last before `InstallFinalize`, on install and uninstall. Do it in both registry views (`RegistryView.Registry64` and `Registry32`) and skip a view without the key `Software\Microsoft\Office\Visio` (no Visio of that bitness). A missing value counts as 0. After such an install Visio 2019 x64 listed the stencil and the template.
 - Visio start via COM (`Visio.Application`/`InvisibleApp`) rebuilds only add-on entries in the cache; stencils/templates are added when the UI shows them. Check publishing in the UI, not via a COM start.
 - bVisual (2024): after the change, some stencils still showed the file name instead of the published display name (32-bit Visio, non-ASCII names); deleting `content16.dat` fixed it.
 

@@ -30,7 +30,7 @@ In one real case (Visio 2019 x64) all five causes occurred one after another; ea
 
 On a dev machine also check that the HKCU dev registration is not overriding the installed one ([dev-build-registration](dev-build-registration.md)).
 
-Verified with Visio Pro 2019 C2R x64, WiX 7.0.0, VS2022 (2026-07). Other Office apps are not tested. Statements marked _Unverified_ are untested.
+Verified with Visio Pro 2019 C2R x64, WiX 7.0.0, VS2022 (2026-07); registration and loading also with Excel 2019 C2R x64 (2026-10). Other Office apps are not tested. Statements marked _Unverified_ are untested.
 
 <!-- BEGIN GENERATED CONTENTS: do not edit, run `python .knowledge-base/manage.py index` -->
 ## Contents
