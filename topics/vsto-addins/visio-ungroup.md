@@ -37,6 +37,7 @@ finally
 - `AlertResponse` is a setting of the whole application and stays until it is reset: restore it in `finally`, or every later dialog of Visio is answered silently.
 - A group with text of its own does not vanish: it stays as a plain shape (same ID, `Type` 3) with that text, beside the former sub-shapes. A group without text is deleted.
 - The sub-shapes keep their IDs; the `Shape` object of the group is invalid afterwards (unless it stayed because of its text).
+- Group and ungroup is not neutral: after `Selection.Group()` and `Ungroup()` the shapes lie in front of shapes that were between or above them (z-order). Undo restores the order.
 - Inside `BeginUndoScope`/`EndUndoScope` the ungroup is one Undo step; Undo brings the group and its master link back.
 - Called from a marker event of `EventDrop` ([visio-shapesheet-calls](visio-shapesheet-calls.md)): drop and ungroup are one Undo step. Redo fires `EventDrop` again for the group, which no longer exists.
 
