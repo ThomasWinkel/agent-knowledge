@@ -1,6 +1,6 @@
 ---
 title: VSTO Office add-ins
-description: "VSTO Office add-ins (incl. Visio): registration, MSI deployment, signing, load failures, user settings, calls from the Visio ShapeSheet."
+description: "VSTO Office add-ins (incl. Visio): registration, MSI deployment, signing, load failures, user settings, calls from the Visio ShapeSheet, Visio active window."
 ---
 
 > **Agents:** read [the knowledge base guide](../../AGENTS.md) first.
@@ -18,6 +18,7 @@ VSTO add-ins are .NET Framework COM add-ins for desktop Office (Word, Excel, Out
 - Sign the assembly before `VisualStudioForApplicationsBuild` generates the manifests: [signing](signing.md).
 - Office updates empty `Properties.Settings` unless `Upgrade()` runs: [user-settings](user-settings.md).
 - Visio: a ShapeSheet cell reaches the add-in only by a marker event, and only `RUNADDONWARGS("QueueMarkerEvent",...)` tells the shape: [visio-shapesheet-calls](visio-shapesheet-calls.md).
+- Visio: `ActiveWindow` is `null` without a document; its `Selection` is empty in a ShapeSheet window and holds master shapes in a master edit window: [visio-active-window](visio-active-window.md).
 
 ## "Installed, but the add-in does not appear or load"
 
@@ -43,5 +44,6 @@ Verified with Visio Pro 2019 C2R x64, WiX 7.0.0, VS2022 (2026-07); registration 
 - [Registry registration via MSI](registration.md) — Read when registering a VSTO add-in from an MSI/WiX installer - registry path (Visio differs), required values, file:/// and |vstolocal, key name, HKMU, 32- and 64-bit Office.
 - [Signing](signing.md) — Read when signing a VSTO add-in (Authenticode, manifests, MSI), choosing the MSBuild hook for signtool, separating debug/release certificates, or when an expired test certificate blocks loading.
 - [User settings location and Office updates](user-settings.md) — Read when a VSTO add-in uses Properties.Settings - where user.config lives, why settings vanish after Office updates, and a safe Settings.Upgrade() pattern.
+- [Visio ActiveWindow and Selection by window type](visio-active-window.md) — Read when a Visio add-in command (ribbon button, event handler) uses Application.ActiveWindow, its Selection or ActivePage - ShapeSheet window, master edit window, no document.
 - [Calling a Visio add-in from the ShapeSheet](visio-shapesheet-calls.md) — Read when a ShapeSheet cell (EventDrop, EventDblClick, Actions) must run code in a Visio VSTO/COM add-in - marker events, context string format, QUEUEMARKEREVENT vs RUNADDONWARGS, redo.
 <!-- END GENERATED CONTENTS -->
