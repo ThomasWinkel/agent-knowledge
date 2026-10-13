@@ -38,6 +38,7 @@ void OnMarkerEvent(Visio.Application app, int sequenceNum, string contextString)
 - Event cells (`EventDblClick`, `EventDrop`, `Actions.X.Action`) fire only when triggered, not when the formula is set. A User cell fires as soon as the formula is set.
 - `EventDrop` fires on dropping a master instance and on duplicating a shape. It **fires again on redo** of the drop (not on undo). `Application.IsUndoingOrRedoing` is `False` in the marker handler, so it is no guard.
 - Changes the handler makes for `EventDrop` join the Undo step of the drop: one Undo removes the shape. After Redo **the handler's change is there twice** (redo fires `EventDrop` again): a handler that counts `K1` up to `K2` on drop leaves `K3` after Undo + Redo. Seen with the handler's change inside `BeginUndoScope`/`EndUndoScope`.
+- A handler that deletes or ungroups the dropped shape: Redo brings the handler's result back, then fires `EventDrop` for a `/shape` that no longer exists. `ItemFromID` throws (`An exception occurred.`); handle it.
 - A handler change for `EventDblClick` inside one undo scope is one Undo step of its own. A scope without changes adds no Undo step, so the handler can open a scope for every command, also read-only ones.
 - Cell values joined into the formula arrive as text in the UI locale, with unit: `"/w="&Width` gave `/w=25,4MM`, `"/n="&(1/3)` gave `/n=0,33333333333333` (German Windows). Pass the cell name and read the cell in the add-in.
 - `""` in the formula gives `"` in the context string: `"/label=""two words"""` arrives as `/label="two words"`.
@@ -47,6 +48,8 @@ void OnMarkerEvent(Visio.Application app, int sequenceNum, string contextString)
 
 - COM automation is enough: `Visio.InvisibleApp`, set the formula, then `cell.Trigger()` for event cells or `page.Drop(master, x, y)` for `EventDrop`. A VSTO add-in registered in HKCU loads in the invisible instance too.
 - To log marker events from outside: `app.EventList.AddAdvise(0x1100, sink, "", "")` (`visEvtApp + visEvtMarker`) with a `[ComVisible(true)]` class that has `object VisEventProc(short code, object source, int id, int seqNum, object subject, object moreInfo)`. Read the text with `app.EventInfo[0]`; `EventInfo[seqNum]` failed for some events.
+- A modal dialog opened by the handler (message box) or by Visio blocks the test: the automation call does not return until it is closed. Close it from a second process: enumerate the visible top-level windows of the Visio process (an invisible instance has no others), then `PostMessage(dialog, WM_COMMAND, GetDlgCtrlID(button), button)` with the first child of class `Button`.
+- `Application.ProcessID` is not the Windows process ID (seen: 747 for process 14740). Find the process of a new instance by comparing `Get-Process VISIO` before and after it starts.
 - Run it on an STA thread that pumps messages (`Application.DoEvents()` in a wait loop). C# compiled with `Add-Type` on its own STA thread works; a version in plain PowerShell hung.
 
 Verified with Visio Pro 2019 C2R x64 on German Windows (2026-10).

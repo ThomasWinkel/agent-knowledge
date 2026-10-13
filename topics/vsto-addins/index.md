@@ -1,6 +1,6 @@
 ---
 title: VSTO Office add-ins
-description: "VSTO Office add-ins (incl. Visio): registration, MSI deployment, signing, load failures, user settings, calls from the Visio ShapeSheet, Visio active window."
+description: "VSTO Office add-ins (incl. Visio): registration, MSI deployment, signing, load failures, user settings, calls from the Visio ShapeSheet, Visio active window, Visio ungroup."
 ---
 
 > **Agents:** read [the knowledge base guide](../../AGENTS.md) first.
@@ -19,6 +19,7 @@ VSTO add-ins are .NET Framework COM add-ins for desktop Office (Word, Excel, Out
 - Office updates empty `Properties.Settings` unless `Upgrade()` runs: [user-settings](user-settings.md).
 - Visio: a ShapeSheet cell reaches the add-in only by a marker event, and only `RUNADDONWARGS("QueueMarkerEvent",...)` tells the shape: [visio-shapesheet-calls](visio-shapesheet-calls.md).
 - Visio: `ActiveWindow` is `null` without a document; its `Selection` is empty in a ShapeSheet window and holds master shapes in a master edit window: [visio-active-window](visio-active-window.md).
+- Visio: `Shape.Ungroup()` on a master instance shows a dialog also when called by code; set `Application.AlertResponse = 1` for the call: [visio-ungroup](visio-ungroup.md).
 
 ## "Installed, but the add-in does not appear or load"
 
@@ -46,4 +47,5 @@ Verified with Visio Pro 2019 C2R x64, WiX 7.0.0, VS2022 (2026-07); registration 
 - [User settings location and Office updates](user-settings.md) — Read when a VSTO add-in uses Properties.Settings - where user.config lives, why settings vanish after Office updates, and a safe Settings.Upgrade() pattern.
 - [Visio ActiveWindow and Selection by window type](visio-active-window.md) — Read when a Visio add-in command (ribbon button, event handler) uses Application.ActiveWindow, its Selection or ActivePage - ShapeSheet window, master edit window, no document.
 - [Calling a Visio add-in from the ShapeSheet](visio-shapesheet-calls.md) — Read when a ShapeSheet cell (EventDrop, EventDblClick, Actions) must run code in a Visio VSTO/COM add-in - marker events, context string format, QUEUEMARKEREVENT vs RUNADDONWARGS, redo.
+- [Visio Shape.Ungroup from code](visio-ungroup.md) — Read when a Visio add-in or script calls Shape.Ungroup - confirmation dialog for master instances, AlertResponse, errors for non-groups and locked groups, what is left of the group.
 <!-- END GENERATED CONTENTS -->
