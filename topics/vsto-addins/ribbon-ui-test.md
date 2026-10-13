@@ -1,0 +1,40 @@
+---
+title: Clicking a ribbon button from a test script
+description: Read when a test must click a button of an add-in's custom ribbon tab (VSTO ribbon designer or XML) without a person - UI Automation recipe in PowerShell, limits.
+---
+
+# Clicking a ribbon button from a test script
+
+COM automation cannot run the click handler of a custom ribbon button. UI Automation can: the test drives the Office app by COM and clicks the button by its label.
+
+```powershell
+Add-Type -AssemblyName UIAutomationClient, UIAutomationTypes
+$uia = [System.Windows.Automation.AutomationElement]
+
+$app = New-Object -ComObject Visio.Application          # visible instance
+$doc = $app.Documents.Add('')
+Start-Sleep -Seconds 2                                   # let the ribbon load
+
+$root = $uia::FromHandle([IntPtr]$app.WindowHandle32)
+function Find($name, $type) {
+    $cond = New-Object System.Windows.Automation.AndCondition(
+        (New-Object System.Windows.Automation.PropertyCondition($uia::NameProperty, $name)),
+        (New-Object System.Windows.Automation.PropertyCondition($uia::ControlTypeProperty, $type)))
+    $root.FindFirst([System.Windows.Automation.TreeScope]::Descendants, $cond)
+}
+
+$tab = Find 'My Tab' ([System.Windows.Automation.ControlType]::TabItem)
+$tab.GetCurrentPattern([System.Windows.Automation.SelectionItemPattern]::Pattern).Select()
+Start-Sleep -Seconds 1
+$button = Find 'My Button' ([System.Windows.Automation.ControlType]::Button)
+$button.GetCurrentPattern([System.Windows.Automation.InvokePattern]::Pattern).Invoke()
+Start-Sleep -Milliseconds 1500                           # handler runs in the app
+```
+
+- Names are the labels of tab and button. A tab or button that is not found is `$null`: the add-in or its ribbon did not load.
+- The `$button` element stays valid: invoke it again for the next case.
+- Prepare the state by COM before the click (`Window.Select`, `Window.DeselectAll`), read the result by COM after it.
+- A message box of the handler: close it from a second process, see "Test without the UI" in [visio-shapesheet-calls](visio-shapesheet-calls.md). In a visible instance filter the dialogs by window class (`#32770` message box, `NUIDialog` Office dialog), or the main window is closed too.
+- Quit without a save prompt: `$doc.Saved = $true; $app.Quit()`.
+
+Verified with Visio Pro 2019 C2R x64, VSTO ribbon designer tab, Windows PowerShell 5.1 (2026-10). _Unverified:_ invisible instance (`Visio.InvisibleApp`), other Office apps, button without selecting the tab first.

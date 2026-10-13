@@ -1,6 +1,6 @@
 ---
 title: VSTO Office add-ins
-description: "VSTO Office add-ins (incl. Visio): registration, MSI deployment, signing, load failures, user settings, calls from the Visio ShapeSheet, Visio active window, Visio ungroup."
+description: "VSTO Office add-ins (incl. Visio): registration, MSI deployment, signing, load failures, user settings, calls from the Visio ShapeSheet, Visio active window, Visio ungroup, ribbon button tests."
 ---
 
 > **Agents:** read [the knowledge base guide](../../AGENTS.md) first.
@@ -20,6 +20,7 @@ VSTO add-ins are .NET Framework COM add-ins for desktop Office (Word, Excel, Out
 - Visio: a ShapeSheet cell reaches the add-in only by a marker event, and only `RUNADDONWARGS("QueueMarkerEvent",...)` tells the shape: [visio-shapesheet-calls](visio-shapesheet-calls.md).
 - Visio: `ActiveWindow` is `null` without a document; its `Selection` is empty in a ShapeSheet window and holds master shapes in a master edit window: [visio-active-window](visio-active-window.md).
 - Visio: `Shape.Ungroup()` on a master instance shows a dialog also when called by code; set `Application.AlertResponse = 1` for the call: [visio-ungroup](visio-ungroup.md).
+- A test can click a custom ribbon button by UI Automation: [ribbon-ui-test](ribbon-ui-test.md).
 
 ## "Installed, but the add-in does not appear or load"
 
@@ -43,6 +44,7 @@ Verified with Visio Pro 2019 C2R x64, WiX 7.0.0, VS2022 (2026-07); registration 
 - [Manifest dependencies must be installed](manifest-dependencies.md) — Read when an installed VSTO add-in silently does not load although registration is correct, or when deciding which DLLs the installer must ship.
 - [Installer prerequisite checks](prerequisite-checks.md) — Read when adding launch conditions to a VSTO add-in installer for the VSTO runtime or the Office application.
 - [Registry registration via MSI](registration.md) — Read when registering a VSTO add-in from an MSI/WiX installer - registry path (Visio differs), required values, file:/// and |vstolocal, key name, HKMU, 32- and 64-bit Office.
+- [Clicking a ribbon button from a test script](ribbon-ui-test.md) — Read when a test must click a button of an add-in's custom ribbon tab (VSTO ribbon designer or XML) without a person - UI Automation recipe in PowerShell, limits.
 - [Signing](signing.md) — Read when signing a VSTO add-in (Authenticode, manifests, MSI), choosing the MSBuild hook for signtool, separating debug/release certificates, or when an expired test certificate blocks loading.
 - [User settings location and Office updates](user-settings.md) — Read when a VSTO add-in uses Properties.Settings - where user.config lives, why settings vanish after Office updates, and a safe Settings.Upgrade() pattern.
 - [Visio ActiveWindow and Selection by window type](visio-active-window.md) — Read when a Visio add-in command (ribbon button, event handler) uses Application.ActiveWindow, its Selection or ActivePage - ShapeSheet window, master edit window, no document.
