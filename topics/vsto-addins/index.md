@@ -20,7 +20,7 @@ VSTO add-ins are .NET Framework COM add-ins for desktop Office (Word, Excel, Out
 - Visio: a ShapeSheet cell reaches the add-in only by a marker event, and only `RUNADDONWARGS("QueueMarkerEvent",...)` tells the shape: [visio-shapesheet-calls](visio-shapesheet-calls.md).
 - Visio: `ActiveWindow` is `null` without a document; its `Selection` is empty in a ShapeSheet window, holds master shapes in a master edit window and skips shapes selected inside a group: [visio-active-window](visio-active-window.md).
 - Visio: `Shape.Ungroup()` on a master instance shows a dialog also when called by code; set `Application.AlertResponse = 1` for the call: [visio-ungroup](visio-ungroup.md).
-- Visio: `ShowChanges = false` deselects all shapes and blocks selection changes by code; `UndoEnabled = false` clears the undo history; `EventsEnabled = 0` hits all add-ins: [visio-performance-switches](visio-performance-switches.md).
+- Visio: `ShowChanges = false` deselects all shapes and blocks selection changes by code; `UndoEnabled = false` clears the undo history; `EventsEnabled = 0` hits all add-ins; in one measurement the switches gave nothing, `Page.SetResults` 3-5x: [visio-performance-switches](visio-performance-switches.md).
 - A test can click a custom ribbon button by UI Automation: [ribbon-ui-test](ribbon-ui-test.md).
 
 ## "Installed, but the add-in does not appear or load"
@@ -49,7 +49,7 @@ Verified with Visio Pro 2019 C2R x64, WiX 7.0.0, VS2022 (2026-07); registration 
 - [Signing](signing.md) — Read when signing a VSTO add-in (Authenticode, manifests, MSI), choosing the MSBuild hook for signtool, separating debug/release certificates, or when an expired test certificate blocks loading.
 - [User settings location and Office updates](user-settings.md) — Read when a VSTO add-in uses Properties.Settings - where user.config lives, why settings vanish after Office updates, and a safe Settings.Upgrade() pattern.
 - [Visio ActiveWindow and Selection by window type](visio-active-window.md) — Read when a Visio add-in command (ribbon button, event handler) uses Application.ActiveWindow, its Selection or ActivePage - ShapeSheet window, master edit window, no document, selection in a group.
-- [Visio performance switches for bulk changes](visio-performance-switches.md) — Read when Visio code changes many shapes or cells and you weigh ScreenUpdating, ShowChanges, DeferRecalc, EventsEnabled, UndoEnabled, InhibitSelectChange - effects and side effects.
+- [Visio performance switches for bulk changes](visio-performance-switches.md) — Read when Visio code changes many shapes or cells and you weigh ScreenUpdating, ShowChanges, DeferRecalc, EventsEnabled, UndoEnabled or batch calls - effects, side effects, one measurement.
 - [Calling a Visio add-in from the ShapeSheet](visio-shapesheet-calls.md) — Read when a ShapeSheet cell (EventDrop, EventDblClick, Actions) must run code in a Visio VSTO/COM add-in - marker events, context string format, QUEUEMARKEREVENT vs RUNADDONWARGS, redo.
 - [Visio Shape.Ungroup from code](visio-ungroup.md) — Read when a Visio add-in or script calls Shape.Ungroup - confirmation dialog for master instances, AlertResponse, errors for non-groups and locked groups, what is left of the group.
 <!-- END GENERATED CONTENTS -->
