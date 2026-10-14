@@ -1,6 +1,6 @@
 ---
 title: VSTO Office add-ins
-description: "VSTO Office add-ins (incl. Visio): registration, MSI deployment, signing, load failures, user settings; Visio: ShapeSheet calls, active window, ungroup, performance switches; ribbon button tests."
+description: "VSTO Office add-ins (incl. Visio): registration, MSI deployment, signing, load failures, user settings; Visio: ShapeSheet calls, windows, ungroup, performance; ribbon tests and icons."
 ---
 
 > **Agents:** read [the knowledge base guide](../../AGENTS.md) first.
@@ -22,6 +22,7 @@ VSTO add-ins are .NET Framework COM add-ins for desktop Office (Word, Excel, Out
 - Visio: `Shape.Ungroup()` on a master instance shows a dialog also when called by code; set `Application.AlertResponse = 1` for the call: [visio-ungroup](visio-ungroup.md).
 - Visio: `ShowChanges = false` deselects all shapes and blocks selection changes by code; `UndoEnabled = false` clears the undo history; `EventsEnabled = 0` hits all add-ins; in one measurement the switches gave nothing, `Page.SetResults` 3-5x: [visio-performance-switches](visio-performance-switches.md).
 - A test can click a custom ribbon button by UI Automation: [ribbon-ui-test](ribbon-ui-test.md).
+- Built-in icon for a ribbon button (`imageMso`): `GetImageMso` from another process returns no picture, but its error tells whether an ID exists: [ribbon-office-icons](ribbon-office-icons.md).
 
 ## "Installed, but the add-in does not appear or load"
 
@@ -45,6 +46,7 @@ Verified with Visio Pro 2019 C2R x64, WiX 7.0.0, VS2022 (2026-07); registration 
 - [Manifest dependencies must be installed](manifest-dependencies.md) — Read when an installed VSTO add-in silently does not load although registration is correct, or when deciding which DLLs the installer must ship.
 - [Installer prerequisite checks](prerequisite-checks.md) — Read when adding launch conditions to a VSTO add-in installer for the VSTO runtime or the Office application.
 - [Registry registration via MSI](registration.md) — Read when registering a VSTO add-in from an MSI/WiX installer - registry path (Visio differs), required values, file:/// and |vstolocal, key name, HKMU, 32- and 64-bit Office.
+- [Office icons for ribbon buttons](ribbon-office-icons.md) — Read when choosing a built-in Office icon (imageMso, OfficeImageId) for a custom ribbon button - check that an ID exists, view the icons, no icon for some commands.
 - [Clicking a ribbon button from a test script](ribbon-ui-test.md) — Read when a test must click a button of an add-in's custom ribbon tab (VSTO ribbon designer or XML) without a person - UI Automation recipe in PowerShell, limits.
 - [Signing](signing.md) — Read when signing a VSTO add-in (Authenticode, manifests, MSI), choosing the MSBuild hook for signtool, separating debug/release certificates, or when an expired test certificate blocks loading.
 - [User settings location and Office updates](user-settings.md) — Read when a VSTO add-in uses Properties.Settings - where user.config lives, why settings vanish after Office updates, and a safe Settings.Upgrade() pattern.
