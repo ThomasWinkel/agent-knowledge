@@ -33,7 +33,7 @@ Start-Sleep -Milliseconds 1500                           # handler runs in the a
 
 - Names are the labels of tab and button. A tab or button that is not found is `$null`: the add-in or its ribbon did not load.
 - Split button (`RibbonSplitButton`): two elements with its label, `SplitButton` (drop-down) and inside it a `Button` (main part). Invoke the `Button`; `Find` with type `Button` finds it.
-- Item in the drop-down of a split button: `Expand()` the `SplitButton` (`ExpandCollapsePattern`), wait, then search the item from `AutomationElement.RootElement` (the drop-down is its own window, not below the app window); it is a `MenuItem` with `InvokePattern`.
+- Item in the drop-down of a split button: `Expand()` the `SplitButton` (`ExpandCollapsePattern`), wait, then search the item from `AutomationElement.RootElement` (verified; search from the app window not tried); it is a `MenuItem` with `InvokePattern`.
   ```powershell
   $split.GetCurrentPattern([System.Windows.Automation.ExpandCollapsePattern]::Pattern).Expand(); Start-Sleep -Milliseconds 800
   $cond = New-Object System.Windows.Automation.PropertyCondition($uia::NameProperty, 'My Item')
