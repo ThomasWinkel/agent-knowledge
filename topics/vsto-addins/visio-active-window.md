@@ -1,6 +1,6 @@
 ---
 title: Visio ActiveWindow and Selection by window type
-description: Read when a Visio add-in command uses ActiveWindow or its Selection, or selects shapes by code - ShapeSheet and master edit window, no document, group selection, select all.
+description: Read when a Visio add-in command uses ActiveWindow or its Selection, or selects shapes by code - ShapeSheet, master and group edit window, no document, group selection, select all.
 ---
 
 # Visio ActiveWindow and Selection by window type
@@ -12,6 +12,7 @@ A command that works on `Application.ActiveWindow.Selection` only fails loudly w
 | No document | `null` | - | - | - |
 | Drawing page | window | 1 `visDrawing` / 128 `visPageWin` | selected shapes | the page |
 | Master edit window | window | 1 `visDrawing` / 64 `visMasterWin` | shapes of the master | `null` |
+| Group edit window (Open Group, `Shape.OpenDrawWindow` of a group on a page) | window | 1 `visDrawing` / 160 `visPageGroupWin` | shapes inside the group | not checked |
 | ShapeSheet window | window | 3 `visSheet` / 3 | empty (`Count` 0), no exception | the page |
 
 ## Gotchas
@@ -20,9 +21,11 @@ A command that works on `Application.ActiveWindow.Selection` only fails loudly w
 - The shape of a ShapeSheet window: `ActiveWindow.SelectedCell.Shape` (page sheet: shape `ThePage`).
 - **Master edit window has the same `Type` as a page window.** `Selection` returns shapes of the master (`Shape.ContainingMaster` set, `Shape.ContainingPage` is `null`); a command changes the master. Tell them apart by `SubType`, or by `Window.Page == null`.
 - `Application.ActivePage` is `null` in a master edit window; it does not throw.
-- **A master edit window works on a copy of the master.** Shapes taken from the `Master` object (verified: the return of `Masters.Add`) are not the shapes in the window: `Window.Select` with them throws `Inappropriate target object for this action`. Take them from the window: `window.Selection.ContainingMaster.Shapes`.
+- **A master edit window works on a copy of the master.** Shapes taken from the `Master` object (verified: the return of `Masters.Add`) are not the shapes in the window: `Window.Select` with them throws `Inappropriate target object for this action`. Take them from the window: `window.Selection.ContainingMaster.Shapes`, or `Window.Master` (the copy; draw on it, select its shapes).
+- Closing a changed master edit window by code (`Window.Close`) asks `Update '<name>'?` (`NUIDialog`, modal): the COM call waits until someone answers.
 - **Shapes selected inside a group do not count.** `Window.Selection` has [IterationMode](https://learn.microsoft.com/en-us/office/vba/api/visio.selection.iterationmode) 1280 (`visSelModeSkipSuper + visSelModeSkipSub`). Only shapes of one group selected (click into the group): `Count` is 0. Together with top-level shapes: only those count. `selection.IterationMode = 0` gives all, the group included (3 sub-shapes: `Count` 4).
 - Select a shape inside a group by code: `Window.Select(shape, visSubSelect)` (3). `visSelect` (2) throws `Inappropriate target object for this action`.
+- **Group edit window:** a shape inside the group is selected with `Window.Select(shape, visSelect)` (2). Selecting top-level shapes of the page there failed with `Inappropriate target object for this action` (seen through an add-in; exact call not isolated). A command that selects shapes of the page: exclude it by `SubType` (`visPageGroupWin` 160, `visMasterGroupWin` 96).
 
 ## Set the selection by code
 
@@ -59,4 +62,4 @@ if (window == null
 Visio.Selection selection = window.Selection;
 ```
 
-Verified with Visio 2019 C2R x64 by COM automation (`Visio.InvisibleApp`; group selection: visible instance) (2026-10). Set the selection by code: page and master edit window. Select-all rule: compared with `Window.SelectAll` for shapes on locked, hidden, locked + normal, hidden + normal layers, guide (page window). _Unverified:_ `LockSelect` in a protected document; group edit windows (`visPageGroupWin` 160, `visMasterGroupWin` 96), stencil windows, and whether a custom ribbon tab stays clickable while a ShapeSheet window is active.
+Verified with Visio 2019 C2R x64 by COM automation (`Visio.InvisibleApp`; group selection: visible instance) (2026-10). Set the selection by code: page and master edit window; group edit window on a page (shape inside the group). Select-all rule: compared with `Window.SelectAll` for shapes on locked, hidden, locked + normal, hidden + normal layers, guide (page window). _Unverified:_ `LockSelect` in a protected document; group edit window of a master (`visMasterGroupWin` 96), stencil windows, and whether a custom ribbon tab stays clickable while a ShapeSheet window is active.
