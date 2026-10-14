@@ -23,6 +23,19 @@ A command that works on `Application.ActiveWindow.Selection` only fails loudly w
 - **Shapes selected inside a group do not count.** `Window.Selection` has [IterationMode](https://learn.microsoft.com/en-us/office/vba/api/visio.selection.iterationmode) 1280 (`visSelModeSkipSuper + visSelModeSkipSub`). Only shapes of one group selected (click into the group): `Count` is 0. Together with top-level shapes: only those count. `selection.IterationMode = 0` gives all, the group included (3 sub-shapes: `Count` 4).
 - Select a shape inside a group by code: `Window.Select(shape, visSubSelect)` (3). `visSelect` (2) throws `Inappropriate target object for this action`.
 
+## Set the selection by code
+
+Build a selection, then set it in one call:
+
+```csharp
+Visio.Selection result = page.CreateSelection(Visio.VisSelectionTypes.visSelTypeEmpty);   // master: master.CreateSelection
+result.Select(first, (short)Visio.VisSelectArgs.visSelect);   // first selected = PrimaryItem
+result.Select(other, (short)Visio.VisSelectArgs.visSelect);
+window.Selection = result;
+```
+
+- `Selection.ContainingPage` is `null` for a selection in a master edit window; use `ContainingMaster` there.
+
 ## Guard
 
 ```csharp
@@ -34,4 +47,4 @@ if (window == null
 Visio.Selection selection = window.Selection;
 ```
 
-Verified with Visio 2019 C2R x64 by COM automation (`Visio.InvisibleApp`; group selection: visible instance) (2026-10). _Unverified:_ group edit windows (`visPageGroupWin` 160, `visMasterGroupWin` 96), stencil windows, and whether a custom ribbon tab stays clickable while a ShapeSheet window is active.
+Verified with Visio 2019 C2R x64 by COM automation (`Visio.InvisibleApp`; group selection: visible instance) (2026-10). Set the selection by code: page and master edit window. _Unverified:_ group edit windows (`visPageGroupWin` 160, `visMasterGroupWin` 96), stencil windows, and whether a custom ribbon tab stays clickable while a ShapeSheet window is active.
