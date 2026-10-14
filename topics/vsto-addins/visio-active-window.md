@@ -1,6 +1,6 @@
 ---
 title: Visio ActiveWindow and Selection by window type
-description: Read when a Visio add-in command (ribbon button, event handler) uses Application.ActiveWindow, its Selection or ActivePage - ShapeSheet window, master edit window, no document, selection in a group.
+description: Read when a Visio add-in command uses ActiveWindow or its Selection, or selects shapes by code - ShapeSheet and master edit window, no document, group selection, select all.
 ---
 
 # Visio ActiveWindow and Selection by window type
@@ -36,6 +36,17 @@ window.Selection = result;
 ```
 
 - `Selection.ContainingPage` is `null` for a selection in a master edit window; use `ContainingMaster` there.
+- **Select all: not `CreateSelection(visSelTypeAll)`.** It also takes shapes on a locked layer and shapes whose layers are all hidden; set as window selection they stay selected (Delete removes hidden shapes). `Window.SelectAll()` skips them, but works only on a window. Same rule in code:
+  ```csharp
+  // Rule of Window.SelectAll: no layer locked; no layers, or at least one visible.
+  static bool CanSelect(Visio.Shape shape)
+  {
+      var layers = Enumerable.Range(1, shape.LayerCount).Select(i => shape.Layer[(short)i]).ToList();
+      return layers.All(l => l.CellsC[(short)Visio.VisCellIndices.visLayerLock].ResultIU == 0)
+          && (layers.Count == 0 || layers.Any(l => l.CellsC[(short)Visio.VisCellIndices.visLayerVisible].ResultIU != 0));
+  }
+  ```
+  Loop over `ContainingShape.Shapes` of a selected shape (page or master) and select those that pass. `SelectAll` also takes guides and shapes with `LockSelect` = 1 (document not protected).
 
 ## Guard
 
@@ -48,4 +59,4 @@ if (window == null
 Visio.Selection selection = window.Selection;
 ```
 
-Verified with Visio 2019 C2R x64 by COM automation (`Visio.InvisibleApp`; group selection: visible instance) (2026-10). Set the selection by code: page and master edit window. _Unverified:_ group edit windows (`visPageGroupWin` 160, `visMasterGroupWin` 96), stencil windows, and whether a custom ribbon tab stays clickable while a ShapeSheet window is active.
+Verified with Visio 2019 C2R x64 by COM automation (`Visio.InvisibleApp`; group selection: visible instance) (2026-10). Set the selection by code: page and master edit window. Select-all rule: compared with `Window.SelectAll` for shapes on locked, hidden, locked + normal, hidden + normal layers, guide (page window). _Unverified:_ `LockSelect` in a protected document; group edit windows (`visPageGroupWin` 160, `visMasterGroupWin` 96), stencil windows, and whether a custom ribbon tab stays clickable while a ShapeSheet window is active.
