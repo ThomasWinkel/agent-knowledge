@@ -20,7 +20,7 @@ A command that works on `Application.ActiveWindow.Selection` only fails loudly w
 - The shape of a ShapeSheet window: `ActiveWindow.SelectedCell.Shape` (page sheet: shape `ThePage`).
 - **Master edit window has the same `Type` as a page window.** `Selection` returns shapes of the master (`Shape.ContainingMaster` set, `Shape.ContainingPage` is `null`); a command changes the master. Tell them apart by `SubType`, or by `Window.Page == null`.
 - `Application.ActivePage` is `null` in a master edit window; it does not throw.
-- **A master edit window works on a copy of the master.** Shapes taken from the `Master` object (e.g. `doc.Masters.Item(...)` or the return of `Masters.Add`) are not the shapes in the window: `Window.Select` with them throws `Inappropriate target object for this action`. Take them from the window: `window.Selection.ContainingMaster.Shapes`.
+- **A master edit window works on a copy of the master.** Shapes taken from the `Master` object (verified: the return of `Masters.Add`) are not the shapes in the window: `Window.Select` with them throws `Inappropriate target object for this action`. Take them from the window: `window.Selection.ContainingMaster.Shapes`.
 - **Shapes selected inside a group do not count.** `Window.Selection` has [IterationMode](https://learn.microsoft.com/en-us/office/vba/api/visio.selection.iterationmode) 1280 (`visSelModeSkipSuper + visSelModeSkipSub`). Only shapes of one group selected (click into the group): `Count` is 0. Together with top-level shapes: only those count. `selection.IterationMode = 0` gives all, the group included (3 sub-shapes: `Count` 4).
 - Select a shape inside a group by code: `Window.Select(shape, visSubSelect)` (3). `visSelect` (2) throws `Inappropriate target object for this action`.
 
