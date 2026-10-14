@@ -1,6 +1,6 @@
 ---
 title: Visio performance switches for bulk changes
-description: Read when Visio code changes many shapes or cells and you weigh ScreenUpdating, ShowChanges, DeferRecalc, EventsEnabled, UndoEnabled, InhibitSelectChange - effects and side effects.
+description: Read when Visio code changes many shapes or cells and you weigh ScreenUpdating, ShowChanges, DeferRecalc, EventsEnabled, UndoEnabled or batch calls - effects, side effects, one measurement.
 ---
 
 # Visio performance switches for bulk changes
@@ -44,4 +44,32 @@ finally
 - `DeferRecalc`: Visio works off the pending recalculations when objects are released or many commands arrive. Keep the `Cell` objects in variables until the end and only set formulas or results in the deferred part.
 - Show a message box only after the switches are back: with `ShowChanges = false` Visio does not repaint its windows, also not when another window uncovered them.
 
-Source: the Microsoft reference pages linked above (2026-10); not tested. _Unverified_ (concluded, not stated there): marker events raised while `EventsEnabled = 0` are lost, not delivered later; in .NET the garbage collector decides when a `Cell` object is released, so `DeferRecalc` defers less reliably than in VBA; results read while `DeferRecalc` is on may be stale.
+## Measured: the switches gave nothing, the batch call did
+
+One case: a VSTO add-in (in-process), ribbon click handler, one undo scope, moves n plain rectangles on a new blank page by two cell writes each (`PinX`, `PinY` via `Cell.ResultIU`). Time of the handler:
+
+| Shapes | Single writes | `Page.SetResults` |
+|---|---|---|
+| 100 | 0.07 s | 0.05 s |
+| 500 | 0.3 s | 0.13 s |
+| 2000 | 4.1 s | 1.2-2.2 s |
+
+- **No measurable gain**, alone or combined: `ScreenUpdating = 0`, `ShowChanges = false`, `DeferRecalc = 1`, `DeferRelationshipRecalc = true`, `Page.AutoSize = false`. Measure before adding switches to a handler.
+- [`Page.SetResults`](https://learn.microsoft.com/en-us/office/vba/api/visio.page.setresults) (all cells in one call) made the write part 3x (500 shapes) to 5x (2000) faster.
+- The time per cell write grows with the number of shapes written: 0.2 ms at 500, 0.8 ms at 2000; also inside the batch call. Cause not found.
+- Not in the write loop: with 2000 shapes `EndUndoScope` took about 0.9 s, and Visio reacted again only about 2 s after the handler returned, in every variant.
+
+```csharp
+// Stream: 4 shorts per cell = sheet ID, section, row, cell.
+short[] stream = { id, (short)Visio.VisSectionIndices.visSectionObject,
+                       (short)Visio.VisRowIndices.visRowXFormOut,
+                       (short)Visio.VisCellIndices.visXFormPinX /* , next cell ... */ };
+Array streamArray = stream;
+Array units = new object[] { (short)Visio.VisUnitCodes.visInches };   // one entry: used for all
+Array results = new object[] { 1.25 /* , ... */ };
+short written = page.SetResults(ref streamArray, ref units, ref results, 0);
+```
+
+Measured with Visio Pro 2019 C2R x64, Debug build, stopwatch in the add-in (2026-10). _Unverified:_ shapes with many formulas or sub-shapes, pages with connectors, what `SetResults` does with guarded cells.
+
+Other statements - source: the Microsoft reference pages linked above (2026-10); not tested. _Unverified_ (concluded, not stated there): marker events raised while `EventsEnabled = 0` are lost, not delivered later; in .NET the garbage collector decides when a `Cell` object is released, so `DeferRecalc` defers less reliably than in VBA; results read while `DeferRecalc` is on may be stale.
