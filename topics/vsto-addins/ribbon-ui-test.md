@@ -32,6 +32,7 @@ Start-Sleep -Milliseconds 1500                           # handler runs in the a
 ```
 
 - Names are the labels of tab and button. A tab or button that is not found is `$null`: the add-in or its ribbon did not load.
+- Split button (`RibbonSplitButton`): two elements with its label, `SplitButton` (drop-down) and inside it a `Button` (main part). Invoke the `Button`; `Find` with type `Button` finds it.
 - The `$button` element stays valid: invoke it again for the next case.
 - Prepare the state by COM before the click (`Window.Select`, `Window.DeselectAll`), read the result by COM after it.
 - A message box of the handler: close it from a second process, see "Test without the UI" in [visio-shapesheet-calls](visio-shapesheet-calls.md). In a visible instance filter the dialogs by window class (`#32770` message box, `NUIDialog` Office dialog), or the main window is closed too.
