@@ -41,6 +41,7 @@ Start-Sleep -Milliseconds 1500                           # handler runs in the a
   $item.GetCurrentPattern([System.Windows.Automation.InvokePattern]::Pattern).Invoke()
   ```
 - The `$button` element stays valid: invoke it again for the next case.
+- Click with a modifier key (e.g. Ctrl+click): `Invoke()` carries no keys. Bring the app window to the front, then `keybd_event` key down, real click by `SetCursorPos` + `mouse_event` in the middle of `Current.BoundingRectangle`, key up (user32, via `Add-Type`). Moves the real mouse. While a drop-down is open, do not call `SetForegroundWindow`: it closes the drop-down and the click goes nowhere.
 - Prepare the state by COM before the click (`Window.Select`, `Window.DeselectAll`), read the result by COM after it.
 - Undo name of the last action (e.g. the name given to `BeginUndoScope`): COM has no getter, but the Undo button of the Quick Access Toolbar is named after it. Search all descendants of the app window for `Name` matching `^Undo ` (English Office UI): `Undo My Action` (verified Visio 2019; two elements with that name). `HelpText` is empty.
 - A message box of the handler: close it from a second process, see "Test without the UI" in [visio-shapesheet-calls](visio-shapesheet-calls.md). In a visible instance filter the dialogs by window class (`#32770` message box, `NUIDialog` Office dialog), or the main window is closed too.
