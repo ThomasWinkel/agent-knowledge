@@ -9,5 +9,5 @@ Shared knowledge for AI agents: internal processes, private APIs, conventions an
 ## Topics
 
 - [Visio content deployment](topics/visio-content-deployment/index.md) — Installing Visio stencils and templates so Visio lists them: MSI PublishComponent (Solution Publishing), ConfigChangeID, content cache, file paths.
-- [VSTO Office add-ins](topics/vsto-addins/index.md) — VSTO Office add-ins (incl. Visio): registration, MSI deployment, signing, load failures, user settings; Visio: ShapeSheet calls, windows, ungroup, performance; ribbon tests and icons.
+- [VSTO Office add-ins](topics/vsto-addins/index.md) — VSTO Office add-ins: registration, MSI, signing, load failures, settings, localization, SDK-project references; Visio: ShapeSheet calls, windows, ungroup, performance; ribbon tests and icons.
 - [WiX Toolset](topics/wix-toolset/index.md) — WiX Toolset v4+ (v7) MSI builds: SDK-style projects, HeatWave VS integration, OSMF EULA, file harvesting, package bitness.
