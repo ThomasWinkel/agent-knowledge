@@ -24,6 +24,7 @@ VSTO add-ins are .NET Framework COM add-ins for desktop Office (Word, Excel, Out
 - Visio: `Shape.Ungroup()` on a master instance shows a dialog also when called by code; set `Application.AlertResponse = 1` for the call: [visio-ungroup](visio-ungroup.md).
 - Visio: `ShowChanges = false` deselects all shapes and blocks selection changes by code; `UndoEnabled = false` clears the undo history; `EventsEnabled = 0` hits all add-ins; in one measurement the switches gave nothing, `Page.SetResults` 3-5x: [visio-performance-switches](visio-performance-switches.md).
 - A test can click a custom ribbon button by UI Automation: [ribbon-ui-test](ribbon-ui-test.md).
+- Ribbon texts can be changed at runtime (e.g. in `Load`), except `RibbonSeparator.Title`; an exception in `Load` silently hides the whole tab: [ribbon-runtime-properties](ribbon-runtime-properties.md).
 - Built-in icon for a ribbon button (`imageMso`): `GetImageMso` from another process returns no picture, but its error tells whether an ID exists: [ribbon-office-icons](ribbon-office-icons.md).
 
 ## "Installed, but the add-in does not appear or load"
@@ -49,6 +50,7 @@ Verified with Visio Pro 2019 C2R x64, WiX 7.0.0, VS2022 (2026-07); registration 
 - [Installer prerequisite checks](prerequisite-checks.md) — Read when adding launch conditions to a VSTO add-in installer for the VSTO runtime or the Office application.
 - [Registry registration via MSI](registration.md) — Read when registering a VSTO add-in from an MSI/WiX installer - registry path (Visio differs), required values, file:/// and |vstolocal, key name, HKMU, 32- and 64-bit Office.
 - [Office icons for ribbon buttons](ribbon-office-icons.md) — Read when choosing a built-in Office icon (imageMso, OfficeImageId) for a custom ribbon button - check that an ID exists, view the icons, no icon for some commands.
+- [Changing ribbon properties at runtime](ribbon-runtime-properties.md) — Read when code sets properties of a VSTO designer ribbon after it is created (e.g. translated Label/ScreenTip/SuperTip in Load) - which can be set, "Component is read only", how to check.
 - [Clicking a ribbon button from a test script](ribbon-ui-test.md) — Read when a test must click a button of an add-in's custom ribbon tab (VSTO ribbon designer or XML) without a person - UI Automation recipe in PowerShell, limits.
 - [Satellite assemblies (localized .resx) in a VSTO add-in](satellite-assemblies.md) — Read when a VSTO add-in or a library it references uses .resx per language (de\<Assembly>.resources.dll) - build output, manifest, MSI, lookup at runtime.
 - [Referencing VSTO assemblies from an SDK-style project](sdk-project-office-tools-reference.md) — Read when a non-VSTO SDK-style library (net48) must use VSTO types such as RibbonBase or RibbonButton, e.g. shared ribbon code - search path, dotnet build limit.
