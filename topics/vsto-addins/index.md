@@ -1,6 +1,6 @@
 ---
 title: VSTO Office add-ins
-description: "VSTO Office add-ins: registration, MSI deployment, signing, load failures, user settings, localization, SDK-project references; Visio: ShapeSheet calls, windows, ungroup, performance; ribbon tests and icons."
+description: "VSTO Office add-ins: registration, MSI, signing, load failures, settings, localization, SDK-project references; Visio: ShapeSheet calls, windows, ungroup, performance; ribbon tests and icons."
 ---
 
 > **Agents:** read [the knowledge base guide](../../AGENTS.md) first.
