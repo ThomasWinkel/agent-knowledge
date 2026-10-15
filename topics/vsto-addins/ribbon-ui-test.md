@@ -42,6 +42,7 @@ Start-Sleep -Milliseconds 1500                           # handler runs in the a
   ```
 - The `$button` element stays valid: invoke it again for the next case.
 - Prepare the state by COM before the click (`Window.Select`, `Window.DeselectAll`), read the result by COM after it.
+- Undo name of the last action (e.g. the name given to `BeginUndoScope`): COM has no getter, but the Undo button of the Quick Access Toolbar is named after it. Search all descendants of the app window for `Name` matching `^Undo ` (English Office UI): `Undo My Action` (verified Visio 2019; two elements with that name). `HelpText` is empty.
 - A message box of the handler: close it from a second process, see "Test without the UI" in [visio-shapesheet-calls](visio-shapesheet-calls.md). In a visible instance filter the dialogs by window class (`#32770` message box, `NUIDialog` Office dialog), or the main window is closed too.
 - Quit without a save prompt: `$doc.Saved = $true; $app.Quit()`.
 
