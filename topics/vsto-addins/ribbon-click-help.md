@@ -89,7 +89,7 @@ File.WriteAllText(redirect, $"<!doctype html><meta charset=utf-8><script>locatio
 Process.Start(redirect);
 ```
 
-_Open:_ the browser sometimes opens in the background (Firefox as default browser, cold start and running instance). `AllowSetForegroundWindow(ASFW_ANY)` before `Process.Start` did not help noticeably.
+_Open:_ the browser sometimes opens in the background (Firefox as default browser, cold start and running instance). `AllowSetForegroundWindow(ASFW_ANY)` before `Process.Start`: effect unclear (maybe helps when the browser already runs; not with a cold start). Reliable but not simple: wait for the new browser window and call `SetForegroundWindow` on it while the Office app is still in front _(not tried)_.
 
 `JsonString`: any JSON string encoder (quotes and escapes the URL). Append the anchor after `AbsoluteUri` as above: on .NET Framework, `new Uri(fileBaseUri, "page.html#anchor")` escapes `#` to `%23` (`page.html%23anchor`), so split a relative target at `#` before combining. `https://` URLs (e.g. a video with `?t=42`) keep query and anchor with `Process.Start(url)` _(unverified)_.
 
