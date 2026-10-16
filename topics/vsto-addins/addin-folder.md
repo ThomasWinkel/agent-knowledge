@@ -12,7 +12,7 @@ var folder = Path.GetDirectoryName(new Uri(typeof(MyRibbon).Assembly.CodeBase).L
 ```
 
 - Dev build (HKCU registration from the build): the build folder (`bin\Debug`). Verified.
-- MSI install: the install folder the `Manifest` value points to. _Unverified._
+- MSI install (HKLM registration, `Manifest` = `file:///C:\Program Files\MyProduct\MyAddIn\MyAddIn.vsto|vstolocal`): the install folder `C:\Program Files\MyProduct\MyAddIn`. Verified.
 - `CodeBase` is obsolete only on .NET 5+; VSTO runs on .NET Framework.
 
 ## Installed and dev build without #if DEBUG
@@ -30,4 +30,4 @@ return null;
 
 Any build configuration in the repo finds the repo's file; a test copy at `bin\help.ini` (above `bin\Debug`) simulates the installed place.
 
-Verified with Visio Pro 2019 C2R x64, dev build (2026-10).
+Verified with Visio Pro 2019 C2R x64, dev build and MSI install (2026-10).
