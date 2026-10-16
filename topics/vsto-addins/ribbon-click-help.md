@@ -66,6 +66,17 @@ static void Wrap(object component, string name, Func<string, bool> tryShowHelp)
 - No help entry for the control: `tryShowHelp` returns false, the action runs as usual.
 - Avoid Alt: Office shows its KeyTips.
 - Private fields: wrap in try/catch and log; if VSTO ever changes them, buttons keep working without help.
+- Other containers hold buttons too: `RibbonBox.Items`, `RibbonButtonGroup.Items`, `RibbonGallery.Buttons`, `RibbonDropDown.Buttons` (walking them builds and runs; Ctrl+click there _unverified_).
+- Toggle buttons and check boxes: leave them out. Office probably flips the state before the handler runs; skipping the action would leave the state wrong _(unverified)_.
+
+## Run it again (language switch, new entries)
+
+Code that sets ribbon texts at runtime (e.g. a language switch) also resets `SuperTip`, so a help hint there must be added again. Make the hook safe to call any number of times:
+
+- Never wrap a component twice: remember the wrapped ones in a `ConditionalWeakTable<object, object>`.
+- Let the wrapper look up the current help table at click time, not the one from the first call: new entries work, removed ones fall back to the action.
+- Hint in the SuperTip (e.g. `Ctrl+click: Help`): before adding it, remove the hint added last if the SuperTip still ends with it (the text code may or may not have run in between). Controls without an entry get no hint.
+- Order: set texts first, then hook.
 
 ## Open a local help page at an anchor
 
@@ -78,6 +89,6 @@ File.WriteAllText(redirect, $"<!doctype html><meta charset=utf-8><script>locatio
 Process.Start(redirect);
 ```
 
-`JsonString`: any JSON string encoder (quotes and escapes the URL). `https://` URLs (e.g. a video with `?t=42`) keep query and anchor with `Process.Start(url)` _(unverified)_.
+`JsonString`: any JSON string encoder (quotes and escapes the URL). Append the anchor after `AbsoluteUri` as above: on .NET Framework, `new Uri(fileBaseUri, "page.html#anchor")` escapes `#` to `%23` (`page.html%23anchor`), so split a relative target at `#` before combining. `https://` URLs (e.g. a video with `?t=42`) keep query and anchor with `Process.Start(url)` _(unverified)_.
 
-Verified with Visio Pro 2019 C2R x64, VSTO ribbon designer, real mouse clicks with Ctrl/Shift held (SendInput), 2026-10; anchor test with Firefox as default browser. _Unverified:_ other Office apps, gallery/check box/toggle button, other browsers (the redirect does not depend on the browser).
+Verified with Visio Pro 2019 C2R x64, VSTO ribbon designer, real mouse clicks with Ctrl/Shift held (SendInput), 2026-10; anchor test with Firefox as default browser. Also verified in a full implementation: button, split button main part, items in its drop-down; hint shown once after repeated language switches. Finding a help file beside the add-in: [addin-folder](addin-folder.md). _Unverified:_ other Office apps, gallery/check box/toggle button, other browsers (the redirect does not depend on the browser).
