@@ -1,6 +1,6 @@
 ---
 title: Ctrl+click on a ribbon button opens help
-description: Read when a VSTO ribbon should open help on Ctrl+click on all buttons without code per handler - wrap the click handlers, open a local page at an anchor, browser to the front.
+description: Read when a VSTO ribbon should open help on Ctrl+click on all buttons without code per handler - wrap the click handlers, open a local help page at an anchor.
 ---
 
 # Ctrl+click on a ribbon button opens help
@@ -86,16 +86,11 @@ Code that sets ribbon texts at runtime (e.g. a language switch) also resets `Sup
 var target = new Uri(pagePath).AbsoluteUri + "#" + anchor;
 var redirect = Path.Combine(Path.GetTempPath(), "MyProduct-help.html");
 File.WriteAllText(redirect, $"<!doctype html><meta charset=utf-8><script>location.replace({JsonString(target)})</script>");
-AllowSetForegroundWindow(-1);   // ASFW_ANY, see below
 Process.Start(redirect);
 ```
 
-Browser comes to the front: without `AllowSetForegroundWindow`, an already running browser sometimes stays in the background (only its taskbar button flashes). ShellExecute only hands the address to the running browser process; Windows lets only the foreground process (Office, which runs the add-in) give away the foreground right. The call allows it once (until the next window change or user input):
-
-```csharp
-[DllImport("user32.dll")] static extern bool AllowSetForegroundWindow(int processId);
-```
+_Open:_ the browser sometimes opens in the background (Firefox as default browser, cold start and running instance). `AllowSetForegroundWindow(ASFW_ANY)` before `Process.Start` did not help noticeably.
 
 `JsonString`: any JSON string encoder (quotes and escapes the URL). Append the anchor after `AbsoluteUri` as above: on .NET Framework, `new Uri(fileBaseUri, "page.html#anchor")` escapes `#` to `%23` (`page.html%23anchor`), so split a relative target at `#` before combining. `https://` URLs (e.g. a video with `?t=42`) keep query and anchor with `Process.Start(url)` _(unverified)_.
 
-Verified with Visio Pro 2019 C2R x64, VSTO ribbon designer, real mouse clicks with Ctrl/Shift held (SendInput), 2026-10; anchor test with Firefox as default browser. Also verified in a full implementation: button, split button main part, items in its drop-down; hint shown once after repeated language switches. Browser in front with `AllowSetForegroundWindow`: verified by user test in Visio. Finding a help file beside the add-in: [addin-folder](addin-folder.md). _Unverified:_ other Office apps, gallery/check box/toggle button, other browsers (the redirect does not depend on the browser).
+Verified with Visio Pro 2019 C2R x64, VSTO ribbon designer, real mouse clicks with Ctrl/Shift held (SendInput), 2026-10; anchor test with Firefox as default browser. Also verified in a full implementation: button, split button main part, items in its drop-down; hint shown once after repeated language switches. Finding a help file beside the add-in: [addin-folder](addin-folder.md). _Unverified:_ other Office apps, gallery/check box/toggle button, other browsers (the redirect does not depend on the browser).
