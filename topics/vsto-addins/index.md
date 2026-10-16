@@ -15,6 +15,7 @@ VSTO add-ins are .NET Framework COM add-ins for desktop Office (Word, Excel, Out
 - **Visio uses its own key** `Software\Microsoft\Visio\Addins`, not `...\Office\Visio\Addins`. MSI installs need `Manifest = file:///<path>.vsto|vstolocal`: [registration](registration.md).
 - Take the registry KeyName from `keyName` in the generated `.dll.manifest`, never from the class name.
 - Every build on a dev machine writes an HKCU registration that overrides the installed add-in. Delete it before installer tests: [dev-build-registration](dev-build-registration.md).
+- Files next to the add-in DLL: use `Assembly.CodeBase`, not `Location` (shadow copy): [addin-folder](addin-folder.md).
 - Sign the assembly before `VisualStudioForApplicationsBuild` generates the manifests: [signing](signing.md).
 - Office updates empty `Properties.Settings` unless `Upgrade()` runs: [user-settings](user-settings.md).
 - Localized `.resx` (satellite assemblies `de\*.resources.dll`) work in debug and MSI without setup; VSTO lists them in the manifest: [satellite-assemblies](satellite-assemblies.md).
@@ -45,6 +46,7 @@ Verified with Visio Pro 2019 C2R x64, WiX 7.0.0, VS2022 (2026-07); registration 
 <!-- BEGIN GENERATED CONTENTS: do not edit, run `python .knowledge-base/manage.py index` -->
 ## Contents
 
+- [Folder of the add-in DLL at runtime](addin-folder.md) — Read when a VSTO add-in must find files next to its DLL or in its install folder (help, data, config) - Location is the shadow copy, CodeBase the real folder.
 - [Dev build registration overrides the installed add-in](dev-build-registration.md) — Read when testing an installed VSTO add-in on a development machine, or when Office loads the add-in from bin\Debug instead of the install folder.
 - [Load diagnostics](load-diagnostics.md) — Read when a VSTO add-in is installed but does not appear or does not load - COMAddIns check via COM, LoadBehavior, VSTO event log, VSTO_LOGALERTS, diagnosis order.
 - [Manifest dependencies must be installed](manifest-dependencies.md) — Read when an installed VSTO add-in silently does not load although registration is correct, or when deciding which DLLs the installer must ship.
