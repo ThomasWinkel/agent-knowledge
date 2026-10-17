@@ -30,6 +30,53 @@ Hook: `VisualStudioForApplicationsBuild` (from `Microsoft.VisualStudio.Tools.Off
 
 Measured order: `CopyFilesToOutputDirectory` → (sign here) → `VisualStudioForApplicationsBuild` → `RegisterOfficeAddin`. The MSI is signed after its build and is not order-sensitive.
 
+### Alternative: sign in obj\ after compiling (whole solution)
+
+One target in `Directory.Build.targets` signs every shipped assembly where it is created. Verified (VS 2026 MSBuild 18, SDK-style net48 libs + classic VSTO projects + DTF custom action, 2026-10): referencing VSTO projects copy the signed files, manifest size/hash match, the `.CA.dll` packs the signed assembly. Incremental builds do not sign again; the marker file skips signing when nothing was compiled. Re-signing in `bin\` after `CopyFilesToOutputDirectory` would sign again on every build, because the copy from `obj\` replaces the signed file.
+
+```xml
+<Target Name="AuthenticodeSignAssembly" AfterTargets="CoreCompile"
+        Condition="'$(SignReleaseArtifacts)' == 'true' and '$(MSBuildProjectExtension)' == '.csproj'"
+        Inputs="@(IntermediateAssembly)" Outputs="@(IntermediateAssembly->'%(FullPath).signed')">
+  <Exec Command="$(SignToolCommand) &quot;@(IntermediateAssembly->'%(FullPath)')&quot;" />
+  <Touch Files="@(IntermediateAssembly->'%(FullPath).signed')" AlwaysCreate="true" />
+</Target>
+<!-- Satellite assemblies (de\MyLib.resources.dll) are listed in the manifest too. -->
+<Target Name="AuthenticodeSignSatellites" AfterTargets="CreateSatelliteAssemblies"
+        Condition="'$(SignReleaseArtifacts)' == 'true' and '@(IntermediateSatelliteAssembliesWithTargetPath)' != ''"
+        Inputs="@(IntermediateSatelliteAssembliesWithTargetPath)" Outputs="@(IntermediateSatelliteAssembliesWithTargetPath->'%(FullPath).signed')">
+  <Exec Command="$(SignToolCommand) @(IntermediateSatelliteAssembliesWithTargetPath->'&quot;%(FullPath)&quot;', ' ')" />
+  <Touch Files="@(IntermediateSatelliteAssembliesWithTargetPath->'%(FullPath).signed')" AlwaysCreate="true" />
+</Target>
+<!-- WixToolset.Dtf.CustomAction: PackCustomAction runs as AfterCompile and packs obj\ -> the assembly is already signed; then sign the package. -->
+<Target Name="AuthenticodeSignCustomActionPackage" AfterTargets="PackCustomAction"
+        Condition="'$(SignReleaseArtifacts)' == 'true' and '$(TargetCAFileName)' != ''">
+  <Exec Command="$(SignToolCommand) &quot;$(IntermediateOutputPath)$(TargetCAFileName)&quot;" />
+</Target>
+```
+
+- Guard with `.csproj`: a `.wixproj` also has a `CoreCompile` target.
+- signtool without a hard-coded SDK version: registry `HKLM\SOFTWARE\Microsoft\Microsoft SDKs\Windows\v10.0` (32-bit view) values `InstallationFolder` + `ProductVersion` → `<InstallationFolder>bin\<ProductVersion>.0\x64\signtool.exe`.
+
+```xml
+<SignToolPath>$([MSBuild]::GetRegistryValueFromView('HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Microsoft SDKs\Windows\v10.0', 'InstallationFolder', null, RegistryView.Registry32))bin\$([MSBuild]::GetRegistryValueFromView('HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Microsoft SDKs\Windows\v10.0', 'ProductVersion', null, RegistryView.Registry32)).0\x64\signtool.exe</SignToolPath>
+<SignToolCommand>"$(SignToolPath)" sign /sha1 $(Thumbprint) /fd SHA256 /tr $(TimestampUrl) /td SHA256</SignToolCommand>
+```
+
+### MSI (WiX v4+ SDK)
+
+WiX imports empty `SignMsi`/`SignCabs` targets in `Sdk.props`; a target of the same name in the `.wixproj` body replaces them. `SignOutput=true` turns the chain on; it runs before the MSI is copied to `bin\`. Embedded cab (`MediaTemplate EmbedCab="yes"`): signing the MSI covers it.
+
+```xml
+<PropertyGroup>
+  <SignOutput Condition="'$(SignReleaseArtifacts)' == 'true'">true</SignOutput>
+</PropertyGroup>
+<Target Name="SignMsi">
+  <!-- /d: program name in the UAC prompt (else a random temp file name) -->
+  <Exec Command="$(SignToolCommand) /d &quot;MyProduct&quot; &quot;%(SignMsi.FullPath)&quot;" />
+</Target>
+```
+
 Check a hook without editing the project. Pass a probe targets file and look where its message appears:
 
 ```xml
@@ -47,10 +94,13 @@ msbuild MyAddin.csproj /t:Rebuild /v:normal /p:CustomAfterMicrosoftCommonTargets
 
 ## Debug vs release
 
-- Token/cloud certificates (e.g. Certum SimplySign) need a confirmation per signature, which is unusable for dev builds. Debug: VS self-signed test certificate for manifests, no Authenticode. Release: real certificate.
+- Token/cloud certificates need the token at hand. Certum SimplySign Desktop: one token confirmation when connecting, then signing runs without prompts for a while (user estimate: 2-3 hours; a whole release build with ~15 signatures ran through). Still unfit for dev builds (session expires, every build would sign). Debug: VS self-signed test certificate for manifests, no Authenticode. Release: real certificate.
 - Safe when installed to `Program Files`: there the VSTO runtime grants FullTrust by location, without the inclusion-list prompt. Not when the location check is bypassed, see expired certificate below.
 - Put thumbprint and a switch (`SignReleaseArtifacts`) in a shared `Signing.props` imported by `.csproj` and `.wixproj`. Override with `/p:SignReleaseArtifacts=false` to test release builds without the token.
-- Release manifests with a CSP-bound key: set no `ManifestKeyFile`. MSBuild's `SignFile` worked with the SimplySign CSP key.
+- Release manifests with a CSP-bound key: set no `ManifestKeyFile`. MSBuild's `SignFile` worked with the SimplySign CSP key. `ManifestTimestampUrl` adds a timestamp (verified with `http://time.certum.pl`). The `.csproj` sets thumbprint and key file unconditionally; override them in `Directory.Build.targets` (evaluated after the project body), not in `Directory.Build.props`.
+- `Configuration` is a global property in solution and VS builds, so a switch like `<SignReleaseArtifacts Condition="'$(Configuration)' == 'Release'">true</...>` works in `Directory.Build.props` and is visible in the `.wixproj` body (where `SignOutput` needs it).
+- A release build of a VSTO project also registers the add-in in HKCU, pointing at `bin\Release` ([dev-build-registration](dev-build-registration.md)).
+- SimplySign: once seen, `SignerSign() failed. (0x80090020)` (NTE_FAILURE) on one file after 10 successful signatures in the same build; the next try succeeded. Retry before debugging.
 
 ## Expired test certificate
 
