@@ -17,7 +17,7 @@ Classic VSTO projects reference `Microsoft.Office.Tools.Common` by name only. A 
 
 ```xml
 <PropertyGroup>
-  <AssemblySearchPaths>$(AssemblySearchPaths);{AssemblyFoldersFromConfig:$(MSBuildToolsPath)\AssemblyFolders.config,v4.8}</AssemblySearchPaths>
+  <AssemblySearchPaths>$(AssemblySearchPaths);{AssemblyFoldersFromConfig:$(MSBuildToolsPath32)\AssemblyFolders.config,v4.8}</AssemblySearchPaths>
 </PropertyGroup>
 <ItemGroup>
   <Reference Include="Microsoft.Office.Tools.Common, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" Private="False" />
@@ -25,6 +25,7 @@ Classic VSTO projects reference `Microsoft.Office.Tools.Common` by name only. A 
 </ItemGroup>
 ```
 
+- `MSBuildToolsPath32`, not `MSBuildToolsPath`: `AssemblyFolders.config` is only in `<VS>\MSBuild\Current\Bin\`. The VS IDE builds with the 64-bit MSBuild (`Bin\amd64\`), where `MSBuildToolsPath` gives `MSB4018 ... AssemblyFolders config file specified does not exist: ...\Bin\amd64\AssemblyFolders.config`. The `MSBuild.exe` that `vswhere -find 'MSBuild\**\Bin\MSBuild.exe'` returns first is the one in `Bin\` and hides the problem; test with both.
 - Put it in the project body. The SDK fills `AssemblySearchPaths` in its `.props`, so appending here works. Setting `AssemblySearchPath_UseGAC` or `..._UseAssemblyFoldersConfigFileSearchPath` to `true` has no effect. The SDK's list (`Microsoft.NET.Sdk.props`) has only `{CandidateAssemblyFiles}`, `{HintPathFromItem}`, `{TargetFrameworkDirectory}` and `{RawFileName}`.
 - `Private="False"`: the consuming VSTO project ships the DLLs itself.
 
@@ -33,4 +34,4 @@ Classic VSTO projects reference `Microsoft.Office.Tools.Common` by name only. A 
 - Works with Visual Studio MSBuild only. `dotnet build` fails with `MSB4018 ... AssemblyFolders config file specified does not exist: <dotnet sdk>\AssemblyFolders.config`. That is fine: VSTO projects need VS MSBuild anyway.
 - `{GAC}` instead of the line above (VS MSBuild) finds `Common` but not `...Utilities`. The dotnet CLI does not search the GAC.
 
-Verified 2026-10: VS 2026 Community (MSBuild 18), .NET SDK 10.0.402, net48.
+Verified 2026-10: VS 2026 Community (MSBuild 18, `Bin\` and `Bin\amd64\`; failure seen in the VS IDE), .NET SDK 10.0.402, net48.
