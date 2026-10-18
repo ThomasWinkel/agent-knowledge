@@ -1,6 +1,6 @@
 ---
 title: Clicking a ribbon button from a test script
-description: Read when a test must click a button of an add-in's custom ribbon tab (VSTO ribbon designer or XML) without a person - UI Automation recipe in PowerShell, limits.
+description: Read when a test must click a button, check box or drop-down of an add-in's custom ribbon tab (VSTO designer or XML) without a person - UI Automation recipe in PowerShell, limits.
 ---
 
 # Clicking a ribbon button from a test script
@@ -41,6 +41,9 @@ Start-Sleep -Milliseconds 1500                           # handler runs in the a
   $item.GetCurrentPattern([System.Windows.Automation.InvokePattern]::Pattern).Invoke()
   ```
 - The `$button` element stays valid: invoke it again for the next case.
+- Check box (`RibbonCheckBox`): type `CheckBox`. `TogglePattern.Toggle()` runs the `Click` handler; read `TogglePattern.Current.ToggleState` (`On`/`Off`) and `Current.IsEnabled`.
+- Drop-down (`RibbonDropDown`): type `ComboBox`, named by its label; `ValuePattern.Current.Value` = label of the selected item. `Expand()` it (`ExpandCollapsePattern`), wait, find the item as `ListItem` from `AutomationElement.RootElement`, `SelectionItemPattern.Select()`: runs `SelectionChanged`. Items added in code (`Factory.CreateRibbonDropDownItem()` in `Load`) show the same way.
+- While a message box of the add-in is open, the tab is not found (`FindFirst` gives `$null`). Close the box first, then search again from `FromHandle(WindowHandle32)`.
 - Click with a modifier key (e.g. Ctrl+click): `Invoke()` carries no keys. Bring the app window to the front, then `keybd_event` key down, real click by `SetCursorPos` + `mouse_event` in the middle of `Current.BoundingRectangle`, key up (user32, via `Add-Type`). Moves the real mouse. While a drop-down is open, do not call `SetForegroundWindow`: it closes the drop-down and the click goes nowhere.
 - Prepare the state by COM before the click (`Window.Select`, `Window.DeselectAll`), read the result by COM after it.
 - Undo name of the last action (e.g. the name given to `BeginUndoScope`): COM has no getter, but the Undo button of the Quick Access Toolbar is named after it. Search all descendants of the app window for `Name` matching `^Undo ` (English Office UI): `Undo My Action` (verified Visio 2019; two elements with that name). `HelpText` is empty.
