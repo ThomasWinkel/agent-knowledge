@@ -1,6 +1,6 @@
 ---
 title: Load diagnostics
-description: Read when a VSTO add-in is installed but does not appear or does not load - COMAddIns check via COM, LoadBehavior, VSTO event log, VSTO_LOGALERTS, diagnosis order.
+description: Read when a VSTO add-in is installed but does not appear or does not load, or to check that a dependency loaded - COMAddIns via COM, LoadBehavior, VSTO event log, VSTO_LOGALERTS.
 ---
 
 # Load diagnostics
@@ -38,3 +38,8 @@ $app.Quit()
 - Environment variables (documented): `VSTO_SUPPRESSDISPLAYALERTS=0` shows error dialogs. `VSTO_LOGALERTS=1` writes `<Name>.vsto.log` next to the `.vsto`; it includes "Loaded Assemblies".
 - `HKCU\Software\Microsoft\VSTO\Security`, DWORD `Debug` = 1: showed the "Publisher cannot be verified" dialog in a real case. _Unverified:_ not found in Microsoft docs. Remove it afterwards.
 - Remove the log files before building an installer from that folder; wildcard harvesting picks them up.
+
+## Did a dependency load?
+
+- `(Get-Process <App>).Modules` (EnumProcessModules) does not list managed assemblies: neither the add-in DLL nor its NuGet dependencies showed, among ~200 native modules (Visio 2019 x64, .NET Framework 4.8). An empty result proves nothing.
+- Prove it by behavior instead: run a feature that needs the dependency (e.g. a settings file read and written with Newtonsoft.Json). A missing DLL fails there with `FileNotFoundException`. _Unverified:_ the "Loaded Assemblies" list of `VSTO_LOGALERTS=1` (above).
