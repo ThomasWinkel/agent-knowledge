@@ -1,6 +1,6 @@
 ---
 title: Typed values in Visio ShapeSheet cells
-description: Read when Visio code writes or reads text, numbers, booleans or dates in ShapeSheet cells (empty cells, type checks, errors, new rows), writes cells protected with GUARD, or writes into a read-only document.
+description: Read when Visio code writes or reads text, numbers, booleans or dates in ShapeSheet cells (empty cells, types, errors, new rows, GUARD, read-only documents).
 ---
 
 # Typed values in Visio ShapeSheet cells
