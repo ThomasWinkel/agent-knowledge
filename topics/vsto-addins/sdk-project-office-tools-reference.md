@@ -34,4 +34,4 @@ Classic VSTO projects reference `Microsoft.Office.Tools.Common` by name only. A 
 - Works with Visual Studio MSBuild only. `dotnet build` fails with `MSB4018 ... AssemblyFolders config file specified does not exist: <dotnet sdk>\AssemblyFolders.config`. That is fine: VSTO projects need VS MSBuild anyway.
 - `{GAC}` instead of the line above (VS MSBuild) finds `Common` but not `...Utilities`. The dotnet CLI does not search the GAC.
 
-Verified 2026-10: VS 2026 Community (MSBuild 18, `Bin\` and `Bin\amd64\`; failure seen in the VS IDE), .NET SDK 10.0.402, net48.
+Verified 2026-10: VS 2026 Community (MSBuild 18, `Bin\` and `Bin\amd64\`, VS IDE), .NET SDK 10.0.402, net48.
