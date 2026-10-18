@@ -31,6 +31,7 @@ $app.Quit()
 ```
 
 - `New-Object -ComObject` attaches to a running instance if one is registered. Check the process list and start time first, so you test a fresh instance and do not disturb the user's open documents.
+- An instance started from its exe (`Start-Process VISIO.EXE`, start screen open) was not reused: `New-Object -ComObject Visio.Application` started a second process (Visio 2019). Start the instance under test by COM, then work with that one.
 - After a failed load, reset `LoadBehavior` to 3 before the next attempt.
 
 ## Make errors visible
