@@ -1,6 +1,6 @@
 ---
 title: Typed values in Visio ShapeSheet cells
-description: Read when Visio code writes or reads text, numbers, booleans or dates in ShapeSheet cells (empty cells, type checks, errors, new rows), or writes cells protected with GUARD.
+description: Read when Visio code writes or reads text, numbers, booleans or dates in ShapeSheet cells (empty cells, types, errors, new rows, GUARD, read-only documents).
 ---
 
 # Typed values in Visio ShapeSheet cells
@@ -38,6 +38,14 @@ Write a literal with `FormulaU`, read the evaluated value with `Result*`. Measur
 - `CellExistsU("User.X.Prompt", 0)` is true when the row `User.X` exists.
 - `PageSheet`: `Type` 1 (`visTypePage`), `NameU` `ThePage`, `ContainingPage` = the page. `DocumentSheet`: `Type` 6 (`visTypeDoc`), `NameU` `TheDoc`. Use the page or document name in messages.
 - An invalid formula set by code (unknown function, `AlertResponse` not set, invisible instance) opened a modal Visio dialog instead of throwing: the automation call hangs. _Unverified:_ whether `AlertResponse = 1` prevents it.
+
+## Read-only documents
+
+A document opened read-only (`Documents.OpenEx(path, visOpenRO)`, `Document.ReadOnly` = -1; seen with a stencil in its own window) accepts cell writes:
+
+- `AddNamedRow` + `FormulaU` on its `DocumentSheet` work, no exception, no dialog; Undo/Redo work.
+- `Document.Saved` stays `True`: the change is not marked as unsaved and cannot be saved to that file.
+- Check `Document.ReadOnly` yourself if a write there must fail or warn.
 
 ## GUARD
 
