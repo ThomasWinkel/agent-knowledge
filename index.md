@@ -8,6 +8,7 @@ Shared knowledge for AI agents: internal processes, private APIs, conventions an
 
 ## Topics
 
+- [.NET Framework](topics/dotnet-framework/index.md) — .NET Framework 4.x (net48) runtime: where its classes behave differently from modern .NET or from the docs - gotchas and workarounds.
 - [Visio content deployment](topics/visio-content-deployment/index.md) — Installing Visio stencils and templates so Visio lists them: MSI PublishComponent (Solution Publishing), ConfigChangeID, content cache, file paths.
 - [VSTO Office add-ins](topics/vsto-addins/index.md) — VSTO Office add-ins: registration, MSI, signing, load failures, settings, localization, SDK-project references; Visio: ShapeSheet calls, windows, ungroup, performance; ribbon tests and icons.
 - [WiX Toolset](topics/wix-toolset/index.md) — WiX Toolset v4+ (v7) MSI builds: SDK-style projects, HeatWave VS integration, OSMF EULA, file harvesting, package bitness.
