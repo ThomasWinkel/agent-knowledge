@@ -1,6 +1,6 @@
 ---
 title: Typed values in Visio ShapeSheet cells
-description: Read when Visio code writes or reads text, numbers, booleans or dates in ShapeSheet cells, or writes cells protected with GUARD - formulas, results, what survives save.
+description: Read when Visio code writes or reads text, numbers, booleans or dates in ShapeSheet cells (empty cells, type checks, errors, new rows), or writes cells protected with GUARD.
 ---
 
 # Typed values in Visio ShapeSheet cells
@@ -18,8 +18,26 @@ Write a literal with `FormulaU`, read the evaluated value with `Result*`. Measur
 - Text without quotes is a formula: `007` gives the number 7. Always quote text.
 - `""` gives an empty string (not the same as a missing row).
 - Number: the `FormulaU` getter shows ~14 significant digits (`0.33333333333333`), but the value keeps the full double, also after save.
+- Number: exponents work as `"R"` writes them (`1E+300`, `1.5E-05`, `double.MaxValue`; the getter shows `1e300`). Denormal doubles (`double.Epsilon` = `4.94065645841247E-324`) fail: COM exception `#VALUE!`. NaN/infinity have no formula: check before writing.
 - Bool: comparisons give the same 1 / 0 (`1>0` -> 1). `ResultStr` gives `TRUE` / `FALSE`.
 - Date: Visio counts days since 1899-12-30, as OLE dates. `DATETIME("2026-10-18 13:45:30")` also works. `Result(visDate)` keeps milliseconds in memory; after save the date is rounded to whole seconds (the formula keeps only that). `ResultStr` formats it by region (`18.10.2026 13:45:30` in de-DE).
+
+## Empty cells, types and errors on read
+
+`Result*` never says "empty" or "wrong type": check first.
+
+| Check | How | Seen |
+|---|---|---|
+| Empty | `FormulaU.Length == 0` | empty formula: `Result` 0, `ResultStr` `0,0000`, `Units` 32 |
+| Error | `Cell.Error != 0` | `1/0` -> 39, `ResultStr` `#DIV/0!`; `NA()` -> 74, `#N/A`. `Units` is not reliable then. |
+| Type | `Cell.Units` | text 231 (`visUnitsString`); number and TRUE/FALSE 32 (`visNumber`, no unit for bool); `3 mm` 70; `3 in` 65; date 40 (`visDate`) |
+
+- Without the type check: `Result(visNumber)` of the text `"5"` gives 5, of `"abc"` 0; of `3 mm` gives inches (0.118...).
+- Row added by `AddNamedRow` (sections `User`, `Prop`): its value formula is `0`, not empty. Set it to `""` if a new row should read as "no value".
+- `CellsU["User.X"]` of a missing row: COM exception `Unexpected end of file.` (does not name the cell). Check `CellExistsU(name, 0)` first.
+- `CellExistsU("User.X.Prompt", 0)` is true when the row `User.X` exists.
+- `PageSheet`: `Type` 1 (`visTypePage`), `NameU` `ThePage`, `ContainingPage` = the page. `DocumentSheet`: `Type` 6 (`visTypeDoc`), `NameU` `TheDoc`. Use the page or document name in messages.
+- An invalid formula set by code (unknown function, `AlertResponse` not set, invisible instance) opened a modal Visio dialog instead of throwing: the automation call hangs. _Unverified:_ whether `AlertResponse = 1` prevents it.
 
 ## GUARD
 
