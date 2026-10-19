@@ -1,6 +1,6 @@
 ---
 title: Reading Visio data recordsets
-description: Read when Visio code reads linked external data (Document.DataRecordsets, GetRowData, DataColumns) - value types, column names and order, empty fields, column properties.
+description: Read when Visio code reads linked external data (Document.DataRecordsets, GetRowData, DataColumns) or links an Excel sheet by code - value types, column names, empty fields, ACE connection.
 ---
 
 # Reading Visio data recordsets
@@ -33,4 +33,16 @@ foreach (var id in rowIds)
 - `DataColumn.GetProperty` throws `Invalid parameter.` for a property that does not apply to the type: `visDataColumnPropertyUnits` (4) only for numbers, `LangID` (2) for text/date, `Calendar` (3) for dates, `Currency` (5) for currency (e.g. `EUR`). `DisplayName` (6), `Visible` (7), `Hyperlink` (8) always work.
 - Test data without a file: `Document.DataRecordsets.AddFromXML(adoXml, 0, "<name>")` takes an ADO rowset XML (`xmlns:s/dt/rs/z`, `s:datatype dt:type='string|int|float|dateTime|boolean'`, currency: `dt:type='number' rs:dbtype='currency'`). A name with `: /` is accepted.
 
-Verified with Visio Pro 2019 C2R x64, German region settings, by COM automation from PowerShell (2026-10). _Unverified:_ column order after the user reorders columns in the External Data window; recordsets linked to Excel, SQL or SharePoint (only `AddFromXML` tested).
+## Linking an Excel sheet by code
+
+```powershell
+$cn = "Provider=Microsoft.ACE.OLEDB.12.0;User ID=Admin;Data Source=$xlsx;Mode=Read;Extended Properties=`"Excel 12.0 Xml;HDR=YES;IMEX=1`""
+$rs = $doc.DataRecordsets.Add($cn, "SELECT * FROM [My sheet`$]", 0, 'My sheet')   # last argument = recordset name
+```
+
+- `.xlsx` needs `Excel 12.0 Xml`. `Excel 12.0` alone (binary `.xlsb`) gives `Unable to connect to the data.` ACE `12.0` and `16.0` both work inside Visio C2R.
+- Without the name argument Visio picks its own recordset name, not the sheet name.
+- Values from Excel cells: every number is `double` (also `1`, `400`), a cell with a currency format is `decimal`, dates `DateTime`, `TRUE`/`FALSE` `bool`, text `string` (`007` stays text if the cell is text).
+- `IMEX=1`: a column with text and numbers becomes text; the numbers come formatted in the user's locale (`7,5` with German settings).
+
+Verified with Visio Pro 2019 C2R x64, German region settings, by COM automation from PowerShell (2026-10). _Unverified:_ column order after the user reorders columns in the External Data window; recordsets linked to CSV, SQL or SharePoint.

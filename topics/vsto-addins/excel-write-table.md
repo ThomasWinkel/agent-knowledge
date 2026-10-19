@@ -1,6 +1,6 @@
 ---
 title: Writing a table to Excel by COM
-description: Read when code in another process or add-in writes rows to Excel by COM - one-call array write, text that turns into numbers, dates, ListObject name rules, sheet name rules, cleanup.
+description: Read when code in another process or add-in writes rows to Excel by COM - one-call array write, text that turns into numbers, dates, ListObject and sheet names, cleanup, PowerShell test gotchas.
 ---
 
 # Writing a table to Excel by COM
@@ -29,7 +29,7 @@ Not `ListRows.AddEx()` + `ListRow.Range.Value` per row: two cross-process calls 
 | .NET value in the array | Cell |
 |---|---|
 | `string` `"007"`, `"1E3"`, `"1/2"` | parsed like a typed entry: `7`, `1000`, a date. Only cells formatted `@` before the write keep the text. |
-| `DateTime` with `Range.Value` | date, cell gets a date format (e.g. `TT.MM.JJJJ hh:mm`) |
+| `DateTime` with `Range.Value` | date, each cell gets its own date format: `TT.MM.JJJJ hh:mm`, but `TT.MM.JJJJ` (time hidden) at midnight; a column can mix both |
 | `DateTime` with `Range.Value2` | serial number, format stays `General`: looks like `46024,57` |
 | `int`, `double`, `decimal` | number, format `General` (currency format is not applied) |
 | `bool` | `TRUE`/`FALSE` |
@@ -47,6 +47,15 @@ Not `ListRows.AddEx()` + `ListRow.Range.Value` per row: two cross-process calls 
 - `Marshal.GetActiveObject("Excel.Application")` gets a running Excel (COMException if none). An invisible running instance usually belongs to another program's automation: start your own (`new Excel.Application()`) instead.
 - On an error: `workbook.Close(SaveChanges: false)`, and `Quit()` an instance you started, else a hidden `EXCEL.EXE` stays.
 - Hand a started instance to the user with `Visible = true` and `UserControl = true`.
-- _Unverified:_ an Excel the user closes stays as a process while .NET still holds RCWs; common remedy: do the COM work in a separate non-inlined method, then `GC.Collect(); GC.WaitForPendingFinalizers();`.
+- An Excel the user closes stays as a process while .NET still holds RCWs (common knowledge, not tried). Remedy: do the COM work in a separate `[MethodImpl(MethodImplOptions.NoInlining)]` method, then `GC.Collect(); GC.WaitForPendingFinalizers();`. With it the process ended ~3 s after the window was closed (verified from a Visio VSTO add-in).
+- A started Excel did not come to the front (add-in button clicked by UI Automation; a real click not tried).
+- The new workbook is named `Sheet1` (title bar `Sheet1 - Excel`), not `Book1`/`Mappe1` (German UI, `xlWBATWorksheet`, from a VSTO add-in).
 
-Verified with Excel 2019 C2R x64, German UI, by COM automation from PowerShell (2026-10): values, formats, names and `xlWBATWorksheet` above. _Unverified:_ the "Which Excel, and cleanup" section (taken from Microsoft docs and common practice, not tested).
+## Test scripts in Windows PowerShell 5.1
+
+- Late-bound setters cache the argument type per property: after `$cell.Value2 = 'text'`, a later `$other.Value2 = 1` (or an `object[,]`) throws `Unable to cast object of type 'System.Int32' to type 'System.String'.` Write the whole block, header included, with one `Value2 = $array` (`New-Object 'object[,]' $rows, $cols`).
+- `Range.Value = ...` fails the same way; use `Value2` (dates as `ToOADate()`).
+- Late-bound `NumberFormat` reads the codes in the user's locale: with German settings use `TT.MM.JJJJ hh:mm`, `#.##0,00`; `dd.mm.yyyy` shows `dd.10.yyyy`.
+- `Quit()` + `ReleaseComObject` leaves `EXCEL.EXE` running until the PowerShell process exits.
+
+Verified with Excel 2019 C2R x64, German UI (2026-10): values, formats, names, `xlWBATWorksheet` and the PowerShell notes by COM automation from PowerShell; process end, foreground and workbook name from a VSTO add-in in Visio 2019. _Unverified:_ cleanup after an error.
