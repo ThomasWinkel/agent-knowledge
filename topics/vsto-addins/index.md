@@ -1,6 +1,6 @@
 ---
 title: VSTO Office add-ins
-description: "VSTO Office add-ins: registration, MSI, signing, load failures, settings, localization, SDK-project references; Visio: ShapeSheet calls, windows, ungroup, performance; ribbon tests and icons."
+description: "VSTO Office add-ins: registration, MSI, signing, load failures, settings, localization, SDK refs; Visio: ShapeSheet calls, windows, ungroup, performance, data recordsets; Excel tables; ribbon."
 ---
 
 > **Agents:** read [the knowledge base guide](../../AGENTS.md) first.
@@ -27,6 +27,8 @@ VSTO add-ins are .NET Framework COM add-ins for desktop Office (Word, Excel, Out
 - Visio: Shape Data lists (`Prop.Format`) and `INDEX`/`LOOKUP` split at `;` in every region; `LISTSEP()` breaks them, `ResultStr` formats numbers by region: [visio-region-settings](visio-region-settings.md).
 - Visio: `Shape.Ungroup()` on a master instance shows a dialog also when called by code; set `Application.AlertResponse = 1` for the call: [visio-ungroup](visio-ungroup.md).
 - Visio: `ShowChanges = false` deselects all shapes and blocks selection changes by code; `UndoEnabled = false` clears the undo history; `EventsEnabled = 0` hits all add-ins; in one measurement the switches gave nothing, `Page.SetResults` 3-5x: [visio-performance-switches](visio-performance-switches.md).
+- Visio: `DataRecordset.GetRowData` returns typed values (`string`, `int`, `double`, `DateTime`, `bool`, `decimal`, `DBNull`); row 0 = column names: [visio-data-recordsets](visio-data-recordsets.md).
+- Excel by COM: write a table as one array; strings like `007` turn into numbers unless formatted `@` first; the table name is `ListObject.DisplayName`, not `Name`: [excel-write-table](excel-write-table.md).
 - A test can click a custom ribbon button by UI Automation: [ribbon-ui-test](ribbon-ui-test.md).
 - Ctrl+click = help on every ribbon button without code per handler: wrap VSTO's private handler field; `file://` URLs lose their `#anchor` in `Process.Start`: [ribbon-click-help](ribbon-click-help.md).
 - Ribbon texts can be changed at runtime (e.g. in `Load`), except `RibbonSeparator.Title`; an exception in `Load` silently hides the whole tab: [ribbon-runtime-properties](ribbon-runtime-properties.md).
@@ -51,6 +53,7 @@ Verified with Visio Pro 2019 C2R x64, WiX 7.0.0, VS2022 (2026-07); registration 
 
 - [Folder of the add-in DLL at runtime](addin-folder.md) — Read when a VSTO add-in must find files next to its DLL or in its install folder (help, data, config) - Location is the shadow copy, CodeBase the real folder.
 - [Dev build registration overrides the installed add-in](dev-build-registration.md) — Read when testing an installed VSTO add-in on a development machine, or when Office loads the add-in from bin\Debug instead of the install folder.
+- [Writing a table to Excel by COM](excel-write-table.md) — Read when code in another process or add-in writes rows to Excel by COM - one-call array write, text that turns into numbers, dates, ListObject name rules, sheet name rules, cleanup.
 - [Load diagnostics](load-diagnostics.md) — Read when a VSTO add-in is installed but does not appear or does not load, or to check that a dependency loaded - COMAddIns via COM, LoadBehavior, VSTO event log, VSTO_LOGALERTS.
 - [Manifest dependencies must be installed](manifest-dependencies.md) — Read when an installed VSTO add-in silently does not load although registration is correct, or when deciding which DLLs the installer must ship.
 - [Installer prerequisite checks](prerequisite-checks.md) — Read when adding launch conditions to a VSTO add-in installer for the VSTO runtime or the Office application.
@@ -66,6 +69,7 @@ Verified with Visio Pro 2019 C2R x64, WiX 7.0.0, VS2022 (2026-07); registration 
 - [Visio ActiveWindow and Selection by window type](visio-active-window.md) — Read when a Visio add-in command uses ActiveWindow or its Selection, or selects shapes by code - ShapeSheet, master and group edit window, no document, group selection, select all.
 - [Long strings in Visio ShapeSheet cells](visio-cell-string-length.md) — Read when storing long text (JSON, encoded data) in Visio ShapeSheet cells from code - no 64k limit via the API, what survives save and reopen, sources claiming 64k.
 - [Typed values in Visio ShapeSheet cells](visio-cell-values.md) — Read when Visio code writes or reads text, numbers, booleans or dates in ShapeSheet cells (empty cells, types, errors, new rows, GUARD, read-only documents).
+- [Reading Visio data recordsets](visio-data-recordsets.md) — Read when Visio code reads linked external data (Document.DataRecordsets, GetRowData, DataColumns) - value types, column names and order, empty fields, column properties.
 - [Visio performance switches for bulk changes](visio-performance-switches.md) — Read when Visio code changes many shapes or cells and you weigh ScreenUpdating, ShowChanges, DeferRecalc, EventsEnabled, UndoEnabled or batch calls - effects, side effects, one measurement.
 - [Visio ShapeSheet values and Windows region settings](visio-region-settings.md) — Read when Visio code builds Shape Data lists (Prop.Format), uses INDEX/LOOKUP/LISTSEP, or reads numbers with ResultStr - what depends on the list separator and decimal symbol.
 - [Visio shape names of copies](visio-shape-names.md) — Read when Visio code compares Shape.Name/NameU, e.g. to find shapes of the same kind - the .<number> suffix of copies, when it is not the ID, names that lose it.
