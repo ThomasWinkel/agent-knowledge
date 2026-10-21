@@ -1,6 +1,6 @@
 ---
 title: Reading Visio data recordsets
-description: Read when Visio code reads linked external data (Document.DataRecordsets, GetRowData, DataColumns) or links an Excel sheet by code - value types, column names, empty fields, ACE connection.
+description: Read when Visio code reads linked external data (DataRecordsets, GetRowData, DataColumns) or links an Excel sheet by code - value types, column names, empty fields, ACE connection, relative paths.
 ---
 
 # Reading Visio data recordsets
@@ -44,5 +44,7 @@ $rs = $doc.DataRecordsets.Add($cn, "SELECT * FROM [My sheet`$]", 0, 'My sheet') 
 - Without the name argument Visio picks its own recordset name, not the sheet name.
 - Values from Excel cells: every number is `double` (also `1`, `400`), a cell with a currency format is `decimal`, dates `DateTime`, `TRUE`/`FALSE` `bool`, text `string` (`007` stays text if the cell is text).
 - `IMEX=1`: a column with text and numbers becomes text; the numbers come formatted in the user's locale (`7,5` with German settings).
+- Relative path: `Data Source=data.xlsx` (no folder) works once the document is saved; Visio reads the file next to the document. It is stored as given (`visio/data/connections.xml`: `<DataConnection FileName='' ConnectionString='...Data Source=data.xlsx;...'>`). Copy document + workbook to another folder, open, Data > Refresh All: reads the copy's workbook.
+- `recordsets.xml` stores the recordset `Name` and the query `Command` (`SELECT * FROM [My sheet$]`) separately: renaming the recordset (`Name = x`, then `Refresh()`) keeps the query and the data. Find the source sheet by `DataRecordset.CommandString`, not by the name.
 
-Verified with Visio Pro 2019 C2R x64, German region settings, by COM automation from PowerShell (2026-10). _Unverified:_ column order after the user reorders columns in the External Data window; recordsets linked to CSV, SQL or SharePoint.
+Verified with Visio Pro 2019 C2R x64, German region settings, by COM automation from PowerShell (2026-10; copy test opened in the Visio UI). _Unverified:_ whether a relative `Data Source` resolves against the document folder or the process's current folder (the tests could not tell them apart); column order after the user reorders columns in the External Data window; recordsets linked to CSV, SQL or SharePoint.
