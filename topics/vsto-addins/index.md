@@ -1,6 +1,6 @@
 ---
 title: VSTO Office add-ins
-description: "VSTO Office add-ins: registration, MSI, signing, load failures, settings, localization, SDK refs; Visio: ShapeSheet calls, windows, layers, ungroup, performance, data recordsets; Excel tables; ribbon."
+description: "VSTO Office add-ins: registration, MSI, signing, load failures, settings, localization, SDK refs; Visio: ShapeSheet, windows, layers, hidden pages, ungroup, performance, data; Excel tables; ribbon."
 ---
 
 > **Agents:** read [the knowledge base guide](../../AGENTS.md) first.
@@ -26,7 +26,8 @@ VSTO add-ins are .NET Framework COM add-ins for desktop Office (Word, Excel, Out
 - Visio: a ShapeSheet cell set by code holds millions of characters (no 64k limit); 1,000,000 survived save and reopen: [visio-cell-string-length](visio-cell-string-length.md).
 - Visio: typed values in cells (text, number, bool, date), what survives save; writing a `GUARD` cell throws `Cell is guarded.` unless forced: [visio-cell-values](visio-cell-values.md).
 - Visio: Shape Data lists (`Prop.Format`) and `INDEX`/`LOOKUP` split at `;` in every region; `LISTSEP()` breaks them, `ResultStr` formats numbers by region: [visio-region-settings](visio-region-settings.md).
-- Visio: a shape on several layers stays visible while any of them is visible; `Layer.Delete(1)` deletes only shapes on no other layer: [visio-layers](visio-layers.md).
+- Visio: a shape on several layers is visible/printed while any layer is visible/printing (print ignores visibility), locked if any is locked; a locked layer blocks paste and drop; layers travel by name on paste; `;` breaks layer names: [visio-layers](visio-layers.md).
+- Visio: `UIVisibility` = 1 hides a page only from the page tabs; print and PDF export still include it: [visio-hidden-pages](visio-hidden-pages.md).
 - Visio: `Shape.Ungroup()` on a master instance shows a dialog also when called by code; set `Application.AlertResponse = 1` for the call: [visio-ungroup](visio-ungroup.md).
 - Visio: `ShowChanges = false` deselects all shapes and blocks selection changes by code; `UndoEnabled = false` clears the undo history; `EventsEnabled = 0` hits all add-ins; in one measurement the switches gave nothing, `Page.SetResults` 3-5x: [visio-performance-switches](visio-performance-switches.md).
 - Visio: `DataRecordset.GetRowData` returns typed values (`string`, `int`, `double`, `DateTime`, `bool`, `decimal`, `DBNull`); row 0 = column names: [visio-data-recordsets](visio-data-recordsets.md).
@@ -72,7 +73,8 @@ Verified with Visio Pro 2019 C2R x64, WiX 7.0.0, VS2022 (2026-07); registration 
 - [Long strings in Visio ShapeSheet cells](visio-cell-string-length.md) — Read when storing long text (JSON, encoded data) in Visio ShapeSheet cells from code - no 64k limit via the API, what survives save and reopen, sources claiming 64k.
 - [Typed values in Visio ShapeSheet cells](visio-cell-values.md) — Read when Visio code writes or reads text, numbers, booleans or dates in ShapeSheet cells (empty cells, types, errors, new rows, GUARD, read-only documents).
 - [Reading Visio data recordsets](visio-data-recordsets.md) — Read when Visio code reads linked external data (Document.DataRecordsets, GetRowData, DataColumns) or links an Excel sheet by code - value types, column names, empty fields, ACE connection.
-- [Visio layers with several layers per shape](visio-layers.md) — Read when Visio code hides, shows or deletes shapes by layers (Layer.Delete, visibility cells) and shapes can be on more than one layer - which layer wins, what Delete(1) deletes.
+- [Hidden Visio pages (UIVisibility)](visio-hidden-pages.md) — Read when Visio code hides pages with the PageSheet cell UIVisibility - what it hides (page tabs only), print and PDF export still include them, hidden active page.
+- [Visio layers by code](visio-layers.md) — Read when Visio code creates, names, hides, locks or deletes layers, or shapes are on several layers - which layer wins for visible/print/lock, names, copy/paste and master drop.
 - [Visio page turns and zoom by code](visio-page-view.md) — Read when Visio add-in code turns pages (Window.Page) or zooms (ViewFit, Zoom) - Undo steps per page turn, zoom kept per page and in the file, selection, dirty flag.
 - [Visio performance switches for bulk changes](visio-performance-switches.md) — Read when Visio code changes many shapes or cells and you weigh ScreenUpdating, ShowChanges, DeferRecalc, EventsEnabled, UndoEnabled or batch calls - effects, side effects, one measurement.
 - [Visio ShapeSheet values and Windows region settings](visio-region-settings.md) — Read when Visio code builds Shape Data lists (Prop.Format), uses INDEX/LOOKUP/LISTSEP, or reads numbers with ResultStr - what depends on the list separator and decimal symbol.
