@@ -1,6 +1,6 @@
 ---
 title: Clicking a ribbon button from a test script
-description: Read when a test must click a button, check box or drop-down of an add-in's custom ribbon tab (VSTO designer or XML) without a person - UI Automation recipe in PowerShell, limits.
+description: "Read when a test must click a control of an add-in's custom ribbon tab (VSTO designer or XML) without a person, or drive the dialog it opens - UI Automation and Win32 in PowerShell."
 ---
 
 # Clicking a ribbon button from a test script
@@ -44,13 +44,23 @@ Start-Sleep -Milliseconds 1500                           # handler runs in the a
 - Check box (`RibbonCheckBox`): type `CheckBox`. `TogglePattern.Toggle()` runs the `Click` handler; read `TogglePattern.Current.ToggleState` (`On`/`Off`) and `Current.IsEnabled`.
 - Drop-down (`RibbonDropDown`): type `ComboBox`, named by its label; `ValuePattern.Current.Value` = label of the selected item; `Current.IsEnabled`. A search for all `ListItem`s from `RootElement` also finds list items of other apps (browser tabs): only the first entries are the drop-down's. `Expand()` it (`ExpandCollapsePattern`), wait, find the item as `ListItem` from `AutomationElement.RootElement`, `SelectionItemPattern.Select()`: runs `SelectionChanged`. Items added in code (`Factory.CreateRibbonDropDownItem()` in `Load`) show the same way.
 - After a window change (seen in Visio: a stencil opened in its own window, and after closing it again) the custom tab may no longer be selected and its controls are not found: select the tab again, then search.
-- While a message box of the add-in is open, the tab is not found (`FindFirst` gives `$null`). Close the box first, then search again from `FromHandle(WindowHandle32)`.
+- While a message box or a modal dialog of the add-in is open, the tab is not found (`FindFirst` gives `$null`). Close the box first, then search again from `FromHandle(WindowHandle32)`.
 - Click with a modifier key (e.g. Ctrl+click): `Invoke()` carries no keys. Bring the app window to the front, then `keybd_event` key down, real click by `SetCursorPos` + `mouse_event` in the middle of `Current.BoundingRectangle`, key up (user32, via `Add-Type`). Moves the real mouse. While a drop-down is open, do not call `SetForegroundWindow`: it closes the drop-down and the click goes nowhere.
 - Prepare the state by COM before the click (`Window.Select`, `Window.DeselectAll`), read the result by COM after it.
 - Undo name of the last action (e.g. the name given to `BeginUndoScope`): COM has no getter, but the Undo button of the Quick Access Toolbar is named after it. Search all descendants of the app window for `Name` matching `^Undo ` (English Office UI): `Undo My Action` (verified Visio 2019; two elements with that name). `HelpText` is empty.
 - Read the tooltip (ScreenTip + SuperTip) of a button: move the real mouse to the middle of it (`SetCursorPos`), wait ~2.5 s, then find the element of type `ToolTip` among the descendants of the app window; its `Name` = title + SuperTip. For an item in an open drop-down search from `AutomationElement.RootElement`. `HelpText` of the button is empty.
 - A message box of the handler: close it from a second process, see "Test without the UI" in [visio-shapesheet-calls](visio-shapesheet-calls.md). In a visible instance filter the dialogs by window class (`#32770` message box, `NUIDialog` Office dialog), or the main window is closed too.
   - Found by UI Automation, its parts show as `Pane` and the OK button has no `InvokePattern`: send `BM_CLICK` (0x00F5) to the button's `Current.NativeWindowHandle` (`SendMessage`).
-- Quit without a save prompt: `$doc.Saved = $true; $app.Quit()`.
+- Quit without a save prompt: `$doc.Saved = $true; $app.Quit()`. Seen once (Visio, after many Undo/Redo by COM): the save prompt came anyway (`NUIDialog`, text `Do you want to save <name>?`) and `Quit` hung; `Invoke()` its `Don't Save` button by UI Automation.
+
+## Modal WinForms dialog of the handler
+
+- `Invoke()` on the button returns while the handler's `Form.ShowDialog()` is still open. Start the driver of the dialog first, as a second process (`Start-Process powershell -File driver.ps1`), then invoke.
+- The dialog opens behind the app (the click comes from another process); `SetForegroundWindow` from the driver does not help. Drive it without the foreground. _Unverified:_ in front after a real click.
+- UI Automation shows its controls only as `Pane` without patterns (Name = text, AutomationId = window handle) (VSTO add-in dialog in Visio, .NET Framework 4.8). Use Win32 instead: `FindWindow`, `EnumChildWindows`, `GetClassName` (`WindowsForms10.BUTTON...`, `...LISTBOX...`, `...STATIC...`), `GetWindowText`.
+  - PowerShell passes `$null` to a P/Invoke `string` parameter as `""`: `FindWindow($null, 'My Dialog')` finds nothing. Use `[NullString]::Value`.
+- Button: `SendMessage(h, 0x00F5 /*BM_CLICK*/, 0, 0)`, also for a check box. `BM_GETCHECK` on a WinForms `CheckBox` returned 0 although it was checked: read states from a screenshot.
+- `CheckedListBox` item: `SendMessage(list, 0x0186 /*LB_SETCURSEL*/, index, 0)`, then `PostMessage(list, 0x0100 /*WM_KEYDOWN*/, 0x20, 1)` and `WM_KEYUP` (0x0101): toggles it once, with `ItemCheck`. Do not post `WM_CHAR` as well: the app's message loop makes one from the posted `WM_KEYDOWN`, so the item toggles twice. Posted mouse clicks (`WM_LBUTTONDOWN`/`UP` inside `LB_GETITEMRECT`) are unreliable: a click on one item toggled the selected item.
+- Screenshot of a window behind others: `PrintWindow(h, hdc, 2)` (`PW_RENDERFULLCONTENT`) into a bitmap of `GetWindowRect` size. Call `SetProcessDPIAware()` first, else the rect is scaled and the picture cut off.
 
 Verified with Visio Pro 2019 C2R x64, VSTO ribbon designer tab, Windows PowerShell 5.1 (2026-10). _Unverified:_ invisible instance (`Visio.InvisibleApp`), other Office apps, button without selecting the tab first.
