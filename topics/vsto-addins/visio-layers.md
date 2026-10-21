@@ -33,6 +33,7 @@ A shape is locked when any of its layers has `Lock` = 1:
 - Hiding or locking a layer deselects its shapes (`Window.Selection` drops them; a selected shape on another layer stays selected).
 - Setting `Shape.Text` throws `Requested operation is presently disabled.`; setting a cell (`PinX`) works; `Layer.Add`/`Remove` (also on the locked layer) work.
 - **Paste, `Shape.Duplicate` and `Page.Drop(master)` fail** when the target page has a locked layer with the name of one of the shape's layers: `Attempting to change one or more locked layers.` (paste, duplicate), `Inappropriate source object for this action.` (drop). `Shape.Copy` works.
+- `Layer.Delete(0)` of a locked layer fails, also when it is empty: `Attempting to change one or more locked layers.` `Shape.Delete()` of a locked shape fails: `Shape protection, container, and/or layer properties prevent complete execution of this command.` Set the layer's `Lock` cell to 0 first (inside the same undo scope, Undo brings the lock back). Renaming a locked layer (`NameU` + name cell, [Names](#names)) works.
 - So locking hidden layers adds no protection (hidden shapes cannot be clicked, `SelectAll` skips them) but blocks pasting and dropping shapes that use the layer.
 
 ## Copy, paste, drop

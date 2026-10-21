@@ -60,6 +60,15 @@ Start-Sleep -Milliseconds 1500                           # handler runs in the a
 - UI Automation shows its controls only as `Pane` without patterns (Name = text, AutomationId = window handle) (VSTO add-in dialog in Visio, .NET Framework 4.8). Use Win32 instead: `FindWindow`, `EnumChildWindows`, `GetClassName` (`WindowsForms10.BUTTON...`, `...LISTBOX...`, `...STATIC...`), `GetWindowText`.
   - PowerShell passes `$null` to a P/Invoke `string` parameter as `""`: `FindWindow($null, 'My Dialog')` finds nothing. Use `[NullString]::Value`.
 - Button: `SendMessage(h, 0x00F5 /*BM_CLICK*/, 0, 0)`, also for a check box. `BM_GETCHECK` on a WinForms `CheckBox` returned 0 although it was checked: read states from a screenshot.
+  - A button whose handler opens another modal dialog: `SendMessage` returns only when that dialog is closed and the driver hangs. Use `PostMessage(h, 0x00F5, 0, 0)`.
+- `GetWindowText` (`WM_GETTEXT`) on a WinForms text box from another process may return the old text after `WM_SETTEXT` or typing: check the result by screenshot or by the app's state.
+- `DataGridView` (no child window per cell): post mouse messages in grid client coordinates, `lParam = (y << 16) | x`; take the cell positions from a screenshot.
+  - `WM_LBUTTONDOWN` (0x0201, `wParam` 1) + `WM_LBUTTONUP` (0x0202) selects the cell; on a check box cell it also toggles it. A posted Space key did not toggle a check box cell.
+  - `WM_LBUTTONDBLCLK` (0x0203) + up on an editable cell starts editing (here the app called `BeginEdit` on double click). The editing control is the visible `WindowsForms10.EDIT...` child of the grid: `WM_SETTEXT`, then post Enter (`WM_KEYDOWN` 0x0D) to commit.
+  - Keys for the grid itself (Ins, F2, Del): posted `WM_KEYDOWN` + `WM_KEYUP` to the grid reach its `KeyDown` event.
+- `ToolTip.Show(text, control, x, y, ms)` in a dialog that is not the active window (the test case): the tooltip window is made but stays invisible (0x0), also with `ShowAlways = true`.
+- Common color dialog (`ColorDialog`, class `#32770`): its title is localized by Windows (`Colour` on en-GB). Set the Red/Green/Blue edits `GetDlgItem(h, 706/707/708)` by `WM_SETTEXT`, then click OK `GetDlgItem(h, 1)`.
+- Gotchas of the dialog itself (Esc in a `DataGridView` closes the form): [winforms-dialogs](winforms-dialogs.md).
 - `CheckedListBox` item: `SendMessage(list, 0x0186 /*LB_SETCURSEL*/, index, 0)`, then `PostMessage(list, 0x0100 /*WM_KEYDOWN*/, 0x20, 1)` and `WM_KEYUP` (0x0101): toggles it once, with `ItemCheck`. Do not post `WM_CHAR` as well: the app's message loop makes one from the posted `WM_KEYDOWN`, so the item toggles twice. Posted mouse clicks (`WM_LBUTTONDOWN`/`UP` inside `LB_GETITEMRECT`) are unreliable: a click on one item toggled the selected item.
 - Screenshot of a window behind others: `PrintWindow(h, hdc, 2)` (`PW_RENDERFULLCONTENT`) into a bitmap of `GetWindowRect` size. Call `SetProcessDPIAware()` first, else the rect is scaled and the picture cut off.
 

@@ -39,4 +39,4 @@ Measured (each case once):
 
 - `Layer.Name = x` is not undone cleanly: after Undo (also a dropped scope) the layer still reports the new `Name`, `NameU` is empty and its cells throw `An exception occurred.`; only save + reopen shows the right old name. Rename layers another way: [visio-layers](visio-layers.md#names).
 
-Verified with Visio Pro 2019 C2R x64 by COM automation from PowerShell (`Visio.InvisibleApp`, out of process), 2026-10. _Unverified:_ the same calls from an add-in (in process) with a modal dialog open; scopes over several documents.
+Verified with Visio Pro 2019 C2R x64 by COM automation from PowerShell (`Visio.InvisibleApp`, out of process), 2026-10. Also in process: a VSTO add-in held the session scope around `Form.ShowDialog()` of a WinForms dialog whose steps renamed and deleted layers, deleted shapes and a page; Cancel took all back, OK gave one Undo step (`Undo()`/`Redo()` by COM). _Unverified:_ scopes over several documents.
