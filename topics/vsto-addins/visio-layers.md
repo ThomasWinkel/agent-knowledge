@@ -52,6 +52,13 @@ Layers travel with the shape **by name**:
 - Allowed and kept after save + reopen: `"`, `,`, `'`, `!`, `[]`, `\`, `/`, `|`, `<>`, `*?`, `:`, `#`, `=`, `&`, `%`, `+`, `.`, `{}`, `()`, `~`, `@`, `$`, `^`, umlauts, `Ω€`, leading/trailing spaces, tab, LF, CR, a single space.
 - Max 255 characters: longer names are cut **silently**, so two long names can end as the same layer. Empty name: `Add("")` throws `Invalid parameter.`; `Layer.Name = ""` does nothing.
 - `Layer.Name = x` changes only the local name, `NameU` stays; `Layer.NameU = x` sets the universal name. Set both when your code finds layers by name.
+- **Undo of `Layer.Name = x` is broken**: afterwards the layer still reports the new `Name`, `NameU` is empty, its cells throw `An exception occurred.` (also after a dropped undo scope); only save + reopen shows the old name. Undo of `Layer.NameU = x` and of a formula in the `visLayerName` cell is clean (also inside nested and dropped scopes, case-only renames too). Rename so Undo works:
+  ```csharp
+  layer.NameU = newName;   // first: the Layer object is stale after the next line
+  page.Layers[index].CellsC[(short)VisCellIndices.visLayerName].FormulaU =
+      "\"" + newName.Replace("\"", "\"\"") + "\"";
+  ```
+  The `visLayerNameUniv` cell cannot be set by formula (`An exception occurred.`). Another clean way: add a layer with the new name, copy its cells, move the shapes, `Delete(0)` the old one. Undo scopes: [visio-undo-scopes](visio-undo-scopes.md).
 - `Layer.Name = x` accepts a name another layer already has (any case): two layers with the same name. Check uniqueness yourself.
 
 ## Gotchas
