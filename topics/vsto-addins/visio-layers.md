@@ -34,6 +34,7 @@ Layers travel with the shape **by name**:
 
 - Target page has no layer of that name: Visio creates it with the **source layer's cells** (visible, print, lock, color). A shape copied from a page where its layer is hidden arrives on a new hidden layer: invisible after paste.
 - Target page has a layer of that name, **ignoring case** (`mylayer:a` for `MyLayer:A`): the shape joins it; the layer keeps the target's cells and name.
+- Matched by local `Name`, not `NameU`: a target layer `Name`=`A`, `NameU`=`X` takes a shape from layer `A`; a target layer `Name`=`X`, `NameU`=`A` does not (Visio adds a new layer `A`).
 - Same for: paste into another drawing, `Shape.Duplicate`, sub-shapes of a pasted group, `Page.Duplicate` (copies all layers). A master made from a shape (`Masters.Drop(shape, ...)`) stores its layers with their cells; dropping it creates them the same way.
 
 ## Names
