@@ -26,7 +26,7 @@ VSTO add-ins are .NET Framework COM add-ins for desktop Office (Word, Excel, Out
 - Visio: a ShapeSheet cell set by code holds millions of characters (no 64k limit); 1,000,000 survived save and reopen: [visio-cell-string-length](visio-cell-string-length.md).
 - Visio: typed values in cells (text, number, bool, date), what survives save; writing a `GUARD` cell throws `Cell is guarded.` unless forced: [visio-cell-values](visio-cell-values.md).
 - Visio: Shape Data lists (`Prop.Format`) and `INDEX`/`LOOKUP` split at `;` in every region; `LISTSEP()` breaks them, `ResultStr` formats numbers by region: [visio-region-settings](visio-region-settings.md).
-- Visio: a shape on several layers is visible/printed while any layer is visible/printing (print ignores visibility), locked if any is locked; a locked layer blocks paste and drop; layers travel by name on paste; `;` breaks layer names: [visio-layers](visio-layers.md).
+- Visio: a shape on several layers is visible/printed while any layer is visible/printing (print ignores visibility), locked if any is locked; a locked layer blocks paste and drop, and cannot be deleted, nor its shapes; layers travel by name on paste; `;` breaks layer names: [visio-layers](visio-layers.md).
 - Visio: a dropped undo scope takes back everything inside, also committed nested scopes; a dropped nested scope only its own changes. Undo of `Layer.Name = x` is broken: rename via `NameU` + the `visLayerName` cell: [visio-undo-scopes](visio-undo-scopes.md), [visio-layers](visio-layers.md).
 - Visio: `UIVisibility` = 1 hides a page only from the page tabs; print and PDF export still include it: [visio-hidden-pages](visio-hidden-pages.md).
 - Visio: `Shape.Ungroup()` on a master instance shows a dialog also when called by code; set `Application.AlertResponse = 1` for the call: [visio-ungroup](visio-ungroup.md).
@@ -34,6 +34,7 @@ VSTO add-ins are .NET Framework COM add-ins for desktop Office (Word, Excel, Out
 - Visio: `DataRecordset.GetRowData` returns typed values (`string`, `int`, `double`, `DateTime`, `bool`, `decimal`, `DBNull`); row 0 = column names: [visio-data-recordsets](visio-data-recordsets.md).
 - Excel by COM: write a table as one array; strings like `007` turn into numbers unless formatted `@` first; the table name is `ListObject.DisplayName`, not `Name`: [excel-write-table](excel-write-table.md).
 - A test can click a custom ribbon button by UI Automation: [ribbon-ui-test](ribbon-ui-test.md).
+- WinForms dialog with an editable `DataGridView` and a `CancelButton`: Esc while typing in a cell closes the whole form: [winforms-dialogs](winforms-dialogs.md).
 - Ctrl+click = help on every ribbon button without code per handler: wrap VSTO's private handler field; `file://` URLs lose their `#anchor` in `Process.Start`: [ribbon-click-help](ribbon-click-help.md).
 - Ribbon texts can be changed at runtime (e.g. in `Load`), except `RibbonSeparator.Title`; an exception in `Load` silently hides the whole tab: [ribbon-runtime-properties](ribbon-runtime-properties.md).
 - Built-in icon for a ribbon button (`imageMso`): `GetImageMso` from another process returns no picture, but its error tells whether an ID exists: [ribbon-office-icons](ribbon-office-icons.md).
@@ -83,4 +84,5 @@ Verified with Visio Pro 2019 C2R x64, WiX 7.0.0, VS2022 (2026-07); registration 
 - [Calling a Visio add-in from the ShapeSheet](visio-shapesheet-calls.md) — Read when a ShapeSheet cell (EventDrop, EventDblClick, Actions) must run code in a Visio VSTO/COM add-in - marker events, context string format, QUEUEMARKEREVENT vs RUNADDONWARGS, redo.
 - [Visio undo scopes - rollback and nesting](visio-undo-scopes.md) — Read when Visio code uses BeginUndoScope/EndUndoScope to make several changes one Undo step, to roll back on error or cancel, or nests scopes (a dialog session with steps).
 - [Visio Shape.Ungroup from code](visio-ungroup.md) — Read when a Visio add-in or script calls Shape.Ungroup - confirmation dialog for master instances, AlertResponse, errors for non-groups and locked groups, what is left of the group.
+- [WinForms dialogs in add-ins - DataGridView gotchas](winforms-dialogs.md) — Read when an add-in dialog edits values in a DataGridView: Esc closes the whole form (CancelButton), error icons that do not show, check boxes that apply late.
 <!-- END GENERATED CONTENTS -->
