@@ -11,7 +11,7 @@ A VSTO designer ribbon (`RibbonBase`) is loaded when its `Load` event runs. Afte
 
 - `Label`, `ScreenTip`, `SuperTip`, `KeyTip`, `Title` of tab, group, dialog launcher, button, toggle button, check box, split button, menu, gallery, drop-down (and its items), combo box, edit box, label: settable at any time (`RibbonPropertyStorage.SetDynamicValue`). Office updates the UI at once.
 - Drop-down items: `Items.Clear()` / `Items.Add(Factory.CreateRibbonDropDownItem())` and `SelectedItem` work at any time (verified: rebuilt many times after load); item `Label`, `Tag`, `OfficeImageId` dynamic.
-- **`RibbonDropDown.SizeString`: only before load** (`SetStaticValue`): set it in the designer.
+- **`RibbonDropDown.SizeString`: only before load** (`SetStaticValue`): set it in the designer. Value = sample text, not a character count: the control gets the width of this text (`20` -> two digits wide); e.g. `xxxxxxxxxxxxxxxxxxxx` for about 20 characters.
 - **`RibbonSeparator.Title`: only before load** (`TitleSetStaticValue`). Setting it in `Load` throws `InvalidOperationException: Component is read only. Cannot change value of this property.` Even setting it to its current value (`null`) throws.
 
 ## Gotcha: exception in Load hides the whole tab
