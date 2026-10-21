@@ -17,7 +17,7 @@ A shape can be on any number of layers of its page (`Shape.LayerCount`, `Shape.L
 
 - To hide shapes by a layer, also set `Print` = 0, and keep the shapes on no other visible or printing layer.
 - `Layer.Delete(1)` deletes only shapes on no other layer, of any kind ([Layer.Delete](https://learn.microsoft.com/en-us/office/vba/api/visio.layer.delete), Remarks). To delete by your own rule, delete the shapes yourself, then `Layer.Delete(0)`.
-- Layers come in without code: _unverified_ connectors drawn with the Connector tool go on a layer `Connector`; masters bring their layers along (below). "On no other layer" is rarely true for shapes of a real drawing.
+- Layers come in without code: a connector made by `Shape.AutoConnect` goes on a layer `Connector` (_unverified:_ same for the Connector tool); masters bring their layers along (below). "On no other layer" is rarely true for shapes of a real drawing.
 
 ## Layer color
 
