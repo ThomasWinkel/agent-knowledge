@@ -28,7 +28,7 @@ Not `ListRows.AddEx()` + `ListRow.Range.Value` per row: two cross-process calls 
 
 | .NET value in the array | Cell |
 |---|---|
-| `string` `"007"`, `"1E3"`, `"1/2"` | parsed like a typed entry: `7`, `1000`, a date. Only cells formatted `@` before the write keep the text. |
+| `string` `"007"`, `"1E3"`, `"12e3"`, `"1/2"`, `"3-4"`, `"jan1"`, `"1jan"`, `"dec31"`, `"1:2"` | parsed like a typed entry: `7`, `1000`, `12000`, dates, a time. Only cells formatted `@` before the write keep the text. Stayed text: `e5`, `1d5`, `a12`, `0x1f`, `wahr`, `jan1234567`. |
 | `DateTime` with `Range.Value` | date, each cell gets its own date format: `TT.MM.JJJJ hh:mm`, but `TT.MM.JJJJ` (time hidden) at midnight; a column can mix both |
 | `DateTime` with `Range.Value2` | serial number, format stays `General`: looks like `46024,57` |
 | `int`, `double`, `decimal` | number, format `General` (currency format is not applied) |
