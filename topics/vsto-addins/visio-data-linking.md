@@ -57,9 +57,20 @@ Key matching on `Refresh()`:
 - `DataRecordsets.Add` with `Data Source=data.xlsx` (also `.\data\x.xlsm`, `..\other\x.xlsx`) resolves against the **document folder** (saved document).
 - `DataRecordset.Refresh()` and Data > Refresh All in the UI resolve it against the **current folder of the Visio process**. Wrong folder: `Unable to connect to the data.` (UI: `Error 80004005: ... could not find the object '...\AppData\Local\Temp\VSO<hex>.xlsx'`), or silently another folder's `data.xlsx`.
 - The current folder depends on how documents were opened: the File Open dialog sets it to the document's folder; Visio started by COM, and a running Visio that got a document by double-click in Explorer, stayed at `C:\WINDOWS\system32`. With documents from two folders open, the last File Open decides. Once a `Refresh()` succeeded although the folder was `system32` (not reproduced, cause unknown).
-- Workaround: set `DataConnection.ConnectionString` to the absolute path, `Refresh()`, set the relative string back. Saved file keeps the relative string. Each `Add` gets its own `DataConnection` (setting one does not change the other). Visio's own Refresh All stays unreliable.
+- Workaround in a VSTO add-in (measured Visio 2019 C2R x64): keep the current folder on the folder of the active drawing. The add-in runs in Visio's process, so `Directory.SetCurrentDirectory` sets the folder ACE uses. Document untouched (not dirty). Measured with `DataRecordset.Refresh()` by COM; the UI's Refresh All should follow (same folder rule), _unverified_. Call it also right before an own `Refresh()`.
+  ```csharp
+  Application.VisioIsIdle += app =>
+  {
+      var doc = app.ActiveWindow?.Document;   // may throw COMException: catch
+      if (doc?.Type != Visio.VisDocumentTypes.visTypeDrawing || doc.Path.Length == 0)
+          return;                              // stencil, unsaved drawing: leave it
+      if (!string.Equals(doc.Path.TrimEnd('\'), Directory.GetCurrentDirectory().TrimEnd('\'), StringComparison.OrdinalIgnoreCase))
+          Directory.SetCurrentDirectory(doc.Path);   // Path ends with '\'; may throw (URL, deleted folder)
+  };
+  ```
+  Without an add-in: set `DataConnection.ConnectionString` to the absolute path, `Refresh()`, set the relative string back (changes the document). Each `Add` gets its own `DataConnection` (setting one does not change the other).
 - The error looks random (works after save, close, reopen; works in a copied folder; the Link Data wizard works only after browsing to the file): all match the current folder rule. `DataConnection.FileName` (read-only) is empty for `Add` by code and set by the wizard; setting it in `connections.xml` did not change the error (VisGuy forum thread "DatarecordSet with relative path to Excel worksheet", 2022). _Unverified:_ that the wizard's browse dialog sets the current folder; behavior of Visio before 2019.
-- Tests: read another process's current folder from its PEB (x64: `NtQueryInformationProcess` -> `PEB+0x20` ProcessParameters -> `+0x38` CurrentDirectory); set it inside Visio with `doc.ExecuteLine("ChDir ""<path>""")`.
+- Tests: read another process's current folder from its PEB (x64: `NtQueryInformationProcess` -> `PEB+0x20` ProcessParameters -> `+0x38` CurrentDirectory); set it inside Visio with `doc.ExecuteLine("ChDir ""<path>""")`. A whole `Refresh` in a wrong folder in one call (no idle between): `doc.ExecuteLine("ChDir ""<path>"": ThisDocument.DataRecordsets(1).Refresh")`. Start Visio in a given folder: `Start-Process VISIO.EXE '"<file>"' -WorkingDirectory <folder>` (add-ins load), then `GetActiveObject`. `Documents.Open`/`OpenEx` by COM from PowerShell hung on one machine; `doc.ExecuteLine("Documents.Open ""<file>""")` opened the second document.
 
 ## Source open in Excel
 
