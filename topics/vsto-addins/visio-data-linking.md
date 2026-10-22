@@ -55,9 +55,10 @@ Key matching on `Refresh()`:
 ## Relative Data Source
 
 - `DataRecordsets.Add` with `Data Source=data.xlsx` (also `.\data\x.xlsm`, `..\other\x.xlsx`) resolves against the **document folder** (saved document).
-- `DataRecordset.Refresh()` resolves against the **current folder of the Visio process**: started by COM it is `C:\WINDOWS\system32` -> `Unable to connect to the data.`; after `ChDir` to another project folder it silently reads that folder's `data.xlsx`. Read/set the folder for tests: `doc.ExecuteLine("ActiveDocument.Title = CurDir")`, `doc.ExecuteLine("ChDir ""<path>""")`.
-- Workaround: set `DataConnection.ConnectionString` to the absolute path, `Refresh()`, set the relative string back. Saved file keeps the relative string. Each `Add` gets its own `DataConnection` (setting one does not change the other).
-- Visio UI: a copied document + workbook, opened by File Open, read the copy's workbook on Data > Refresh All. _Unverified:_ whether that worked because the File Open dialog sets the current folder (then Refresh All after opening a document of another folder would read the wrong file).
+- `DataRecordset.Refresh()` and Data > Refresh All in the UI resolve it against the **current folder of the Visio process**. Wrong folder: `Unable to connect to the data.` (UI: `Error 80004005: ... could not find the object '...\AppData\Local\Temp\VSO<hex>.xlsx'`), or silently another folder's `data.xlsx`.
+- The current folder depends on how documents were opened: the File Open dialog sets it to the document's folder; Visio started by COM, and a running Visio that got a document by double-click in Explorer, stayed at `C:\WINDOWS\system32`. With documents from two folders open, the last File Open decides. Once a `Refresh()` succeeded although the folder was `system32` (not reproduced, cause unknown).
+- Workaround: set `DataConnection.ConnectionString` to the absolute path, `Refresh()`, set the relative string back. Saved file keeps the relative string. Each `Add` gets its own `DataConnection` (setting one does not change the other). Visio's own Refresh All stays unreliable.
+- Tests: read another process's current folder from its PEB (x64: `NtQueryInformationProcess` -> `PEB+0x20` ProcessParameters -> `+0x38` CurrentDirectory); set it inside Visio with `doc.ExecuteLine("ChDir ""<path>""")`.
 
 ## Source open in Excel
 
