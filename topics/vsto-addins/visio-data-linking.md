@@ -47,7 +47,7 @@ Key matching on `Refresh()`:
 ## Refresh and linked shapes
 
 - Changed values reach linked shapes; the row is matched by key (above).
-- A linked value the user edits in the shape (shape data window or `FormulaU`) is **kept** on refresh; the shape's other linked values still update. `recordset.RefreshSettings = visRefreshOverwriteAll` (1) overwrites edited values too. Default `RefreshSettings` = 0.
+- A linked value the user edits in the shape (shape data window or `FormulaU`) is **kept** on refresh; the shape's other linked values still update. `recordset.RefreshSettings = visRefreshOverwriteAll` (1) overwrites edited values too. Default `RefreshSettings` = 0. Repair one shape: `LinkToData` to the same row again restores the row's values, and later refreshes update them again (`BreakLinkToData` first is not needed).
 - Column added in the source: appears in the recordset and as a new shape data row in every linked shape. Column removed: its shape data row is removed. Column renamed: = removed + added (`_VisDM_X` gone, `_VisDM_Y` new).
 - Hidden column (`DataColumn.SetProperty(visDataColumnPropertyVisible, false)` before linking): no shape data row is created. Made visible later: the row appears at once with the current value, but refresh does not update it until the shape is linked again (`LinkToData`).
 - Text of 400 characters came through ACE complete (2 rows; longer text below 8 short rows not tested, ACE guesses types from the first rows).
