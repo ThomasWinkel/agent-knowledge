@@ -15,7 +15,7 @@ description: Read when Visio code changes many shapes or cells and you weigh Scr
 | [`InhibitSelectChange`](https://learn.microsoft.com/en-us/office/vba/api/visio.application.inhibitselectchange) = true | `bool` | dropped shapes are not selected, the selection is kept where possible; code can still select | - | many drops |
 | [`DeferRelationshipRecalc`](https://learn.microsoft.com/en-us/office/vba/api/visio.application.deferrelationshiprecalc) = true | `bool` | containers do not resize while members move or resize; `false` processes all deferred actions at once | - | diagrams with containers |
 | [`EventsEnabled`](https://learn.microsoft.com/en-us/office/vba/api/visio.application.eventsenabled) = 0 | `short` | Visio fires no events, runs no add-ons, does not execute `RUNADDON` code in cells | hits every add-in and VBA project, not only yours | avoid |
-| [`UndoEnabled`](https://learn.microsoft.com/en-us/office/vba/api/visio.application.undoenabled) = false | `bool` | no undo information is collected | **clears the existing undo history** | avoid when the user must be able to undo |
+| [`UndoEnabled`](https://learn.microsoft.com/en-us/office/vba/api/visio.application.undoenabled) = false | `bool` | no undo information is collected | **clears the existing undo history** (measured: a step before it no longer undoes) | avoid when the user must be able to undo; data outside Undo: [visio-undo-scopes](visio-undo-scopes.md#data-outside-undo) |
 | [`LiveDynamics`](https://learn.microsoft.com/en-us/office/vba/api/visio.application.livedynamics) | `bool` | recalculation on every mouse move of a drag, or only on release | - | mouse drags only, no gain for code |
 
 ```csharp
