@@ -25,8 +25,10 @@ if (items.Length <= 255)
 - Text items match case-sensitive: list `Abc` rejects `abc` and `ABC`.
 - The cell value is parsed before the check, like a typed entry: list `1;2;3` in a General cell holds `2` as a number, in a `@` cell as text; both pass.
 - Booleans: list `TRUE;FALSE` in a General cell: typed `TRUE`/`true` -> `bool`, passes; in a `@` cell `TRUE` stays text and passes, `true` fails. `WAHR` is text in an English-UI Excel and fails. List from a range of two `bool` cells (`=Lists!$A$1:$A$2`): typed `TRUE` passes as `bool`; the drop-down shows the UI language's words. Custom `=ISLOGICAL(<cell>)` passes only `bool` (no drop-down). Same in every UI language, with drop-down: `@` cells + list `TRUE;FALSE` (text; Visio turns it into a real Boolean on link: [visio-data-linking](visio-data-linking.md)).
+- Any number: `xlValidateDecimal`, `xlBetween`, `"-1E+307"`, `"1E+307"` (no decimal sign: works in every region). Rejects text.
+- Any date: `xlValidateDate`, `xlGreaterEqual`, `"1"` (1900-01-01; `Formula1` reads back as a local date). `"0"` throws `0x800A03EC`. Rejects text, negative numbers and a time alone (`0.5`); a date with time passes.
 - `Validation.Value` (read-only, `bool`) tells whether the cell's current value passes; handy in tests.
 - Alert style `xlValidAlertWarning`/`Information` still show a message on a wrong value; `ShowError = false` shows none.
 - Validation does not stop paste; a value set by code is not checked.
 
-Verified with Excel 2019 C2R x64 (version 16.0, UI language 1033, German region settings), by COM from PowerShell (2026-10), values set with `Range.FormulaLocal` like a typed entry. _Unverified:_ a pick from the drop-down stores the same as typing; a German-UI Excel (`WAHR`, local function names).
+Verified with Excel 2019 C2R x64 (version 16.0, UI language 1033, German region settings), by COM from PowerShell (2026-10), values set with `Range.FormulaLocal` like a typed entry; number and date rules by C# (embedded PIA, thread culture `de-DE` and `en-US`), values set with `Value2`. _Unverified:_ a pick from the drop-down stores the same as typing; a German-UI Excel (`WAHR`, local function names).
