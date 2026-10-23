@@ -1,6 +1,6 @@
 ---
 title: Typed values in Visio ShapeSheet cells
-description: Read when Visio code writes or reads text, numbers, booleans or dates in ShapeSheet cells (empty cells, types, errors, new rows, GUARD, read-only documents).
+description: Read when Visio code writes or reads text, numbers, booleans or dates in ShapeSheet cells (empty cells, types, errors, new rows, master instances, GUARD, read-only documents).
 ---
 
 # Typed values in Visio ShapeSheet cells
@@ -38,6 +38,12 @@ Write a literal with `FormulaU`, read the evaluated value with `Result*`. Measur
 - `CellExistsU("User.X.Prompt", 0)` is true when the row `User.X` exists.
 - `PageSheet`: `Type` 1 (`visTypePage`), `NameU` `ThePage`, `ContainingPage` = the page. `DocumentSheet`: `Type` 6 (`visTypeDoc`), `NameU` `TheDoc`. Use the page or document name in messages.
 - An invalid formula set by code (unknown function, `AlertResponse` not set, invisible instance) opened a modal Visio dialog instead of throwing: the automation call hangs. _Unverified:_ whether `AlertResponse = 1` prevents it.
+
+## Master instances
+
+- `FormulaU = ""` (also `FormulaForceU = ""`) on a cell of a master instance does not empty it: it removes the local formula, the cell inherits again (`IsInherited` true, later master changes arrive). On a shape without master it empties the cell. To clear a value in an instance, write the empty text `""""` (`""` in the formula).
+- `Shape.DeleteRow` on a row the instance inherits removes the row from the instance for good: it stays gone when the master changes later.
+- Measured with `User` and `Prop` rows, master in the document stencil, master changed by `Master.Open()`/`Close()`.
 
 ## Read-only documents
 
