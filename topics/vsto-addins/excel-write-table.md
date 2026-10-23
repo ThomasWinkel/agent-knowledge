@@ -35,6 +35,12 @@ Not `ListRows.AddEx()` + `ListRow.Range.Value` per row: two cross-process calls 
 | `bool` | `TRUE`/`FALSE` |
 | `null`, `DBNull` | empty cell |
 
+## Number formats and empty tables
+
+- **Early-bound interop (C# with the PIA) reads and writes `NumberFormat` in English codes, whatever the thread culture** (`General`, `@`, `m/d/yyyy`; same with `de-DE` and `en-US`). `NumberFormatLocal` gives the local code (`Standard`, `TT.MM.JJJJ`). Late-bound PowerShell differs (below).
+- `m/d/yyyy` is Excel's built-in short date: cells show the date as the region settings say (`TT.MM.JJJJ` with German settings).
+- A table with no data yet: `ListObjects.Add` over the header row plus one empty row gives a body of one row. Set formats and validation on `ListColumns[i].DataBodyRange`: rows added by `ListRows.Add()` take them on.
+
 ## Filtered or protected sheet
 
 - **With a filter active on the sheet, a write to a range of several cells goes only to its visible cells, and each gets the first value of the array** (`Range.Value2 = object[,]`; table filter and plain range AutoFilter alike). Hidden rows stay as they were; no error. `Range.NumberFormat` on such a range also skips hidden cells.
@@ -45,16 +51,20 @@ Not `ListRows.AddEx()` + `ListRow.Range.Value` per row: two cross-process calls 
 ## Names
 
 - **`ListObject.Name` takes any text and is not the table name.** The name used in formulas and the Name Manager is `DisplayName`. Setting `Name` to `Test data 1` succeeds silently.
-- `DisplayName` is refused (COMException) unless it starts with a letter or `_`, holds only letters, digits, `_`, `.` (non-ASCII letters like `ü` are fine), and does not look like a cell or row/column reference (`A1`, `xfd1048576`, `R1C1`, `RC`, `R`, `C`, `C12`). Unique in the workbook ignoring case.
-- Sheet names: at most 31 characters, none of `: \ / ? * [ ]`, not `History`, unique ignoring case. `'` inside is fine (`It's`); Excel refuses it at the start or end.
+- `DisplayName` is refused (COMException `0x800A03EC`, no text) when a workbook-level defined name (`Workbook.Names`, not `Sheet!Name`) has the name, and unless it starts with a letter or `_`, holds only letters, digits, `_`, `.` (non-ASCII letters like `ü` are fine), and does not look like a cell or row/column reference (`A1`, `xfd1048576`, `R1C1`, `RC`, `R`, `C`, `C12`). Unique in the workbook ignoring case.
+- Sheet names: at most 31 characters, none of `: \ / ? * [ ]`, not `History`, unique ignoring case (taken: `That name is already taken. Try a different one.`). `'` inside is fine (`It's`); Excel refuses it at the start or end.
+- Workbook structure protected (`Workbook.ProtectStructure`): `Worksheets.Add` throws `0x800A03EC` without text. Check it first.
 - `Workbooks.Add(xlWBATWorksheet)` gives one sheet regardless of the user's "sheets in new workbook" option: no placeholder sheet to delete.
 
 ## Which Excel, and cleanup
 
-- `Marshal.GetActiveObject("Excel.Application")` gets a running Excel (COMException if none). An invisible running instance usually belongs to another program's automation: start your own (`new Excel.Application()`) instead.
+- `Marshal.GetActiveObject("Excel.Application")` gets a running Excel (COMException if none). An invisible running instance usually belongs to another program's automation: start your own (`new Excel.Application()`) instead. An invisible leftover (e.g. of a crashed script) that registered first hides every visible instance from `GetActiveObject`.
 - `GetActiveObject` returns only the first instance (the Running Object Table holds one `Excel.Application` entry). Every open workbook of every instance is in the ROT under its full path, also one opened read-only in a second instance (`excel.exe /x /r`). Find a workbook by path: enumerate the ROT (`GetRunningObjectTable` -> `EnumRunning`, compare `IMoniker.GetDisplayName` ignoring case, then `GetObject`); the 8.3 short path does not match, so compare full long paths. Then `Workbook.ReadOnly`, `Saved` (`false` after an unsaved change) and `Application` (that instance).
 - Not `Marshal.BindToMoniker(path)` / VB `GetObject(path)` to look for it: for a file that is not open it opens the workbook in the first running instance with a hidden window (no new process, 161 ms). For an open one it returns it (path case does not matter).
 - A workbook open in Excel locks the file (other processes get a sharing violation on write); opened read-only it does not.
+- `Workbooks.Open` with `DisplayAlerts = false`: a file with the read-only attribute, or held by another process that allows reading, opens with `ReadOnly = true`, no question. A file another process holds exclusively throws `0x800A03EC` `Excel cannot open the file ... because the file format or file extension is not valid`: open it with `File.Open(path, Open, Read, ReadWrite | Delete)` first for a true error.
+- An instance can hold one workbook per file name: with `data.xlsx` of another folder open, `Workbooks.Open` of a second `data.xlsx` returns `null` silently (`DisplayAlerts = false`), `SaveAs` to that name throws `0x800A03EC`. Check `Workbook.Name` of the open workbooks and use another instance.
+- Take back a sheet added to the user's saved, open workbook: `DisplayAlerts = false`, `sheet.Delete()`, then `Workbook.Saved = true` (Excel asks nothing on close, content is as saved).
 - Starting Excel (`new Excel.Application()`) took 2.0-2.1 s, opening a small workbook then 0.1-0.3 s (3 runs, add-ins installed).
 - On an error: `workbook.Close(SaveChanges: false)`, and `Quit()` an instance you started, else a hidden `EXCEL.EXE` stays.
 - Hand a started instance to the user with `Visible = true` and `UserControl = true`.
@@ -69,4 +79,4 @@ Not `ListRows.AddEx()` + `ListRow.Range.Value` per row: two cross-process calls 
 - Late-bound `NumberFormat` reads the codes in the user's locale: with German settings use `TT.MM.JJJJ hh:mm`, `#.##0,00`; `dd.mm.yyyy` shows `dd.10.yyyy`.
 - `Quit()` + `ReleaseComObject` leaves `EXCEL.EXE` running until the PowerShell process exits.
 
-Verified with Excel 2019 C2R x64, English UI (`LanguageSettings.LanguageID(msoLanguageIDUI)` 1033), German region settings (2026-10): values, formats, names, `xlWBATWorksheet` and the PowerShell notes by COM automation from PowerShell; process end, foreground and workbook name from a VSTO add-in in Visio 2019; filtered and protected sheets from PowerShell and from a VSTO Excel add-in. ROT lookup and start times by PowerShell with workbooks opened by `excel.exe` (2026-10). _Unverified:_ cleanup after an error; network paths (mapped drive vs. UNC) in the ROT.
+Verified with Excel 2019 C2R x64, English UI (`LanguageSettings.LanguageID(msoLanguageIDUI)` 1033), German region settings (2026-10): values, formats, names, `xlWBATWorksheet` and the PowerShell notes by COM automation from PowerShell; process end, foreground and workbook name from a VSTO add-in in Visio 2019; filtered and protected sheets from PowerShell and from a VSTO Excel add-in. ROT lookup and start times by PowerShell with workbooks opened by `excel.exe` (2026-10). Number formats, empty tables, opening, same file name, structure protection, sheet rollback: C# console (net48, embedded PIA), thread culture `de-DE` and `en-US` (2026-10). Cleanup after an error (`Close(false)`, `Quit()`, then `GC.Collect()`): no `EXCEL.EXE` left 3 s later (C# console). _Unverified:_ network paths (mapped drive vs. UNC) in the ROT.
