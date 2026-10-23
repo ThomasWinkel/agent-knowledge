@@ -1,6 +1,6 @@
 ---
 title: Writing a table to Excel by COM
-description: Read when code in another process or add-in writes rows to Excel by COM - array write, text turning into numbers, dates, filtered or protected sheets, names, open workbook in any instance, cleanup, PowerShell.
+description: Read when code in another process or add-in writes rows to Excel by COM - array write, text turning into numbers, dates, filtered or protected sheets, names, open workbook, cleanup, PowerShell.
 ---
 
 # Writing a table to Excel by COM
