@@ -1,6 +1,6 @@
 ---
 title: Writing a table to Excel by COM
-description: Read when code in another process or add-in writes rows to Excel by COM - array write, text turning into numbers, dates, filtered or protected sheets, names, cleanup, PowerShell gotchas.
+description: Read when code in another process or add-in writes rows to Excel by COM - array write, text turning into numbers, dates, filtered or protected sheets, names, open workbook, cleanup, PowerShell.
 ---
 
 # Writing a table to Excel by COM
@@ -52,11 +52,15 @@ Not `ListRows.AddEx()` + `ListRow.Range.Value` per row: two cross-process calls 
 ## Which Excel, and cleanup
 
 - `Marshal.GetActiveObject("Excel.Application")` gets a running Excel (COMException if none). An invisible running instance usually belongs to another program's automation: start your own (`new Excel.Application()`) instead.
+- `GetActiveObject` returns only the first instance (the Running Object Table holds one `Excel.Application` entry). Every open workbook of every instance is in the ROT under its full path, also one opened read-only in a second instance (`excel.exe /x /r`). Find a workbook by path: enumerate the ROT (`GetRunningObjectTable` -> `EnumRunning`, compare `IMoniker.GetDisplayName` ignoring case, then `GetObject`); the 8.3 short path does not match, so compare full long paths. Then `Workbook.ReadOnly`, `Saved` (`false` after an unsaved change) and `Application` (that instance).
+- Not `Marshal.BindToMoniker(path)` / VB `GetObject(path)` to look for it: for a file that is not open it opens the workbook in the first running instance with a hidden window (no new process, 161 ms). For an open one it returns it (path case does not matter).
+- A workbook open in Excel locks the file (other processes get a sharing violation on write); opened read-only it does not.
+- Starting Excel (`new Excel.Application()`) took 2.0-2.1 s, opening a small workbook then 0.1-0.3 s (3 runs, add-ins installed).
 - On an error: `workbook.Close(SaveChanges: false)`, and `Quit()` an instance you started, else a hidden `EXCEL.EXE` stays.
 - Hand a started instance to the user with `Visible = true` and `UserControl = true`.
 - An Excel the user closes stays as a process while .NET still holds RCWs (common knowledge, not tried). Remedy: do the COM work in a separate `[MethodImpl(MethodImplOptions.NoInlining)]` method, then `GC.Collect(); GC.WaitForPendingFinalizers();`. With it the process ended ~3 s after the window was closed (verified from a Visio VSTO add-in).
 - A started Excel did not come to the front (add-in button clicked by UI Automation; a real click not tried).
-- The new workbook is named `Sheet1` (title bar `Sheet1 - Excel`), not `Book1`/`Mappe1` (German UI, `xlWBATWorksheet`, from a VSTO add-in).
+- The new workbook is named `Sheet1` (title bar `Sheet1 - Excel`), not `Book1`/`Mappe1` (English UI, `xlWBATWorksheet`, from a VSTO add-in).
 
 ## Test scripts in Windows PowerShell 5.1
 
@@ -65,4 +69,4 @@ Not `ListRows.AddEx()` + `ListRow.Range.Value` per row: two cross-process calls 
 - Late-bound `NumberFormat` reads the codes in the user's locale: with German settings use `TT.MM.JJJJ hh:mm`, `#.##0,00`; `dd.mm.yyyy` shows `dd.10.yyyy`.
 - `Quit()` + `ReleaseComObject` leaves `EXCEL.EXE` running until the PowerShell process exits.
 
-Verified with Excel 2019 C2R x64, German UI (2026-10): values, formats, names, `xlWBATWorksheet` and the PowerShell notes by COM automation from PowerShell; process end, foreground and workbook name from a VSTO add-in in Visio 2019; filtered and protected sheets from PowerShell and from a VSTO Excel add-in. _Unverified:_ cleanup after an error.
+Verified with Excel 2019 C2R x64, English UI (`LanguageSettings.LanguageID(msoLanguageIDUI)` 1033), German region settings (2026-10): values, formats, names, `xlWBATWorksheet` and the PowerShell notes by COM automation from PowerShell; process end, foreground and workbook name from a VSTO add-in in Visio 2019; filtered and protected sheets from PowerShell and from a VSTO Excel add-in. ROT lookup and start times by PowerShell with workbooks opened by `excel.exe` (2026-10). _Unverified:_ cleanup after an error; network paths (mapped drive vs. UNC) in the ROT.
