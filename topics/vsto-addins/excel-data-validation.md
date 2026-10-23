@@ -24,7 +24,7 @@ if (items.Length <= 255)
 - An item cannot contain the list separator. Kept literally: spaces inside, `"` (item `"q"` accepts `"q"`, not `q`), `,` when the separator is `;`. An item with leading/trailing spaces (` a `) accepted neither `a` nor ` a `: leave such lists without validation.
 - Text items match case-sensitive: list `Abc` rejects `abc` and `ABC`.
 - The cell value is parsed before the check, like a typed entry: list `1;2;3` in a General cell holds `2` as a number, in a `@` cell as text; both pass.
-- Booleans: list `TRUE;FALSE` in a General cell: typed `TRUE`/`true` -> `bool`, passes; in a `@` cell `TRUE` stays text and passes, `true` fails. `WAHR` is text in an English-UI Excel and fails. List from a range of two `bool` cells (`=Lists!$A$1:$A$2`): typed `TRUE` passes as `bool`; the drop-down shows the UI language's words. Custom `=ISLOGICAL(<cell>)` passes only `bool` (no drop-down).
+- Booleans: list `TRUE;FALSE` in a General cell: typed `TRUE`/`true` -> `bool`, passes; in a `@` cell `TRUE` stays text and passes, `true` fails. `WAHR` is text in an English-UI Excel and fails. List from a range of two `bool` cells (`=Lists!$A$1:$A$2`): typed `TRUE` passes as `bool`; the drop-down shows the UI language's words. Custom `=ISLOGICAL(<cell>)` passes only `bool` (no drop-down). Same in every UI language, with drop-down: `@` cells + list `TRUE;FALSE` (text; Visio turns it into a real Boolean on link: [visio-data-linking](visio-data-linking.md)).
 - `Validation.Value` (read-only, `bool`) tells whether the cell's current value passes; handy in tests.
 - Alert style `xlValidAlertWarning`/`Information` still show a message on a wrong value; `ShowError = false` shows none.
 - Validation does not stop paste; a value set by code is not checked.
