@@ -20,7 +20,7 @@ Write a literal with `FormulaU`, read the evaluated value with `Result*`. Measur
 - Number: the `FormulaU` getter shows ~14 significant digits (`0.33333333333333`), but the value keeps the full double, also after save.
 - Number: exponents work as `"R"` writes them (`1E+300`, `1.5E-05`, `double.MaxValue`; the getter shows `1e300`). Denormal doubles (`double.Epsilon` = `4.94065645841247E-324`) fail: COM exception `#VALUE!`. NaN/infinity have no formula: check before writing.
 - Bool: comparisons give the same 1 / 0 (`1>0` -> 1). `ResultStr` gives `TRUE` / `FALSE`.
-- Date: Visio counts days since 1899-12-30, as OLE dates. `DATETIME("2026-10-18 13:45:30")` also works. `Result(visDate)` keeps milliseconds in memory; after save the date is rounded to whole seconds (the formula keeps only that). `ResultStr` formats it by region (`18.10.2026 13:45:30` in de-DE).
+- Date: Visio counts days since 1899-12-30, as OLE dates. `DATETIME("2026-10-18 13:45:30")` also works. `Result(visDate)` keeps milliseconds in memory; after save the date is rounded to whole seconds (the formula keeps only that). `ResultStr` formats it by region (`18.10.2026 13:45:30` in de-DE). `DATETIME` takes one argument: `DATETIME(2026,10,1)` gives no error and means `DATETIME(2026)` = 1905-07-18; use `DATE(2026,10,1)+TIME(13,30,0)`.
 
 ## Empty cells, types and errors on read
 
