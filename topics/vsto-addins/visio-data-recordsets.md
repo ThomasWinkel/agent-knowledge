@@ -44,7 +44,8 @@ $rs = $doc.DataRecordsets.Add($cn, "SELECT * FROM [My sheet`$]", 0, 'My sheet') 
 - Without the name argument Visio picks its own recordset name, not the sheet name.
 - `Add` sets no primary key: refresh then matches rows by position. Set one: [visio-data-linking](visio-data-linking.md).
 - Values from Excel cells: every number is `double` (also `1`, `400`), a cell with a currency format is `decimal`, dates `DateTime`, `TRUE`/`FALSE` `bool`, text `string` (`007` stays text if the cell is text).
-- `IMEX=1`: a column with text and numbers becomes text; the numbers come formatted in the user's locale (`7,5` with German settings).
+- `IMEX=1`: a column with text and numbers becomes text; the numbers come formatted in the user's locale (`7,5` with German settings). In such a mixed column (German settings): `TRUE` -> `TRUE`, a date with number format `dd.mm.yyyy` -> `dd.10.yyyy` (only the month filled in). A column of only dates gives `DateTime`, only `TRUE`/`FALSE` gives `bool`.
+- Rows without any value inside the sheet come as rows of `DBNull` when a value follows further down (in any column, also outside the ListObject). Empty rows at the end are left out, also empty rows at the end of a ListObject. ACE reads the sheet, not the ListObject: a note below the table is a row too.
 - Relative path: `Data Source=data.xlsx` (no folder) is stored as given (`visio/data/connections.xml`: `<DataConnection FileName='' ConnectionString='...Data Source=data.xlsx;...'>`). `Add` resolves it against the document folder, `Refresh()` against Visio's current folder: [visio-data-linking](visio-data-linking.md).
 - `recordsets.xml` stores the recordset `Name` and the query `Command` (`SELECT * FROM [My sheet$]`) separately: renaming the recordset (`Name = x`, then `Refresh()`) keeps the query and the data. Find the source sheet by `DataRecordset.CommandString`, not by the name.
 
