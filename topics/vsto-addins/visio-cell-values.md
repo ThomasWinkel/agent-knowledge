@@ -41,7 +41,7 @@ Write a literal with `FormulaU`, read the evaluated value with `Result*`. Measur
 
 ## Master instances
 
-- `FormulaU = ""` (also `FormulaForceU = ""`) on a cell of a master instance does not empty it: it removes the local formula, the cell inherits again (`IsInherited` true, later master changes arrive). On a shape without master it empties the cell. To clear a value in an instance, write the empty text `""""` (`""` in the formula).
+- `FormulaU = string.Empty` (also `FormulaForceU`) on a cell of a master instance does not empty it: it removes the local formula, the cell inherits again (`IsInherited` true, later master changes arrive). On a shape without master it empties the cell. To clear a value in an instance, write the formula `""` (two quote characters = empty text; C# `"\"\""`; _unverified_ in an instance).
 - `Shape.DeleteRow` on a row the instance inherits removes the row from the instance for good: it stays gone when the master changes later.
 - Measured with `User` and `Prop` rows, master in the document stencil, master changed by `Master.Open()`/`Close()`.
 
