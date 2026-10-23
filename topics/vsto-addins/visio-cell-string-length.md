@@ -15,6 +15,8 @@ $cell.ResultStr(0).Length                 # read back
 - **In memory:** every tested cell took 32,768,000 characters and returned all of them; the search stopped there. Cells: `User.x`, `User.x.Prompt`, `Prop.x` (value), `Prop.x.Label`, `Prop.x.Prompt`, `Prop.x.Format`, on the DocumentSheet, a PageSheet and a shape. `GUARD("...")` around the literal: same (tested up to 10,000,000).
 - **Save and reopen:** 1,000,000 characters in `User.x`, `User.x.Prompt`, `Prop.x` (shape) and `User.x` (DocumentSheet) came back complete, both `.vsdx` and `.vsd`. Save and open each took under 1 s.
 - No difference at 65,535 / 65,536 / 65,537: there is no 64k limit for cells set by code.
+- **Row names:** `AddNamedRow` took User row names up to 200 characters (the search stopped there); `CellsU("User.<name>")` finds them.
+- **Real data in a master:** 8 JSON cells (85 KB in total) in one master with 100 instances: `.vsdx` 22,709 bytes vs 15,397 without (instances inherit, the text is stored once); writing all 8 cells 75 ms; reading one 27 KB cell through each of 100 instances 331 ms (`FormulaU`) out of process -> read it once per master if the instances inherit it.
 
 ## Sources claiming 64k
 
