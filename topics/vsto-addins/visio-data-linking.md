@@ -27,9 +27,11 @@ Key matching on `Refresh()`:
 | Key duplicated (second row `a1`) | shape linked to `a1` loses its link; not restored when the duplicate is removed again |
 | One row with empty key | treated as key `""`, link kept |
 | Two rows with empty key | the linked shape loses its link |
+| Two rows with no value at all (blank rows, key `DBNull`), no shape linked to them | no conflict, links of the other rows kept |
 | Row removed | shape loses its link, keeps its values |
 | Key `0007`, `1E3`, `-5`, `12.3` in text cells | kept as text, matched |
 
+- Refresh time with a key grows about with the square of the row count (8 text columns, unchanged data, no linked shapes, `Refresh()` by COM): 1,000 rows 394 ms, 2,500 rows 1,935 ms, 5,000 rows 7,221 ms, 10,000 rows 29,683 ms. Same 10,000 rows without key: 711 ms (`Add` 747 ms). `SetPrimaryKey` itself: a few ms.
 - Visio row IDs are never reused (a removed or failed row burns its ID).
 - A shape that lost its link stays in `DataRecordset.GetAllRefreshConflicts()`; `GetMatchingRowsForRefreshConflict(shape)` gives the competing rows (duplicate key) or nothing (row removed). `Refresh()` by code shows no conflict UI. Relink: `shape.LinkToData(recordsetId, rowId, false)`.
 
@@ -72,7 +74,12 @@ Key matching on `Refresh()`:
 - The error looks random (works after save, close, reopen; works in a copied folder; the Link Data wizard works only after browsing to the file): all match the current folder rule. `DataConnection.FileName` (read-only) is empty for `Add` by code and set by the wizard; setting it in `connections.xml` did not change the error (VisGuy forum thread "DatarecordSet with relative path to Excel worksheet", 2022). _Unverified:_ that the wizard's browse dialog sets the current folder; behavior of Visio before 2019.
 - Tests: read another process's current folder from its PEB (x64: `NtQueryInformationProcess` -> `PEB+0x20` ProcessParameters -> `+0x38` CurrentDirectory); set it inside Visio with `doc.ExecuteLine("ChDir ""<path>""")`. A whole `Refresh` in a wrong folder in one call (no idle between): `doc.ExecuteLine("ChDir ""<path>"": ThisDocument.DataRecordsets(1).Refresh")`. Start Visio in a given folder: `Start-Process VISIO.EXE '"<file>"' -WorkingDirectory <folder>` (add-ins load), then `GetActiveObject`. `Documents.Open`/`OpenEx` by COM from PowerShell hung on one machine; `doc.ExecuteLine("Documents.Open ""<file>""")` opened the second document.
 
+## Undo
+
+`Add` (with `SetPrimaryKey`), `Refresh()` and `Delete()` inside one undo scope ([visio-undo-scopes](visio-undo-scopes.md)) are one Undo step: `Undo()` removes the added recordsets, puts the old values back into the recordset and the linked shapes, and brings a deleted recordset back with its key; `Redo()` does it all again (measured by COM, VSTO add-in held the scope).
+
 ## Source open in Excel
 
 - ACE reads a workbook open in Excel: it gets the **saved** state; unsaved edits are not seen.
 - While Excel has it open, another process cannot open the file for writing (sharing violation); reading works.
+- Another process holding the file open, even read-only with `FileShare.ReadWrite | FileShare.Delete`: `DataRecordsets.Add` failed with `Unable to connect to the data.` (measured once). Close own readers of the file before Visio reads it.
