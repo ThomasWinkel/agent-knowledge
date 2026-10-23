@@ -1,6 +1,6 @@
 ---
 title: Writing a table to Excel by COM
-description: Read when code in another process or add-in writes rows to Excel by COM - one-call array write, text that turns into numbers, dates, ListObject and sheet names, cleanup, PowerShell test gotchas.
+description: Read when code in another process or add-in writes rows to Excel by COM - array write, text turning into numbers, dates, filtered or protected sheets, names, cleanup, PowerShell gotchas.
 ---
 
 # Writing a table to Excel by COM
@@ -35,6 +35,13 @@ Not `ListRows.AddEx()` + `ListRow.Range.Value` per row: two cross-process calls 
 | `bool` | `TRUE`/`FALSE` |
 | `null`, `DBNull` | empty cell |
 
+## Filtered or protected sheet
+
+- **With a filter active on the sheet, a write to a range of several cells goes only to its visible cells, and each gets the first value of the array** (`Range.Value2 = object[,]`; table filter and plain range AutoFilter alike). Hidden rows stay as they were; no error. `Range.NumberFormat` on such a range also skips hidden cells.
+  - A single cell is written even when its row is hidden; so is a range of only hidden cells. Rows hidden by hand (`EntireRow.Hidden`, no filter) are written normally.
+  - Test `Worksheet.FilterMode`: `True` also when the filter of *another* table on the sheet hides rows of yours; `ListObject.AutoFilter.FilterMode` sees only its own filter. Filtered: write cell by cell (one `NumberFormat` + one `Value2` call per cell; VSTO add-in, 10,000 cells: whole run 4.9 s, vs 0.5 s with one array write unfiltered).
+- Protected sheet (`Worksheet.ProtectContents`; `Protect()` with defaults): setting `NumberFormat` throws `Unable to set the NumberFormat property of the Range class` even on unlocked cells. Check `ProtectContents` first and tell the user.
+
 ## Names
 
 - **`ListObject.Name` takes any text and is not the table name.** The name used in formulas and the Name Manager is `DisplayName`. Setting `Name` to `Test data 1` succeeds silently.
@@ -58,4 +65,4 @@ Not `ListRows.AddEx()` + `ListRow.Range.Value` per row: two cross-process calls 
 - Late-bound `NumberFormat` reads the codes in the user's locale: with German settings use `TT.MM.JJJJ hh:mm`, `#.##0,00`; `dd.mm.yyyy` shows `dd.10.yyyy`.
 - `Quit()` + `ReleaseComObject` leaves `EXCEL.EXE` running until the PowerShell process exits.
 
-Verified with Excel 2019 C2R x64, German UI (2026-10): values, formats, names, `xlWBATWorksheet` and the PowerShell notes by COM automation from PowerShell; process end, foreground and workbook name from a VSTO add-in in Visio 2019. _Unverified:_ cleanup after an error.
+Verified with Excel 2019 C2R x64, German UI (2026-10): values, formats, names, `xlWBATWorksheet` and the PowerShell notes by COM automation from PowerShell; process end, foreground and workbook name from a VSTO add-in in Visio 2019; filtered and protected sheets from PowerShell and from a VSTO Excel add-in. _Unverified:_ cleanup after an error.
