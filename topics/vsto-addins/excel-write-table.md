@@ -1,6 +1,6 @@
 ---
 title: Writing a table to Excel by COM
-description: Read when code in another process or add-in writes rows to Excel by COM - array write, text turning into numbers, dates, filtered or protected sheets, names, open workbook, cleanup, PowerShell.
+description: Read when code writes rows to Excel by COM - array write, text turning into numbers, dates, appending to a table, filtered or protected sheets, names, open workbook, cleanup, PowerShell.
 ---
 
 # Writing a table to Excel by COM
@@ -28,8 +28,10 @@ Not `ListRows.AddEx()` + `ListRow.Range.Value` per row: two cross-process calls 
 
 | .NET value in the array | Cell |
 |---|---|
-| `string` `"007"`, `"1E3"`, `"12e3"`, `"1/2"`, `"3-4"`, `"jan1"`, `"1jan"`, `"dec31"`, `"1:2"` | parsed like a typed entry: `7`, `1000`, `12000`, dates, a time. Only cells formatted `@` before the write keep the text. Stayed text: `e5`, `1d5`, `a12`, `0x1f`, `wahr`, `jan1234567`. |
-| `DateTime` with `Range.Value` | date, each cell gets its own date format: `TT.MM.JJJJ hh:mm`, but `TT.MM.JJJJ` (time hidden) at midnight; a column can mix both |
+| `string` `"007"`, `"1E3"`, `"12e3"`, `"1/2"`, `"3-4"`, `"jan1"`, `"1jan"`, `"dec31"`, `"1:2"`, `"TRUE"` | parsed like a typed entry: `7`, `1000`, `12000`, dates, a time, a bool. Only cells formatted `@` before the write keep the text (`=1+1` too). Stayed text: `e5`, `1d5`, `a12`, `0x1f`, `wahr`, `jan1234567`. |
+| `string` with a leading `'` (`"'007"`, `"'TRUE"`, `"'=1+1"`) | text without the `'` (`PrefixCharacter` = `'`), in `General` and `@` cells alike. **Also in `@` cells a leading `'` is eaten**: `"'x"` gives `x`, so write `"''x"` for `'x`. Text guard for cells of unknown format: prefix every string with `'`. |
+| string over 32,767 chars | cut to 32,766 chars, no error. A row holding such a cell makes `Range.Formula` throw `0x800A03EC`; `WorksheetFunction.CountA` works. |
+| `DateTime` with `Range.Value` | date, each cell gets its own date format: `TT.MM.JJJJ hh:mm`, but `TT.MM.JJJJ` (time hidden) at midnight; a column can mix both. A cell already formatted `m/d/yyyy` keeps it. In an `@` cell: US text `10/23/2026`. **Before 1900: `COMException` `E_OUTOFMEMORY` (0x8007000E)**: write the serial number instead. |
 | `DateTime` with `Range.Value2` | serial number, format stays `General`: looks like `46024,57` |
 | `int`, `double`, `decimal` | number, format `General` (currency format is not applied) |
 | `bool` | `TRUE`/`FALSE` |
@@ -40,6 +42,36 @@ Not `ListRows.AddEx()` + `ListRow.Range.Value` per row: two cross-process calls 
 - **Early-bound interop (C# with the PIA) reads and writes `NumberFormat` in English codes, whatever the thread culture** (`General`, `@`, `m/d/yyyy`; same with `de-DE` and `en-US`). `NumberFormatLocal` gives the local code (`Standard`, `TT.MM.JJJJ`). Late-bound PowerShell differs (below).
 - `m/d/yyyy` is Excel's built-in short date: cells show the date as the region settings say (`TT.MM.JJJJ` with German settings).
 - A table with no data yet: `ListObjects.Add` over the header row plus one empty row gives a body of one row. Set formats and validation on `ListColumns[i].DataBodyRange`: rows added by `ListRows.Add()` take them on.
+- `ListObjects.Add` over the header row alone: `ListRows.Count` 0, `DataBodyRange` null, but `Range` includes an empty `InsertRowRange`. The first `ListRows.Add()` then gives **two** rows (count 2): loop `while (ListRows.Count < n) ListRows.Add();`.
+- Mixed formats in a range: `Range.NumberFormat` returns no string (null/`DBNull`). `Range.EntireRow.Hidden`: `true` all hidden, `false` none, else null.
+- `ListColumn.DataBodyRange.HasFormula` is `true` when every cell has a formula: a usable test for a calculated column. Writing a formula into one table cell by COM makes Excel fill the whole column (seen once, not isolated).
+
+## Appending rows to an existing table
+
+Fast and like `ListRows.Add` (only cells below the table in its columns move down; formats, validation and calculated-column formulas carried on):
+
+```csharp
+var range = list.Range;                                   // header + body (+ total row)
+int below = range.Row + range.Rows.Count, left = range.Column, right = left + range.Columns.Count - 1;
+sheet.Range[sheet.Cells[below, left], sheet.Cells[below + n - 1, right]]
+    .Insert(Excel.XlInsertShiftDirection.xlShiftDown, Excel.XlInsertFormatOrigin.xlFormatFromLeftOrAbove);
+list.Resize(sheet.Range[sheet.Cells[range.Row, left], sheet.Cells[below + n - 1, right]]);
+// then one Range.Value write per column; skip a column with no values, else null clears a calculated formula
+```
+
+| 300 rows | Time (out of process) |
+|---|---|
+| `Insert` + `Resize` | 9 ms |
+| `ListRows.Add()` per row | 1,032 ms |
+| values, 6 columns, one write per column | 39 ms (cell by cell: 3,462 ms) |
+
+- `Resize` alone also carries formats, validation and formulas, but swallows content below the table into it.
+- A write into the row right below a table extends the table (auto-expand works for COM writes).
+- **With a filter active on the sheet, `Range.Insert` (shift down) fails** (`Insert method of Range class failed`), even below the table. `ListRows.Add()` and `Resize` work; inserting whole sheet rows works but moves cells beside the table too. Use `ListRows.Add()` then; also when the table has no rows (Insert would copy the header's formats) or a total row (`ShowTotals`).
+- New rows appended while filtered stay visible; an array write into all-visible rows is fine with `FilterMode` on.
+- Insert into a range crossing a merged cell: with `DisplayAlerts = true` Excel shows a message box and **the COM call waits until the user closes it**; with `false` it inserts and silently unmerges the cell.
+- `Workbook.Save()` onto a file whose read-only attribute was set after it was opened: Excel shows "Save As" even with `DisplayAlerts = false`; the call waits.
+- Undo an append in a user's open workbook: `ListRows[i].Delete()` from the end, `ClearContents` on cells you filled in reused rows (only your columns: a calculated formula stays), then `Workbook.Saved = true`.
 
 ## Filtered or protected sheet
 
@@ -58,7 +90,7 @@ Not `ListRows.AddEx()` + `ListRow.Range.Value` per row: two cross-process calls 
 
 ## Which Excel, and cleanup
 
-- `Marshal.GetActiveObject("Excel.Application")` gets a running Excel (COMException if none). An invisible running instance usually belongs to another program's automation: start your own (`new Excel.Application()`) instead. An invisible leftover (e.g. of a crashed script) that registered first hides every visible instance from `GetActiveObject`.
+- `Marshal.GetActiveObject("Excel.Application")` gets a running Excel (COMException if none). Right after an instance quit, its stale entry can still be returned: the cast to `Excel.Application` throws `InvalidCastException` (`RPC_E_DISCONNECTED` 0x80010108), not `COMException`; treat it as "none running". An invisible running instance usually belongs to another program's automation: start your own (`new Excel.Application()`) instead. An invisible leftover (e.g. of a crashed script) that registered first hides every visible instance from `GetActiveObject`.
 - `GetActiveObject` returns only the first instance (the Running Object Table holds one `Excel.Application` entry). Every open workbook of every instance is in the ROT under its full path, also one opened read-only in a second instance (`excel.exe /x /r`). Find a workbook by path: enumerate the ROT (`GetRunningObjectTable` -> `EnumRunning`, compare `IMoniker.GetDisplayName` ignoring case, then `GetObject`); the 8.3 short path does not match, so compare full long paths. Then `Workbook.ReadOnly`, `Saved` (`false` after an unsaved change) and `Application` (that instance).
 - Not `Marshal.BindToMoniker(path)` / VB `GetObject(path)` to look for it: for a file that is not open it opens the workbook in the first running instance with a hidden window (no new process, 161 ms). For an open one it returns it (path case does not matter).
 - A workbook open in Excel locks the file (other processes get a sharing violation on write); opened read-only it does not.
@@ -79,4 +111,4 @@ Not `ListRows.AddEx()` + `ListRow.Range.Value` per row: two cross-process calls 
 - Late-bound `NumberFormat` reads the codes in the user's locale: with German settings use `TT.MM.JJJJ hh:mm`, `#.##0,00`; `dd.mm.yyyy` shows `dd.10.yyyy`.
 - `Quit()` + `ReleaseComObject` leaves `EXCEL.EXE` running until the PowerShell process exits.
 
-Verified with Excel 2019 C2R x64, English UI (`LanguageSettings.LanguageID(msoLanguageIDUI)` 1033), German region settings (2026-10): values, formats, names, `xlWBATWorksheet` and the PowerShell notes by COM automation from PowerShell; process end, foreground and workbook name from a VSTO add-in in Visio 2019; filtered and protected sheets from PowerShell and from a VSTO Excel add-in. ROT lookup and start times by PowerShell with workbooks opened by `excel.exe` (2026-10). Number formats, empty tables, opening, same file name, structure protection, sheet rollback: C# console (net48, embedded PIA), thread culture `de-DE` and `en-US` (2026-10). Cleanup after an error (`Close(false)`, `Quit()`, then `GC.Collect()`): no `EXCEL.EXE` left 3 s later (C# console). _Unverified:_ network paths (mapped drive vs. UNC) in the ROT.
+Verified with Excel 2019 C2R x64, English UI (`LanguageSettings.LanguageID(msoLanguageIDUI)` 1033), German region settings (2026-10): values, formats, names, `xlWBATWorksheet` and the PowerShell notes by COM automation from PowerShell; process end, foreground and workbook name from a VSTO add-in in Visio 2019; filtered and protected sheets from PowerShell and from a VSTO Excel add-in. ROT lookup and start times by PowerShell with workbooks opened by `excel.exe` (2026-10). Number formats, empty tables, opening, same file name, structure protection, sheet rollback: C# console (net48, embedded PIA), thread culture `de-DE` and `en-US` (2026-10). Cleanup after an error (`Close(false)`, `Quit()`, then `GC.Collect()`): no `EXCEL.EXE` left 3 s later (C# console). Appending to tables, leading `'`, long text, dates before 1900, header-only tables, merged cell, Save As, stale `GetActiveObject`: C# console (net48), German region (2026-10). _Unverified:_ network paths (mapped drive vs. UNC) in the ROT.
