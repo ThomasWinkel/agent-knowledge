@@ -1,6 +1,6 @@
 ---
 title: Writing a table to Excel by COM
-description: Read when code writes rows to Excel by COM - array write, text turning into numbers, dates, appending to a table, filtered or protected sheets, names, open workbook, cleanup, PowerShell.
+description: Read when code writes to an Excel table by COM - array write, text turning into numbers, dates, append, delete rows, add columns, filtered or protected sheets, names, open workbook, cleanup.
 ---
 
 # Writing a table to Excel by COM
@@ -71,13 +71,23 @@ list.Resize(sheet.Range[sheet.Cells[range.Row, left], sheet.Cells[below + n - 1,
 - New rows appended while filtered stay visible; an array write into all-visible rows is fine with `FilterMode` on.
 - Insert into a range crossing a merged cell: with `DisplayAlerts = true` Excel shows a message box and **the COM call waits until the user closes it**; with `false` it inserts and silently unmerges the cell.
 - `Workbook.Save()` onto a file whose read-only attribute was set after it was opened: Excel shows "Save As" even with `DisplayAlerts = false`; the call waits.
+- A table with a total row grows by `ListRows.Add()` into empty sheet rows below the total row without moving anything; a cell right below the total row is moved down.
 - Undo an append in a user's open workbook: `ListRows[i].Delete()` from the end, `ClearContents` on cells you filled in reused rows (only your columns: a calculated formula stays), then `Workbook.Saved = true`.
+
+## Deleting rows and adding columns
+
+- Delete table rows: `Range` over the rows, table columns only, `.Delete(xlShiftUp)`; one call per run of adjacent rows, from the bottom up so the row numbers of the others stay right. The table shrinks, cells below it in its columns move up, cells beside stay; a total row stays last. All body rows deleted: `ListRows.Count` 0, `DataBodyRange` null, an `InsertRowRange` remains; a later `ListRows.Add()` works and takes the column formats.
+- **A filter on the table blocks deleting**: `Range.Delete` and `ListRows[i].Delete()` throw `Can't move cells in a filtered range or table.` (in a file opened again: `No cells were found.`), even for one hidden row. Deleting `EntireRow` deletes only the visible rows, without an error.
+- **A filter on another table of the same sheet that hides a row makes `Range.Delete` delete the whole sheet row**: no error, and the hidden row of the other table is gone too. Rows hidden by hand (no filter) are deleted normally; there `Range.Insert` (shift down) works too and leaves the other table alone.
+- Remedy: before deleting, `AutoFilter.ShowAllData()` on every table of the sheet with `ShowAutoFilter && AutoFilter.FilterMode`, then `Worksheet.ShowAllData()` if `Worksheet.FilterMode`.
+- `ListColumns.Add()` appends a column at the right. Cells right of the table move right, but only in the table's rows (a second table inside those rows moves as a whole); cells below stay. Works with a filter on. The new body takes the number format of the column left of it (e.g. `@`), the header `General`; a calculated column on the left does not carry over its formula.
+- `ListColumn.Name = "007"` gives `7`: format the header cell `@` first. A name the table already has (ignoring case) is ignored without an error: the column keeps its old name, so read `Name` back.
 
 ## Filtered or protected sheet
 
 - **With a filter active on the sheet, a write to a range of several cells goes only to its visible cells, and each gets the first value of the array** (`Range.Value2 = object[,]`; table filter and plain range AutoFilter alike). Hidden rows stay as they were; no error. `Range.NumberFormat` on such a range also skips hidden cells.
   - A single cell is written even when its row is hidden; so is a range of only hidden cells. Rows hidden by hand (`EntireRow.Hidden`, no filter) are written normally.
-  - Test `Worksheet.FilterMode`: `True` also when the filter of *another* table on the sheet hides rows of yours; `ListObject.AutoFilter.FilterMode` sees only its own filter. Filtered: write cell by cell (one `NumberFormat` + one `Value2` call per cell; VSTO add-in, 10,000 cells: whole run 4.9 s, vs 0.5 s with one array write unfiltered).
+  - Test `Worksheet.FilterMode`: `True` also when the filter of *another* table on the sheet hides rows of yours; `ListObject.AutoFilter.FilterMode` sees only its own filter. **In a file opened again, `Worksheet.FilterMode` is `False` when only another table's filter hides rows** (own table's filter: `True`): ask every table of the sheet too, or test `Range.EntireRow.Hidden` of the rows you write. Filtered: write cell by cell (one `NumberFormat` + one `Value2` call per cell; VSTO add-in, 10,000 cells: whole run 4.9 s, vs 0.5 s with one array write unfiltered).
 - Protected sheet (`Worksheet.ProtectContents`; `Protect()` with defaults): setting `NumberFormat` throws `Unable to set the NumberFormat property of the Range class` even on unlocked cells. Check `ProtectContents` first and tell the user.
 
 ## Names
@@ -111,4 +121,4 @@ list.Resize(sheet.Range[sheet.Cells[range.Row, left], sheet.Cells[below + n - 1,
 - Late-bound `NumberFormat` reads the codes in the user's locale: with German settings use `TT.MM.JJJJ hh:mm`, `#.##0,00`; `dd.mm.yyyy` shows `dd.10.yyyy`.
 - `Quit()` + `ReleaseComObject` leaves `EXCEL.EXE` running until the PowerShell process exits.
 
-Verified with Excel 2019 C2R x64, English UI (`LanguageSettings.LanguageID(msoLanguageIDUI)` 1033), German region settings (2026-10): values, formats, names, `xlWBATWorksheet` and the PowerShell notes by COM automation from PowerShell; process end, foreground and workbook name from a VSTO add-in in Visio 2019; filtered and protected sheets from PowerShell and from a VSTO Excel add-in. ROT lookup and start times by PowerShell with workbooks opened by `excel.exe` (2026-10). Number formats, empty tables, opening, same file name, structure protection, sheet rollback: C# console (net48, embedded PIA), thread culture `de-DE` and `en-US` (2026-10). Cleanup after an error (`Close(false)`, `Quit()`, then `GC.Collect()`): no `EXCEL.EXE` left 3 s later (C# console). Appending to tables, leading `'`, long text, dates before 1900, header-only tables, merged cell, Save As, stale `GetActiveObject`: C# console (net48), German region (2026-10). _Unverified:_ network paths (mapped drive vs. UNC) in the ROT.
+Verified with Excel 2019 C2R x64, English UI (`LanguageSettings.LanguageID(msoLanguageIDUI)` 1033), German region settings (2026-10): values, formats, names, `xlWBATWorksheet` and the PowerShell notes by COM automation from PowerShell; process end, foreground and workbook name from a VSTO add-in in Visio 2019; filtered and protected sheets from PowerShell and from a VSTO Excel add-in. ROT lookup and start times by PowerShell with workbooks opened by `excel.exe` (2026-10). Number formats, empty tables, opening, same file name, structure protection, sheet rollback: C# console (net48, embedded PIA), thread culture `de-DE` and `en-US` (2026-10). Cleanup after an error (`Close(false)`, `Quit()`, then `GC.Collect()`): no `EXCEL.EXE` left 3 s later (C# console). Appending to tables, leading `'`, long text, dates before 1900, header-only tables, merged cell, Save As, stale `GetActiveObject`: C# console (net48), German region (2026-10). Deleting rows, filters of other tables, `ListColumns.Add`, total row growth: C# console (net48), Excel 2019 C2R x64, German region (2026-10-24). _Unverified:_ network paths (mapped drive vs. UNC) in the ROT.
