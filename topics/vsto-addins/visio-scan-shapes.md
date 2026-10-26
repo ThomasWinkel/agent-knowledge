@@ -1,6 +1,6 @@
 ---
 title: Scanning all shapes of a Visio document fast
-description: Read when Visio code must read cells of many shapes across all pages (find shapes by type or key, build an index or tree) - release COM objects, batch reads by master, GetResults failures that block a page.
+description: Read when Visio code reads cells of many shapes across all pages (find by type or key, build an index) - release COM objects, batch reads, GetResults failures.
 ---
 
 # Scanning all shapes of a Visio document fast
