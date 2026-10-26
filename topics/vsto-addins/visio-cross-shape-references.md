@@ -44,6 +44,13 @@ Chains: an edit is forwarded only through cells that hold `SETATREF` themselves 
 - `FormulaForceU` on `Prop.P` replaces `Prop.P`'s own `SETATREF` formula; nothing is forwarded.
 - Pattern: one link cell holds `SETATREF(<target>)`; cells that should be editable use `SETATREF(<link cell>)`, read-only cells a plain `<link cell>` reference.
 
+With that pattern (measured the same way, three pages):
+
+- Chain over two shapes (A links to B's cell, B's cell links to C): an edit in A lands in C, all formulas stay. A broken middle link (constant in B's link cell) makes A show B's constant.
+- Target cell holds a formula (`Prop.W&"A"`): the edit replaces it with a constant; Undo restores it. Target `GUARD(...)`: `Cell is guarded`, nothing changed.
+- Target deleted: the link cell becomes a constant (the `SETATREF` is gone too); a later edit stays in the link cell.
+- Cycle (S takes M's cell, M takes S's cell): no error, no hang, nothing reports it. Plain references freeze at the last value. With `SETATREF` on both sides an edit of S ends in M's cell as a constant (M's `SETATREF` formula is replaced), which breaks the cycle.
+
 ## CONTAINERSHEETREF
 
 ```text
