@@ -35,7 +35,7 @@ void OnMarkerEvent(Visio.Application app, int sequenceNum, string contextString)
 
 ## Gotchas
 
-- Event cells (`EventDblClick`, `EventDrop`, `Actions.X.Action`) fire only when triggered, not when the formula is set. A User cell fires as soon as the formula is set.
+- Event cells (`EventDblClick`, `EventDrop`, `Actions.X.Action`) fire only when triggered, not when the formula is set. A User cell fires as soon as the formula is set, then on each real change of a cell it depends on; an instance inheriting it from the master does not fire on drop, paste, duplicate or file open: [visio-cell-change-events](visio-cell-change-events.md).
 - `EventDrop` fires on dropping a master instance and on duplicating a shape. It **fires again on redo** of the drop (not on undo). `Application.IsUndoingOrRedoing` is `False` in the marker handler, so it is no guard.
 - Only the dropped shape fires: `EventDrop` of the sub-shapes of a group does not fire when the group is duplicated or dropped as a master instance, also not when the handler then ungroups it.
 - Changes the handler makes for `EventDrop` join the Undo step of the drop: one Undo removes the shape. After Redo **the handler's change is there twice** (redo fires `EventDrop` again): a handler that counts `K1` up to `K2` on drop leaves `K3` after Undo + Redo. Seen with the handler's change inside `BeginUndoScope`/`EndUndoScope`.
