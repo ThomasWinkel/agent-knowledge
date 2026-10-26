@@ -18,6 +18,8 @@ $cell.ResultStr(0).Length                 # read back
 - **Row names:** `AddNamedRow` took User row names up to 200 characters (the search stopped there); `CellsU("User.<name>")` finds them.
 - **Real data in a master:** 8 JSON cells (85 KB in total) in one master with 100 instances: `.vsdx` 22,709 bytes vs 15,397 without (instances inherit, the text is stored once); writing all 8 cells 75 ms; reading one 27 KB cell through each of 100 instances 331 ms (`FormulaU`) out of process -> read it once per master if the instances inherit it.
 
+- **Undo keeps every old value:** a document `User` cell with 317,029 characters (JSON, 6,500 entries) rewritten by code: write 5-16 ms, read 1-2 ms, Undo 1 ms (out of process); Visio's private memory grew about 2 MB per write up to +35 MB after 20 writes (default 20 Undo levels), not more after 60. Data that must not be undone: [visio-undo-scopes](visio-undo-scopes.md#data-outside-undo).
+
 ## Sources claiming 64k
 
 - Visio MVP blog (bVisual, Shape Data): "the value can be up to 64k characters", "64k characters can be entered or viewed". Probably a limit of the UI (Shape Data window, ShapeSheet window); _unverified_.
