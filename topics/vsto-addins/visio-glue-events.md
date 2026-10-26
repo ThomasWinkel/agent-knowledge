@@ -9,7 +9,8 @@ Measured 2026-10-26, Visio 2019 C2R x64, out-of-process C# (events on `Applicati
 
 ## ConnectionsAdded / ConnectionsDeleted
 
-- Fire once per glue change with the `Connect`s: `FromSheet`/`FromCell` (`BeginX`, `EndX`) and `ToSheet`/`ToCell` (`Connections.S2.X`; row name = middle part).
+- Fire once per glue change with the `Connect`s: `FromSheet`/`FromCell` (`BeginX`, `EndX`) and `ToSheet`/`ToCell` (`Connections.S2.X`; `ToCell.RowNameU` = `S2`, `ToCell.Row` = row index).
+- Connection row names: adding one named row names all rows of the section (`Row_1`, `Row_2`, ...). In a section without names `ToCell` is `Connections.X3` (`RowNameU` empty, `Row` 2; other cells `Connections.Y3`, `Connections.DirX[3]`). The row type only renames columns 2-6 (`DirX, DirY, Type, AutoGen, Prompt` vs. `A, B, C, D, E`), and both names resolve in either type (`Connections.S2.D` on a normal row is its `AutoGen` cell; unnamed: `Connections.D3`). Measured 2026-10, Visio 2019 C2R x64.
 - Do **not** fire when the glued-to shape moves (glue stays).
 - Undo/Redo fire them again with `Application.IsUndoingOrRedoing = true`. Skip those in the handler: Undo already restores your cell changes.
 - A cell written inside the handler (not undoing) lands in the **same Undo step** as the glue: one Undo takes back glue and write; Redo brings both.
@@ -23,7 +24,7 @@ app.ConnectionsAdded += connects =>
     if (app.IsUndoingOrRedoing) return;
     foreach (Visio.Connect c in connects)
     {
-        string row = c.ToCell.Name.Split('.')[1];   // "Connections.S2.X" -> "S2"
+        string row = c.ToCell.RowNameU;   // "S2"; empty for unnamed rows (then c.ToCell.Row)
         // write into c.FromSheet ...
     }
 };

@@ -26,6 +26,7 @@ Measured 2026-10-26, Visio 2019 C2R x64, COM from PowerShell (`Cut`/`Copy`/`Past
 
 - Nothing errors and nothing reports the change: a lost link looks like a normal value. An add-in that relies on links must store the target's identity (e.g. a GUID cell) next to the formula to detect and repair them.
 - Glue (`BeginX = PAR(PNT(Sheet.n!Connections.X1.X, ...))`) behaves like a same-page reference: a 1D shape copied alone is pasted unglued.
+- Formula text is not a stable key: a same-page reference written as `Sheet.1!Prop.X` reads back as `Labbox!Prop.X` from `FormulaU` once the target has the `NameU` `Labbox` (`Formula` shows the local `Name`); a cross-page `Pages[A]!Sheet.1!Prop.X` keeps `Sheet.1` after the rename. To check where a formula points, use `Cell.Precedents` (array of the referenced `Cell`s: `.Shape`, `.Name`), not string compare. Measured 2026-10, Visio 2019 C2R x64.
 
 ## SETATREF across pages
 
@@ -41,6 +42,7 @@ Chains: an edit is forwarded only through cells that hold `SETATREF` themselves 
 | `SETATREF(User.L)` | `GUARD(SETATREF(Pages[A]!Sheet.1!Prop.X))` | lands in the target; both formulas stay |
 
 - One Undo takes back the forwarded write (target value restored, formulas kept).
+- A user edit in the Shape Data window behaves the same (`SETATREF` link cell; text and number row; one Undo step each; [visio-shape-data-window-test](visio-shape-data-window-test.md)).
 - `FormulaForceU` on `Prop.P` replaces `Prop.P`'s own `SETATREF` formula; nothing is forwarded.
 - Pattern: one link cell holds `SETATREF(<target>)`; cells that should be editable use `SETATREF(<link cell>)`, read-only cells a plain `<link cell>` reference.
 
