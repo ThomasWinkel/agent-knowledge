@@ -1,6 +1,6 @@
 ---
 title: Scanning all shapes of a Visio document fast
-description: Read when Visio code reads cells of many shapes across all pages (find by type or key, build an index) - release COM objects, batch reads, GetResults failures.
+description: Read when Visio code reads cells or row names of many shapes across all pages (find by type, key or row name prefix, build an index) - release COM objects, batch reads, GetResults failures.
 ---
 
 # Scanning all shapes of a Visio document fast
@@ -62,6 +62,36 @@ Drawing 2: 50 pages, 20,000 top-level shapes; per page 90 master instances + 40 
 
 - Per-call cost grows with the number of live COM objects, not with the document: releasing them made the one-by-one scan 4x faster. The same probably explains growing write costs: [visio-performance-switches](visio-performance-switches.md#measured-the-switches-gave-nothing-the-batch-call-did) (_unverified_).
 - `CreateSelection(visSelTypeByMaster, mode, master)` on a page found only top-level instances, never instances inside a user's group, in every mode (`visSelModeSkipSub`, `SkipSuper`: 70 of 70 top-level; `OnlySub`, `OnlySuper`: 0). Shapes without master are not found by it.
+
+## Finding rows by name prefix (e.g. all `User.Link_*` rows)
+
+No call returns all row names of a section: read them one by one. Cost per call stays about 10 us when every object is released, so this is affordable even in a large document; reading the found cells costs as much again.
+
+```csharp
+const short user = (short)Visio.VisSectionIndices.visSectionUser;
+short rows = shape.SectionExists[user, 0] != 0 ? shape.RowCount[user] : (short)0;
+for (short r = 0; r < rows; r++)
+{
+    var cell = shape.CellsSRC[user, r, 0];
+    string name = cell.RowNameU;          // "" for an unnamed row
+    Marshal.ReleaseComObject(cell);
+    if (name.StartsWith("Link_", StringComparison.Ordinal)) { /* ... */ }
+}
+```
+
+Measured as above (in-process, Debug, Visio 2019, 2026-10): drawing 2 with 21 User rows on each of the 6,500 devices (13 named `Link_*`), 3 runs:
+
+| Variant | 20,000 shapes |
+|---|---|
+| `SectionExists` + `RowCount` of the User section only | 302-311 ms (first run after opening: 6,660 ms) |
+| all row names, `CellsSRC(...).RowNameU` (136,500 rows) | 2,355-3,809 ms |
+| all row names, `Section[s][r].NameU` | 2,664-3,849 ms |
+| names cached per master, reused when the instance has the same `RowCount` (not exact) | 1,582-1,959 ms |
+| one list cell per shape naming the rows instead (exists + `ResultStr`) | 359-362 ms |
+| row names + 2 cells of each of the 84,500 found rows (`Prompt` `ResultStr`, `FormulaU`) | 5,884-7,338 ms |
+
+- The first touch of all shapes after opening a large document is slow whatever is read (here 6.7 s, 11.5 s in the scan above).
+- A list cell is fast but must be kept in step with the rows by hand; a per-master cache misses rows an instance renamed or replaced with the same count.
 
 ## Batch read by master: how and why it is risky
 
