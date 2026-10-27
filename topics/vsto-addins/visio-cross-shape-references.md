@@ -43,7 +43,15 @@ Chains: an edit is forwarded only through cells that hold `SETATREF` themselves 
 
 - One Undo takes back the forwarded write (target value restored, formulas kept).
 - A user edit in the Shape Data window behaves the same (`SETATREF` link cell; text and number row; one Undo step each; [visio-shape-data-window-test](visio-shape-data-window-test.md)).
-- `FormulaForceU` on `Prop.P` replaces `Prop.P`'s own `SETATREF` formula; nothing is forwarded.
+- Code that rewrites a `SETATREF` cell itself (new target, constant, or back to the master) must use `FormulaForceU` or `Shape.SetFormulas` with `visSetBlastGuards` (2): that replaces the cell's own formula and forwards nothing. Plain `FormulaU` and `SetFormulas` without flag 2 always forward (measured on a master instance with local `User.L = SETATREF(Sheet.1!Prop.X)`):
+
+  | Write to `User.L` | `FormulaU` / `SetFormulas` 0 or 8 | `FormulaForceU` / `SetFormulas` 2 or 10 |
+  |---|---|---|
+  | `SETATREF(Sheet.1!Prop.Y)` | `Prop.X` becomes `Prop.Y`; `User.L` unchanged | `User.L` = `SETATREF(Sheet.1!Prop.Y)`; `Prop.X` unchanged |
+  | `"t"` | `Prop.X` becomes `"t"`; `User.L` unchanged | `User.L` = `"t"` |
+  | `""` | `Prop.X` emptied **and** `User.L` back to the master | `User.L` back to the master; `Prop.X` unchanged |
+
+  Force also skips `GUARD`: check for it before writing. Writing `GUARD(<own SETATREF formula>)` with `FormulaU` forwards it into the target: `Circular formula reference.`
 - Pattern: one link cell holds `SETATREF(<target>)`; cells that should be editable use `SETATREF(<link cell>)`, read-only cells a plain `<link cell>` reference.
 
 With that pattern (measured the same way, three pages):
