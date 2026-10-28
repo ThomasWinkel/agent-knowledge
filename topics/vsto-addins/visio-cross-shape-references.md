@@ -17,6 +17,7 @@ Measured 2026-10-26, Visio 2019 C2R x64, COM from PowerShell (`Cut`/`Copy`/`Past
 | Page `Name` changed (local name only) | unchanged: `Pages[..]` holds `NameU` |
 | Page `NameU` changed | rewritten to the new `NameU` |
 | Target deleted | **constant** with the last value (`"v1"`); Undo restores the reference |
+| Page of the target deleted | **constant**, like target deleted; Undo of the page delete restores the reference |
 | Target cut + pasted (same or other page, new ID) | **constant** with the last value |
 | Referencing shape copied alone, cross-page ref | unchanged: copy points to the original target |
 | Referencing shape duplicated (`Duplicate`) | unchanged |
@@ -25,6 +26,7 @@ Measured 2026-10-26, Visio 2019 C2R x64, COM from PowerShell (`Cut`/`Copy`/`Past
 | Referencing shape pasted into another document | `REF()` => `#REF!` |
 
 - Nothing errors and nothing reports the change: a lost link looks like a normal value. An add-in that relies on links must store the target's identity (e.g. a GUID cell) next to the formula to detect and repair them.
+- Keep the formula instead of a constant: in `BeforeShapeDelete` of the target, find the referencing cells by `Cell.Dependents` of the target's cells (also across pages; it also lists formulas inside the target's own sub-shapes, skip those) and write them before Visio does, e.g. `FormulaForceU = ""` = master formula again. Same Undo step as the delete: Undo brings target and reference back, Redo deletes again with the master formula (skip the handler while `IsUndoingOrRedoing`). Works when both shapes are deleted in one selection. A page delete gives no `BeforeShapeDelete` (event list of the document). Measured 2026-10-28 in process: [visio-cell-change-events](visio-cell-change-events.md#handlers-in-process).
 - Glue (`BeginX = PAR(PNT(Sheet.n!Connections.X1.X, ...))`) behaves like a same-page reference: a 1D shape copied alone is pasted unglued.
 - Formula text is not a stable key: a same-page reference written as `Sheet.1!Prop.X` reads back as `Labbox!Prop.X` from `FormulaU` once the target has the `NameU` `Labbox` (`Formula` shows the local `Name`); a cross-page `Pages[A]!Sheet.1!Prop.X` kept `Sheet.1` after the rename. Not always: written as `SETATREF(Pages[Page-1]!Sheet.151!Prop.X)` to a master instance named `My Part 1/A.151`, it read back as `SETATREF(Pages[Page-1]!'My Part 1/A.151'!Prop.X)` (name quoted with `'`), while one to `Sheet.8` (named `Symbol`) stayed `Sheet.8` (seen 2026-10-28; rule unknown). To check where a formula points, use `Cell.Precedents` (array of the referenced `Cell`s: `.Shape`, `.Name`), not string compare. Measured 2026-10, Visio 2019 C2R x64.
 
