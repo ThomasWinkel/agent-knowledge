@@ -1,6 +1,6 @@
 ---
 title: Visio cross-shape references - pages, delete, copy, SETATREF, containers
-description: "Read when a ShapeSheet formula reads another shape (Sheet.n!, Pages[..]!, SETATREF, CONTAINERSHEETREF) and must survive page rename, delete, cut/paste, copy or another document."
+description: "Read when a ShapeSheet formula reads another shape (Sheet.n!, Pages[..]!, SETATREF, CONTAINERSHEETREF): page names, rename, delete, cut/paste, copy, other document."
 ---
 
 # Visio cross-shape references
@@ -27,6 +27,19 @@ Measured 2026-10-26, Visio 2019 C2R x64, COM from PowerShell (`Cut`/`Copy`/`Past
 - Nothing errors and nothing reports the change: a lost link looks like a normal value. An add-in that relies on links must store the target's identity (e.g. a GUID cell) next to the formula to detect and repair them.
 - Glue (`BeginX = PAR(PNT(Sheet.n!Connections.X1.X, ...))`) behaves like a same-page reference: a 1D shape copied alone is pasted unglued.
 - Formula text is not a stable key: a same-page reference written as `Sheet.1!Prop.X` reads back as `Labbox!Prop.X` from `FormulaU` once the target has the `NameU` `Labbox` (`Formula` shows the local `Name`); a cross-page `Pages[A]!Sheet.1!Prop.X` keeps `Sheet.1` after the rename. To check where a formula points, use `Cell.Precedents` (array of the referenced `Cell`s: `.Shape`, `.Name`), not string compare. Measured 2026-10, Visio 2019 C2R x64.
+
+## Page names in `Pages[..]`
+
+Measured 2026-10, Visio 2019 C2R x64, COM from PowerShell, values read back after save and reopen.
+
+- **No quoting.** Write the page name as it is: `Pages[My Page]!Sheet.1!Prop.X`. Works with space, leading space, `-`, `.`, `'`, `"`, `!`, `;`, `,`, `+`, umlauts, leading digit, and a page named `Pages`. `Pages['My Page']` and `Pages["My Page"]` throw `#NAME?`.
+- **`]` in a page name breaks the reference.** Writing `Pages[a]b]!...` or `Pages[a[b]]!...` throws `Error in formula.`. Renaming the target page to such a name makes Visio rewrite existing references to `Pages[a]b]!...` itself; they keep working in the session, but **after save and reopen they are constants** (last value, or `0`). `[` alone (`a[b`) survives. Check page names for `]` before relying on cross-page references.
+- **`NameU` vs `Name`.** `FormulaU` shows the page's `NameU`, `Formula` its local `Name`. `FormulaU = "Pages[x]!..."` resolves `x` by `NameU` (a `Name` is accepted too); `Formula` resolves by `Name`. Write `FormulaU` with `NameU`.
+- One name space: setting a page's `NameU` to another page's `Name` throws `The name '...' is already in use.`; the reverse (`Name` = another page's `NameU`) is allowed, so `Pages[X1]` can mean different pages in `FormulaU` and `Formula`.
+- A reference to the own page is shortened: `Pages[<own page>]!Sheet.2!Prop.X` reads back as `Sheet.2!Prop.X`, to the own shape as `Prop.X`.
+- Background pages and hidden pages (`UIVisibility` = 1) work as targets; renaming a background page's `NameU` rewrites the references.
+- Missing page, shape or cell in the reference: the write throws `#NAME?`.
+- `Cell.Precedents` returns the target cell across pages (`.Shape.ContainingPage`, `.Shape`, `.Name`) for a plain reference, `SETATREF(..)`, `GUARD(SETATREF(..))`, `IFERROR(<ref>, "none")` and `SETATREF(..)&""`; for `<ref1>&<ref2>` both cells. Same after reopen.
 
 ## SETATREF across pages
 
