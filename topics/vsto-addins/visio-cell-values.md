@@ -45,6 +45,7 @@ Write a literal with `FormulaU`, read the evaluated value with `Result*`. Measur
 - `Shape.DeleteRow` on a row the instance inherits removes the row from the instance for good: it stays gone when the master changes later.
 - Adding a row to a section of an instance (`AddNamedRow`), or deleting a row it inherits, copies the whole section into the instance: every row there turns local (`IsInherited` false), and later master changes of any cell in that section no longer arrive. Setting one cell makes only that cell local. Deleting the added row again does not bring inheritance back (Undo does); `FormulaU = ""` on each value cell does for these cells (other columns not checked).
   - Rows that instances fill in (e.g. an ID per instance): add them to the master, empty; the instance only sets the value.
+- Renaming a master row (`Cell.RowNameU = "NewName"` in the master opened by `Master.Open()`) rewrites the references to it in the master and its sub-shapes (`Sheet.5!Prop.Name` -> `Sheet.5!Prop.NewName`); instances keep their local values of that row (seen 2026-10-28, `Prop` rows, 7 instances).
 - Measured with `User` and `Prop` rows, master in the document stencil, master changed by `Master.Open()`/`Close()` (section copy: 2026-10, Visio 2019 C2R x64).
 
 ## Read-only documents
