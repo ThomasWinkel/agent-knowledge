@@ -59,13 +59,14 @@ public class Sink : Visio.IVisEventProc   // public, also its outer class; else 
 
 Measured 2026-10-28, Visio 2019 C2R x64, VSTO add-in (Debug), actions by COM, drawing with 20,000 top-level shapes.
 
-- The interop's `Document` has no `BeforeShapeDelete` event; advise it on the document: `doc.EventList.AddAdvise((short)(0x40 | 0x4000), sink, "", "")` (`visEvtShape` + `visEvtDel`, same `IVisEventProc` sink as above, `subject` is the `Shape`). `ShapeAdded` exists as a `Document` event (cast to `EDocument_Event`).
+- The interop's `Document` has no `BeforeShapeDelete` or `ConnectionsAdded`/`Deleted` events; advise them on the document: `doc.EventList.AddAdvise((short)(0x40 | 0x4000), sink, "", "")` (`visEvtShape` + `visEvtDel`, same `IVisEventProc` sink as above, `subject` is the `Shape`). `ShapeAdded` exists as a `Document` event (cast to `EDocument_Event`).
+- One sink for all document events works: codes are object + action (`visEvtShape` 0x40, `visEvtPage` 0x10, `visEvtConnect` 0x100, `visEvtCell` 0x800; `visEvtAdd` 0x8000, `visEvtDel` 0x4000, `visEvtMod` 0x2000). Seen firing on the document's `EventList`: `ShapeAdded` `unchecked((short)0x8040)`, `BeforeShapeDelete` 0x4040, `BeforePageDelete` 0x4010, `ConnectionsAdded` `unchecked((short)0x8100)` and `ConnectionsDeleted` 0x4100 (`subject` = `Connects`), `CellChanged` 0x2800. `PageAdded` 0x8010 advised, firing not checked.
 - Deleting a page fires no `BeforeShapeDelete` for its shapes (document event list); use `BeforePageDelete`.
 - Event delivery is cheap: 1,000 `ShapeAdded` or `BeforeShapeDelete` cost the empty handler 1 ms, 26,000 `CellChanged` 46-195 ms.
 - **COM calls inside the handler, during the user's action, are slow: about 0.2-0.4 ms each** (normally about 10 us). Reading ~25 cells of each new shape in `ShapeAdded`: 3.5-5.3 s per 1,000 pasted shapes; the same reads after the action (at `ExitScope`): 0.4-0.5 s. Collect IDs in the handler (`ContainingPageID`, `ID`), read later. But a write after the action is an Undo step of its own (below).
 - `CellChanged` also fires for cells whose **result** changes through a formula (one edit, 4 events incl. dependent cells of another shape). A master edit fires per instance: label of a Prop row in a master with 6,500 instances = 6,500 events; a value change in the master = one event per inheriting instance plus its dependents.
 - `SetFilterSRC` ranges are rectangles: `243, 0, 0, 243, 32767, 0, -1` = value column of every Prop row only; a `Label` change then fires nothing.
-- A cell written in `ShapeAdded` (drop, paste, duplicate) or `BeforeShapeDelete`, in the shape itself or in another shape: **same Undo step** as the user's action; Undo and Redo take it along.
+- A cell written in `ShapeAdded` (drop, paste, duplicate) or `BeforeShapeDelete`, in the shape itself or in another shape: **same Undo step** as the user's action; Undo and Redo take it along. Same for cells of shapes on other pages written in `BeforePageDelete`: one Undo brings the page and the cells back, Redo deletes the page and writes them again.
 
 ## Writes in the handler and Undo
 
