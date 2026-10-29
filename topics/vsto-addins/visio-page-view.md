@@ -1,6 +1,6 @@
 ---
 title: Visio page turns and zoom by code
-description: Read when Visio add-in code turns pages (Window.Page) or zooms (ViewFit, Zoom) - Undo steps per page turn, zoom kept per page and in the file, selection, dirty flag.
+description: Read when Visio code turns pages (Window.Page), zooms (ViewFit) or goes to a shape (CenterViewOnShape) - Undo step per page turn, zoom per page and in the file, flags, hidden pages/layers.
 ---
 
 # Visio page turns and zoom by code
@@ -40,4 +40,13 @@ catch
 - `Window.Page` exists only in a page window (`Type` 1 `visDrawing`, `SubType` 128 `visPageWin`); check first, see [visio-active-window](visio-active-window.md).
 - Time: 51 pages with one rectangle each, fit by an add-in ribbon handler: about 0.5 s until Visio answered COM calls again (no undo scope).
 
-Verified with Visio Pro 2019 C2R x64, VSTO add-in ribbon handler clicked by UI Automation, visible instance (2026-10). _Unverified:_ group and master edit windows, `ShowChanges = false` during the loop (effect on flicker and on `ViewFit`), pages with many shapes.
+## Go to a shape on any page
+
+`window.CenterViewOnShape(shape, Visio.VisCenterViewFlags.visCenterViewSelectShape)` turns the window to the shape's page, centers it and selects it (selection = only that shape). Reference: [Window.CenterViewOnShape](https://learn.microsoft.com/en-us/office/vba/api/visio.window.centerviewonshape).
+
+- Flag values (interop enum): `visCenterViewDefault` 0, `visCenterViewIfOffScreen` 1, `visCenterViewSelectShape` 2. Late-bound callers that pass 1 get no selection.
+- Works for shapes on background pages, hidden pages (`UIVisibility` 1, [visio-hidden-pages](visio-hidden-pages.md)) and hidden background pages: the window shows that page.
+- **Also selects shapes the user cannot see or select:** a shape whose only layer is hidden and/or locked is selected all the same (`Selection.Count` 1). Filter such targets yourself if the user should not land on them.
+- Undo: a call that turns to another page is one Undo step, like `Window.Page` (Undo: window back on the old page, the cell change made before stays). Inside an undo scope: still one step. A call on the shown page adds no Undo step.
+
+Verified with Visio Pro 2019 C2R x64 (2026-10): page turns and zoom by a VSTO add-in ribbon handler clicked by UI Automation, visible instance; `CenterViewOnShape` by COM automation, own visible instance. _Unverified:_ group and master edit windows, `ShowChanges = false` during the loop (effect on flicker and on `ViewFit`), pages with many shapes; Undo step names.
