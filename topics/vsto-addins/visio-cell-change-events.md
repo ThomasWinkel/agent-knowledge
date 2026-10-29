@@ -1,6 +1,6 @@
 ---
 title: Visio cell change events - marker cell vs filtered CellChanged, Undo
-description: "Read when a Visio add-in must react to changed Shape Data or other cells (name typed, drop, paste, delete, Undo), writes cells in the handler, or batches work per user action."
+description: "Read when a Visio add-in must react to changed cells, shapes, pages or opened documents (drop, paste, delete, Undo), writes cells in a handler, or batches work per user action."
 ---
 
 # Visio cell change events
@@ -57,11 +57,15 @@ public class Sink : Visio.IVisEventProc   // public, also its outer class; else 
 
 ## Handlers in process
 
-Measured 2026-10-28, Visio 2019 C2R x64, VSTO add-in (Debug), actions by COM, drawing with 20,000 top-level shapes.
+Measured 2026-10-28/29, Visio 2019 C2R x64, VSTO add-in (Debug), actions by COM, drawing with 20,000 top-level shapes.
+
+- **Do not handle `DocumentOpened`.** Any handler of it (interop event `Application.DocumentOpened` or `Application.EventList.AddAdvise` code `0x0002`; also `DocumentAdded` `0x8002`) makes every cell read and write 5-6 times slower for the whole session, whatever the handler does: reading ~25 cells of 6,500 shapes 36-39 s instead of 6-7 s. `DocumentCreated` (`0x0001`) and `BeforeDocumentClose` (`0x4002`) cost nothing, nor do document-level handlers incl. a filtered `CellChanged`. To give opened documents handlers, check `Application.Documents.Count` in `VisioIsIdle` (count changed, or a `BeforeDocumentClose` came) and attach the new ones.
 
 - The interop's `Document` has no `BeforeShapeDelete` or `ConnectionsAdded`/`Deleted` events; advise them on the document: `doc.EventList.AddAdvise((short)(0x40 | 0x4000), sink, "", "")` (`visEvtShape` + `visEvtDel`, same `IVisEventProc` sink as above, `subject` is the `Shape`). `ShapeAdded` exists as a `Document` event (cast to `EDocument_Event`).
 - One sink for all document events works: codes are object + action (`visEvtShape` 0x40, `visEvtPage` 0x10, `visEvtConnect` 0x100, `visEvtCell` 0x800; `visEvtAdd` 0x8000, `visEvtDel` 0x4000, `visEvtMod` 0x2000). Seen firing on the document's `EventList`: `ShapeAdded` `unchecked((short)0x8040)`, `BeforeShapeDelete` 0x4040, `BeforePageDelete` 0x4010, `ConnectionsAdded` `unchecked((short)0x8100)` and `ConnectionsDeleted` 0x4100 (`subject` = `Connects`), `CellChanged` 0x2800. `PageAdded` 0x8010 advised, firing not checked.
 - Deleting a page fires no `BeforeShapeDelete` for its shapes (document event list); use `BeforePageDelete`.
+- `Page.Duplicate` (and its Redo): `PageAdded` 0x8010 (the page holds its shapes already), then `ShapeAdded` per shape. Undo of a page delete: `PageAdded` only, no `ShapeAdded`. Undo of a duplicate and Redo of a delete: `BeforePageDelete` only.
+- Events of cells the handler writes come **after the handler has returned**, so a "busy" flag set during the handler never sees them; let them pass your filters (52,000 such `CellChanged` cost about 11 s to deliver). Code run from a `MarkerEvent` gets the events of its writes at once, inside the call.
 - Event delivery is cheap: 1,000 `ShapeAdded` or `BeforeShapeDelete` cost the empty handler 1 ms, 26,000 `CellChanged` 46-195 ms.
 - **COM calls inside the handler, during the user's action, are slow: about 0.2-0.4 ms each** (normally about 10 us). Reading ~25 cells of each new shape in `ShapeAdded`: 3.5-5.3 s per 1,000 pasted shapes; the same reads after the action (at `ExitScope`): 0.4-0.5 s. Collect IDs in the handler (`ContainingPageID`, `ID`), read later. But a write after the action is an Undo step of its own (below).
 - `CellChanged` also fires for cells whose **result** changes through a formula (one edit, 4 events incl. dependent cells of another shape). A master edit fires per instance: label of a Prop row in a master with 6,500 instances = 6,500 events; a value change in the master = one event per inheriting instance plus its dependents.
