@@ -7,7 +7,7 @@ description: "IEC 81346 reference designations (device tags) for schematics: asp
 
 # IEC 81346 reference designation
 
-IEC 81346 defines reference designations (German: Referenzkennzeichen, formerly BMK) for objects in technical systems, e.g. `=AP+ST1-M1` in a circuit diagram. Read before designing how a schematic tool stores, composes, numbers or displays device tags. The standards are paid; facts here come from public previews and secondary sources, each file names them.
+IEC 81346 defines reference designations (German: Referenzkennzeichen, formerly BMK) for objects in technical systems, e.g. `=AP+ST1-M1` in a circuit diagram. Not only electrical: IEC 81346-2:2019 is meant for all technical areas (electric, mechanical, process, civil) and branches (energy, chemical, construction, automotive, marine) (its introduction). Read before designing how a schematic tool stores, composes, numbers or displays device tags. The standards are paid; facts here come from public previews and secondary sources, each file names them.
 
 ## Key facts
 
