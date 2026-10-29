@@ -46,7 +46,7 @@ catch
 
 - Flag values (interop enum): `visCenterViewDefault` 0, `visCenterViewIfOffScreen` 1, `visCenterViewSelectShape` 2. Late-bound callers that pass 1 get no selection.
 - Works for shapes on background pages, hidden pages (`UIVisibility` 1, [visio-hidden-pages](visio-hidden-pages.md)) and hidden background pages: the window shows that page.
-- **Also selects shapes the user cannot see or select:** a shape whose only layer is hidden and/or locked is selected all the same (`Selection.Count` 1). Filter such targets yourself if the user should not land on them.
+- **Also selects shapes the user cannot see or select:** a shape whose only layer is hidden and/or locked is selected all the same (`Selection.Count` 1). Filter such targets yourself if the user should not land on them. The lock still protects it: `Selection.Move` and `Window.Delete` fail with `Shape protection, container, and/or layer properties prevent complete execution of this command.`; on a hidden, unlocked layer both work (the invisible shape moves or is deleted).
 - Undo: a call that turns to another page is one Undo step, like `Window.Page` (Undo: window back on the old page, the cell change made before stays). Inside an undo scope: still one step. A call on the shown page adds no Undo step.
 
 Verified with Visio Pro 2019 C2R x64 (2026-10): page turns and zoom by a VSTO add-in ribbon handler clicked by UI Automation, visible instance; `CenterViewOnShape` by COM automation, own visible instance. _Unverified:_ group and master edit windows, `ShowChanges = false` during the loop (effect on flicker and on `ViewFit`), pages with many shapes; Undo step names.
