@@ -1,6 +1,6 @@
 ---
 title: Visio cross-shape references - pages, delete, copy, SETATREF, containers
-description: "Read when a ShapeSheet formula reads another shape (Sheet.n!, Pages[..]!, SETATREF, CONTAINERSHEETREF): page names, rename, delete, cut/paste, copy, other document."
+description: "Read when a ShapeSheet formula reads another shape or page (Sheet.n!, Pages[..]!, ThePage!, SETATREF, CONTAINERSHEETREF): names, delete, copy, nesting, stale values, speed."
 ---
 
 # Visio cross-shape references
@@ -83,9 +83,24 @@ User.Loc = IFERROR(CONTAINERSHEETREF(1)!Prop.Loc, "none")
 User.Loc = IFERROR(CONTAINERSHEETREF(1, "Cabinet")!Prop.Loc, "none")   ' container's User.msvShapeCategories = "Cabinet"
 ```
 
+Measured 2026-10-30 unless noted, Visio 2019 C2R x64, invisible Visio by COM, members added by `ContainerProperties.AddMember`.
+
 - Works in Visio 2019: value follows the container live; not a member -> `IFERROR` fallback.
 - Membership is not geometry: `ContainerProperties.AddMember` makes a member; moving it out by code removes it; moving it back in by code does not add it again (UI drag: _unverified_).
-- Visio stores an unresolved name upper case in the formula (`CONTAINERSHEETREF(1)!Prop.LOC`); the lookup still works.
-- Nested containers: the first match is by z-order, not nesting (_unverified_, from a design note).
+- Category match is **case-sensitive**: `CONTAINERSHEETREF(1, "MyCat")` does not find a container with category `MYCAT`; a category list (`"Cabinet;MyCat"`) matches each entry.
+- **Nesting is not passed on**: a shape in container I, I in container O, is member of I only (`MemberOfContainers` = I, `CONTAINERCOUNT()` = 1, `CONTAINERSHEETREF(2)` -> fallback). `CONTAINERSHEETREF(1, "<O's category>")` finds nothing. To inherit over levels, each container reads its own container with the same formula (chain: `User.Loc = <parent via CONTAINERSHEETREF or ThePage> & ";" & own code` works over two levels, also after save + reopen); a container without that formula cuts the chain.
+- Member of two overlapping containers: index 1 = the one on top in z-order; `BringToFront` of the other switches it live.
+- **Stale values**: the dependency is made when the member's formula is evaluated. If the container gets the category or the cell only after `AddMember`, or its cell is deleted and added again, the member keeps the old value (no error) until it recalculates itself: change of one of its own input cells, of membership or of z-order. A deleted container cell gives no `REF()`; Visio stores the unresolved name upper case (`CONTAINERSHEETREF(1)!Prop.LOC`) and resolves it later.
+- Speed: changing the container cell recalculates all members, ~0.1 ms each (1,024 members 116-124 ms, 8,192 members 974-1,008 ms; `ScreenUpdating` 0). `AddMember` of a `Selection`: 1,024 shapes 390 ms, 8,192 shapes 5,978 ms.
+
+## ThePage and missing page cells
+
+Measured 2026-10-30, same setup.
+
+- `ThePage!User.X` where the page has no `User.X`: the write throws `#NAME?`, also inside `IFERROR(...)`.
+- Page cell deleted: Visio rewrites the reference to `REF()` for good; adding the cell again does not bring it back. Rewrite the formula.
+- Shape with `ThePage!User.X` copied (`Page.Drop(shape, x, y)`) onto a page without `User.X`: no error, shows the source page's last value (also after save + reopen), follows that page's cell once it is added.
+- `Pages.Add()` by code does not copy the active page's `User` rows (UI "Insert Page": _unverified_). Code that relies on a page cell must add it to new pages.
+- Speed: one page cell change recalculates all dependent shapes on the page, ~0.1 ms each (1,024 shapes 96-118 ms, 8,192 shapes 824-952 ms, plain `ThePage!User.X` or a nested `IF` of 5 sources alike; invisible Visio, `ScreenUpdating` 0).
 
 Events for these changes (glue, container): [visio-glue-events](visio-glue-events.md).
