@@ -70,3 +70,4 @@ A document opened read-only (`Documents.OpenEx(path, visOpenRO)`, `Document.Read
 
 - No silent failure: catch the exception (or test `GUARD` in `FormulaU` first) to skip guarded cells.
 - `FormulaForceU` replaces the whole formula, `GUARD` included; write `GUARD(...)` again if the cell should stay protected.
+- User edit in the Shape Data window (Visio 2019 C2R x64, typed by window messages, [visio-shape-data-window-test](visio-shape-data-window-test.md)): a guarded `Prop` row ignores the new value **silently**: no message, no dialog, formula unchanged. Same for `Prop.X = GUARD(SETATREF(User.W))` (target not guarded) and for `Prop.X = SETATREF(User.U)` with `User.U = GUARD(...)`. Tell the user yourself if a field can be locked. _Unverified:_ whether the in-place editor opens at all for such a row.

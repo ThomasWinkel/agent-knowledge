@@ -1,6 +1,6 @@
 ---
 title: Visio ShapeSheet values and Windows region settings
-description: Read when Visio code builds Shape Data lists (Prop.Format), uses INDEX/LOOKUP/LISTSEP, or reads numbers with ResultStr - what depends on the list separator and decimal symbol.
+description: Read when Visio code builds Shape Data lists (Prop.Format), uses INDEX/LOOKUP/LISTSEP or list formulas, or reads numbers with ResultStr - list separator, decimal symbol, INDEX edge cases.
 ---
 
 # Visio ShapeSheet values and Windows region settings
@@ -24,6 +24,24 @@ The Windows region settings of the user (`HKCU\Control Panel\International`: `sL
 - `LISTSEP()` returns the region's separator; with a fixed `;` list it **breaks** the formula in regions with another separator. Do not use it for lists stored in the ShapeSheet.
 - The selected value (`Prop.x.Value`) is the item text, without separator.
 - _Unverified:_ other Visio versions and UI languages.
+
+## Lists in formulas: edge cases
+
+Measured with Visio 2019 C2R x64 (region de-DE):
+
+| Formula | Result |
+|---|---|
+| `INDEX(0,"S1;X1;A2",";")` / `INDEX(2,...)` | `S1` / `A2` (0-based) |
+| `INDEX(3,"S1;X1;A2",";")`, `INDEX(-1,...)` | empty, no error |
+| `INDEX(3,"S1;X1;A2",";","none")`, `INDEX(-1,...,"none")` | `none` (4th argument = value when out of range) |
+| `INDEX(0,"",";","none")` | empty, not `none`: an empty list holds one empty item |
+| `INDEX(1,"S1;;A2",";")` | empty: empty items count |
+| `LOOKUP("X1","S1;X1;A2",";")` / `LOOKUP("Q",...)` | `1` / `-1` |
+| `LEN(L)-LEN(SUBSTITUTE(L,";",""))+1` | item count, but `1` for `L = ""`: wrap in `IF(LEN(L)=0,0,...)` |
+| `"+"&SUBSTITUTE("S1;X1",";","+")` | `+S1+X1` (all occurrences without a 4th argument) |
+| `STRSAME("s1","S1")` / `STRSAME("s1","S1",TRUE)` | `FALSE` / `TRUE` (case-sensitive unless the 3rd argument is `TRUE`) |
+
+- Cut a known head `H` off a list `L`: `IF(STRSAME(L,H),"",IF(STRSAME(LEFT(L,LEN(H)+1),H&";"),MID(L,LEN(H)+2,999),L))`. Compare with `H&";"`, not `H` alone (`S1` must not match `S10;X1`), and handle `L = H` on its own.
 
 ## Numbers: `ResultStr` follows the region
 
