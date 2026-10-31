@@ -26,4 +26,5 @@ Start-Sleep -Milliseconds 600                                # editor appears
 ```
 
 - The editor stays open after the click until Enter; a second click script finds no *new* editor, so look for the visible `RichEdit20W` too.
-- Verified: a text row and a number row (`7` -> `7`), each edit one Undo step.
+- Fixed list row (`Type = 1`): the click opens a `REComboBox20W` (`CBS_DROPDOWNLIST`) as child of the Shape Data list box, not a `RichEdit20W`. Choose by `CB_SETCURSEL` (0x014E, wParam = item index), then post Enter to the combo; `WM_SETTEXT` does nothing. Items: `CB_GETCOUNT` (0x0146), `CB_GETLBTEXT` (0x0148). What the choice writes: [visio-cell-values](visio-cell-values.md#fixed-list-chosen-by-the-user).
+- Verified: a text row and a number row (`7` -> `7`), each edit one Undo step; fixed list rows on a shape and on the page.
