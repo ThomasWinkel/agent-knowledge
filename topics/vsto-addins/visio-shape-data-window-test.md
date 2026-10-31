@@ -7,7 +7,7 @@ description: "Read when a test must type into Visio's anchored Shape Data window
 
 A COM write (`Cell.FormulaU`) is not the same code path as a user edit. To test the user path, drive the anchored Shape Data window. Measured with Visio 2019 C2R x64 (2026-10).
 
-- Show it by COM: `$app.ActiveWindow.Windows.ItemFromID(1658).Visible = $true` (`visWinIDCustProp`); select the shape first.
+- Show it by COM: `$app.ActiveWindow.Windows.ItemFromID(1658).Visible = $true` (`visWinIDCustProp`); select the shape first. With nothing selected (`DeselectAll`) it shows the page's Shape Data: pane name `Shape Data - ThePage` (2026-10-31).
 - UI Automation sees only a pane named `Shape Data - <shape name>` with a `ListBox` child (owner-drawn, no item elements). Take its `NativeWindowHandle`.
 - One list item per visible row, in section order. `LB_GETCOUNT` (0x018B) gives the count, `LB_GETITEMRECT` (0x0198) the item rectangle.
 - A click on the value part (right half of the item) opens an in-place editor: a new visible `RichEdit20W` child of the Visio main window (`VISIOA`).

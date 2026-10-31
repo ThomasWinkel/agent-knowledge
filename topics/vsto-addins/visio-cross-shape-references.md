@@ -67,6 +67,7 @@ Chains: an edit is forwarded only through cells that hold `SETATREF` themselves 
   | `""` | `Prop.X` emptied **and** `User.L` back to the master | `User.L` back to the master; `Prop.X` unchanged |
 
   Force also skips `GUARD`: check for it before writing. Writing `GUARD(<own SETATREF formula>)` with `FormulaU` forwards it into the target: `Circular formula reference.`
+- The target may be a `Prompt` cell: `Prop.P = SETATREF(User.U.Prompt)` writes the edit into the Prompt (COM `FormulaU`; one Undo step in a scope), so `User.U` can derive its value from it, e.g. a code `INDEX(0,User.U.Prompt," ")` from a chosen `S1 Cabinet` (Visio 2019, 2026-10-31).
 - Pattern: one link cell holds `SETATREF(<target>)`; cells that should be editable use `SETATREF(<link cell>)`, read-only cells a plain `<link cell>` reference.
 
 With that pattern (measured the same way, three pages):
@@ -100,7 +101,9 @@ Measured 2026-10-30, same setup.
 - `ThePage!User.X` where the page has no `User.X`: the write throws `#NAME?`, also inside `IFERROR(...)`.
 - Page cell deleted: Visio rewrites the reference to `REF()` for good; adding the cell again does not bring it back. Rewrite the formula.
 - Shape with `ThePage!User.X` copied (`Page.Drop(shape, x, y)`) onto a page without `User.X`: no error, shows the source page's last value (also after save + reopen), follows that page's cell once it is added.
-- `Pages.Add()` by code does not copy the active page's `User` rows (UI "Insert Page": _unverified_). Code that relies on a page cell must add it to new pages.
+- New pages and page rows (measured 2026-10-31, Visio 2019 C2R x64): `Pages.Add()` (also with `Background = 1`) and the UI command `DoCmd(2361)` (`visCmdNewForegroundPage`) copy none of the active page's `User`/`Prop` rows. `Page.Duplicate()` and `DoCmd(2383)` (`visCmdDuplicatePage`) copy rows, formulas and values. So in `PageAdded`: rows missing = new page, rows present = duplicated page. Code that relies on a page cell must add it to new pages.
+- Gotcha: `DoCmd(2202)` (`visCmdInsertPageTab`) from an out-of-process script hung twice (Visio blocked, COM calls of a second client returned nothing; process killed). Use 2361 to insert a page by command.
+- `TheDoc!User.X` behaves like `ThePage!`: writing a formula (seen for `Prop.X.Format = TheDoc!User.X`) fails with `#NAME?` while the document cell is missing. Add the document cell first.
 - Speed: one page cell change recalculates all dependent shapes on the page, ~0.1 ms each (1,024 shapes 96-118 ms, 8,192 shapes 824-952 ms, plain `ThePage!User.X` or a nested `IF` of 5 sources alike; invisible Visio, `ScreenUpdating` 0).
 
 Events for these changes (glue, container): [visio-glue-events](visio-glue-events.md).
