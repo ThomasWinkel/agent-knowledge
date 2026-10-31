@@ -1,6 +1,6 @@
 ---
 title: Typed values in Visio ShapeSheet cells
-description: Read when Visio code writes or reads text, numbers, booleans or dates in ShapeSheet cells (empty cells, types, errors, new rows, master instances, GUARD, read-only documents).
+description: Read when Visio code writes or reads text, numbers, booleans or dates in ShapeSheet cells (empty cells, types, errors, new rows, master instances, fixed lists, GUARD, read-only documents).
 ---
 
 # Typed values in Visio ShapeSheet cells
@@ -38,6 +38,14 @@ Write a literal with `FormulaU`, read the evaluated value with `Result*`. Measur
 - `CellExistsU("User.X.Prompt", 0)` is true when the row `User.X` exists.
 - `PageSheet`: `Type` 1 (`visTypePage`), `NameU` `ThePage`, `ContainingPage` = the page. `DocumentSheet`: `Type` 6 (`visTypeDoc`), `NameU` `TheDoc`. Use the page or document name in messages.
 - An invalid formula set by code (unknown function, `AlertResponse` not set, invisible instance) opened a modal Visio dialog instead of throwing: the automation call hangs. _Unverified:_ whether `AlertResponse = 1` prevents it.
+
+## Fixed list chosen by the user
+
+Measured with Visio 2019 C2R x64 build 20527, choices made in the Shape Data window by window messages ([visio-shape-data-window-test](visio-shape-data-window-test.md)).
+
+- A choice in a fixed list (`Prop.X.Type = 1`) writes the **position**, not the text: `INDEX(n,Prop.X.Format)`. Through `Prop.X = SETATREF(User.Y.Prompt)` it lands as `User.Y.Prompt = INDEX(n,Prop.X.Format)`; same on a page sheet. One Undo step. A COM write of the text (`Prop.X.FormulaU = "\"B\""`) stores the text.
+- So the value follows the list: with `Format = TheDoc!User.MyList`, reorder `A;B` -> `B;A` turns the chosen `B` into `A`; an item inserted in front shifts it; a list too short gives `""`. No error. A shape copied to another document picks the item at that position of the target's list. If the list may change, store the text yourself (replace the `INDEX` formula by the text it shows, e.g. in a `CellChanged` handler) and convert existing ones before you rewrite the list.
+- The editor is a drop-down list: the user cannot type or clear the value (`WM_SETTEXT ""`, posted Del, a text not in the list: nothing written; real keyboard Del: _unverified_). To let the user go back to "nothing", give the list an empty first item: `Format = ";"&TheDoc!User.MyList`; choosing it writes `INDEX(0,...)` = `""`.
 
 ## Master instances
 
