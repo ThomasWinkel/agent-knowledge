@@ -37,10 +37,15 @@ Measured with Visio 2019 C2R x64 (region de-DE):
 | `INDEX(0,"",";","none")` | empty, not `none`: an empty list holds one empty item |
 | `INDEX(1,"S1;;A2",";")` | empty: empty items count |
 | `LOOKUP("X1","S1;X1;A2",";")` / `LOOKUP("Q",...)` | `1` / `-1` |
+| `LOOKUP("both","Name;Designation;Both")`, `LOOKUP("Ä","a;ä;Ä")` | `2`, `1`: case-insensitive, also for umlauts (first match wins) |
+| `LOOKUP("Desig","Name;Designation")`, `LOOKUP("",...)` | `-1`, `-1` (whole items only; `""` finds an empty item) |
+| `INDEX(MAX(0,LOOKUP(k,L)),L2,"|")` | item of `L2` at the position of `k` in `L`; unknown `k` -> first item |
+| `INDEX(1,"a||b||c","||")` | `b`: the delimiter may have several characters |
 | `LEN(L)-LEN(SUBSTITUTE(L,";",""))+1` | item count, but `1` for `L = ""`: wrap in `IF(LEN(L)=0,0,...)` |
 | `"+"&SUBSTITUTE("S1;X1",";","+")` | `+S1+X1` (all occurrences without a 4th argument) |
 | `STRSAME("s1","S1")` / `STRSAME("s1","S1",TRUE)` | `FALSE` / `TRUE` (case-sensitive unless the 3rd argument is `TRUE`) |
 
+- Delimiter for lists of formula texts (which contain `;` themselves): a rare printable char such as `␞` (U+241E) or `¦` works and survives save + reopen. Control chars (`CHAR(30)`) work live but are **lost on save** to `.vsdx` (after reopen `INDEX` finds nothing). String constants of 1,000,000 chars in a cell work (written, read back, `INDEX` finds the last item).
 - Cut a known head `H` off a list `L`: `IF(STRSAME(L,H),"",IF(STRSAME(LEFT(L,LEN(H)+1),H&";"),MID(L,LEN(H)+2,999),L))`. Compare with `H&";"`, not `H` alone (`S1` must not match `S10;X1`), and handle `L = H` on its own.
 
 ## Numbers: `ResultStr` follows the region
