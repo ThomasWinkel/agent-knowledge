@@ -43,7 +43,7 @@ VSTO add-ins are .NET Framework COM add-ins for desktop Office (Word, Excel, Out
 - Excel data validation by COM: `Formula1` uses the region's list separator; a typed list over 255 characters breaks the saved file: [excel-data-validation](excel-data-validation.md).
 - A test can click a custom ribbon button by UI Automation: [ribbon-ui-test](ribbon-ui-test.md).
 - A test can type into Visio's Shape Data window like a user, by window messages to its owner-drawn list and in-place editor: [visio-shape-data-window-test](visio-shape-data-window-test.md).
-- WinForms dialog with an editable `DataGridView` and a `CancelButton`: Esc while typing in a cell closes the whole form: [winforms-dialogs](winforms-dialogs.md).
+- WinForms dialog with an editable `DataGridView` and a `CancelButton`: Esc while typing in a cell closes the whole form; a grid control added in code opens without the focus: [winforms-dialogs](winforms-dialogs.md).
 - Ctrl+click = help on every ribbon button without code per handler: wrap VSTO's private handler field; `file://` URLs lose their `#anchor` in `Process.Start`: [ribbon-click-help](ribbon-click-help.md).
 - Ribbon texts can be changed at runtime (e.g. in `Load`), except `RibbonSeparator.Title`; an exception in `Load` silently hides the whole tab: [ribbon-runtime-properties](ribbon-runtime-properties.md).
 - Built-in icon for a ribbon button (`imageMso`): `GetImageMso` from another process returns no picture, but its error tells whether an ID exists: [ribbon-office-icons](ribbon-office-icons.md).
@@ -103,5 +103,5 @@ Verified with Visio Pro 2019 C2R x64, WiX 7.0.0, VS2022 (2026-07); registration 
 - [Calling a Visio add-in from the ShapeSheet](visio-shapesheet-calls.md) — Read when a ShapeSheet cell (EventDrop, EventDblClick, Actions) must run code in a Visio VSTO/COM add-in - marker events, context string format, QUEUEMARKEREVENT vs RUNADDONWARGS, redo.
 - [Visio undo scopes - rollback and nesting](visio-undo-scopes.md) — Read when Visio code uses BeginUndoScope/EndUndoScope (one Undo step, rollback, nesting) or must store document data that Undo does not take back.
 - [Visio Shape.Ungroup from code](visio-ungroup.md) — Read when a Visio add-in or script calls Shape.Ungroup - confirmation dialog for master instances, AlertResponse, errors for non-groups and locked groups, what is left of the group.
-- [WinForms dialogs in add-ins - DataGridView gotchas](winforms-dialogs.md) — Read when an add-in dialog edits values in a DataGridView: Esc closes the whole form (CancelButton), error icons that do not show, check boxes that apply late.
+- [WinForms dialogs in add-ins - DataGridView gotchas](winforms-dialogs.md) — Read when an add-in dialog edits values in a DataGridView: Esc closes the whole form (CancelButton), first focus on OK, error icons that do not show, check boxes that apply late.
 <!-- END GENERATED CONTENTS -->

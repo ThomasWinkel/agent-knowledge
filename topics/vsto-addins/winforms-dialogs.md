@@ -1,6 +1,6 @@
 ---
 title: WinForms dialogs in add-ins - DataGridView gotchas
-description: "Read when an add-in dialog edits values in a DataGridView: Esc closes the whole form (CancelButton), error icons that do not show, check boxes that apply late."
+description: "Read when an add-in dialog edits values in a DataGridView: Esc closes the whole form (CancelButton), first focus on OK, error icons that do not show, check boxes that apply late."
 ---
 
 # WinForms dialogs in add-ins - DataGridView gotchas
@@ -23,6 +23,17 @@ protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
     return base.ProcessCmdKey(ref msg, keyData);
 }
 ```
+
+## First focus on OK instead of the grid
+
+A `UserControl` holding the grid, added in code into a designer panel that already holds the OK/Cancel panel (`TabIndex` 1), gets the next free `TabIndex` (2): the dialog opens with the focus on OK, and keys meant for the grid (Ins, Del, F2) do nothing until the user clicks into it. Give it the first place:
+
+```csharp
+myControl = new MyGridControl { Dock = DockStyle.Fill, TabIndex = 0 };
+layoutPanel.Controls.Add(myControl, 0, 0);
+```
+
+Verified: before, focus on OK (`GetGUIThreadInfo`); after, focus in the grid and a posted Ins right after open reached its `KeyDown`.
 
 ## Errors and commits
 
