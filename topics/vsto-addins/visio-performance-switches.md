@@ -14,7 +14,7 @@ description: Read when Visio code changes many shapes or cells and you weigh Scr
 | [`DeferRecalc`](https://learn.microsoft.com/en-us/office/vba/api/visio.application.deferrecalc) = 1 | `short` | formulas are recalculated later | queue is processed early when objects are released | write-only phases |
 | [`InhibitSelectChange`](https://learn.microsoft.com/en-us/office/vba/api/visio.application.inhibitselectchange) = true | `bool` | dropped shapes are not selected, the selection is kept where possible; code can still select | - | many drops |
 | [`DeferRelationshipRecalc`](https://learn.microsoft.com/en-us/office/vba/api/visio.application.deferrelationshiprecalc) = true | `bool` | containers do not resize while members move or resize; `false` processes all deferred actions at once | - | diagrams with containers |
-| [`EventsEnabled`](https://learn.microsoft.com/en-us/office/vba/api/visio.application.eventsenabled) = 0 | `short` | Visio fires no events, runs no add-ons, does not execute `RUNADDON` code in cells | hits every add-in and VBA project, not only yours | avoid |
+| [`EventsEnabled`](https://learn.microsoft.com/en-us/office/vba/api/visio.application.eventsenabled) = 0 | `short` | Visio fires no events, runs no add-ons, does not execute `RUNADDON` code in cells | hits every add-in and VBA project, not only yours; **stays 0 in later Visio sessions** (also the user's own); `QueueMarkerEvent` throws while 0 | avoid; if used (e.g. a COM script that must not wake add-in handlers), put back `-1` in `finally` |
 | [`UndoEnabled`](https://learn.microsoft.com/en-us/office/vba/api/visio.application.undoenabled) = false | `bool` | no undo information is collected | **clears the existing undo history** (measured: a step before it no longer undoes) | avoid when the user must be able to undo; data outside Undo: [visio-undo-scopes](visio-undo-scopes.md#data-outside-undo) |
 | [`LiveDynamics`](https://learn.microsoft.com/en-us/office/vba/api/visio.application.livedynamics) | `bool` | recalculation on every mouse move of a drag, or only on release | - | mouse drags only, no gain for code |
 
@@ -42,6 +42,7 @@ finally
 - With both off, Visio updates the views only when `ShowChanges` comes back: a noticeable delay after a long sequence. Switching `ScreenUpdating` on again right after `ShowChanges = false` shortens that delay and lengthens the sequence.
 - Visio turns `ShowChanges`, `ScreenUpdating` and `InhibitSelectChange` back by itself when the user does something. Do not rely on it; for `DeferRecalc` the docs demand the reset.
 - `DeferRecalc`: Visio works off the pending recalculations when objects are released or many commands arrive. Keep the `Cell` objects in variables until the end and only set formulas or results in the deferred part.
+- `EventsEnabled = 0` is saved by Visio: a new `Visio.Application` or `Visio.InvisibleApp` started after a session that left it 0 reads 0, and every `Application.QueueMarkerEvent` throws `An exception occurred.` (also with an unknown marker text). Setting `-1` again fixes it, also for the next sessions. Measured with a script that quit Visio without resetting it.
 - Show a message box only after the switches are back: with `ShowChanges = false` Visio does not repaint its windows, also not when another window uncovered them.
 
 ## Measured: the switches gave nothing, the batch call did
@@ -70,6 +71,6 @@ Array results = new object[] { 1.25 /* , ... */ };
 short written = page.SetResults(ref streamArray, ref units, ref results, 0);
 ```
 
-Measured with Visio Pro 2019 C2R x64, Debug build, stopwatch in the add-in (2026-10). _Unverified:_ shapes with many formulas or sub-shapes, pages with connectors, what `SetResults` does with guarded cells.
+Measured with Visio Pro 2019 C2R x64, Debug build, stopwatch in the add-in (2026-10). `EventsEnabled` persistence: same Visio, PowerShell COM, 2026-10. _Unverified:_ shapes with many formulas or sub-shapes, pages with connectors, what `SetResults` does with guarded cells.
 
 Other statements - source: the Microsoft reference pages linked above (2026-10); not tested. _Unverified_ (concluded, not stated there): marker events raised while `EventsEnabled = 0` are lost, not delivered later; in .NET the garbage collector decides when a `Cell` object is released, so `DeferRecalc` defers less reliably than in VBA; results read while `DeferRecalc` is on may be stale.
