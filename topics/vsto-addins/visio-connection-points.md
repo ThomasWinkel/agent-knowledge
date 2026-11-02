@@ -13,7 +13,7 @@ Measured 2026-10 and 2026-11, Visio 2019 C2R x64, COM, `Cell.GlueTo`. Section `v
 - The type only renames columns 2-6: `DirX, DirY, Type, AutoGen, Prompt` vs. `A, B, C, D, Prompt` (`visCnnctA` = `visCnnctDirX` = 2, `visCnnctD` = `visCnnctAutoGen` = 5). Both names resolve in either type (`Connections.S2.D` on a normal row is its `AutoGen`; unnamed: `Connections.D3`, `Connections.DirX[3]`).
 - Types may be mixed in one section; switch per row: `shape.RowType(7, row) = 186` (PowerShell: same syntax).
 - **ABCD row = no glue meaning**: A/B/C hold any text; connectors ignore them (no leaving direction); the point cannot be the source of 2D glue. Use ABCD rows for data on a point, normal rows for direction or 2D glue.
-- Normal row: text written into `AutoGen` (D) becomes `TRUE`. `Prompt` (column 6) holds text in both types.
+- Normal row: text written into `AutoGen` (D) becomes `TRUE`. Column 6 (`Connections.Prompt`) is reachable by COM only (not shown in the ShapeSheet window); it holds text, but after save + reopen only in normal rows, in ABCD rows it is lost. Do not store data there.
 
 ## DirX/DirY/Type (normal rows)
 
