@@ -1,6 +1,6 @@
 ---
-title: Visio glue and container events - what fires, Undo, paste, delete
-description: "Read when an add-in reacts to glue (ConnectionsAdded/Deleted) or container membership events, writes cells in the handler, or must handle Undo, paste and delete."
+title: Visio glue and container events - what fires, Undo, paste, delete, keeping glue out
+description: "Read when an add-in reacts to glue or container events, writes cells in the handler, handles Undo/paste/delete, or protects a group shape against unwanted glue."
 ---
 
 # Visio glue and container events
@@ -29,6 +29,16 @@ app.ConnectionsAdded += connects =>
     }
 };
 ```
+
+## Keeping glue out of a built group shape
+
+Goal: connectors glue only to the shape's connection points, nothing glues to the lines inside, inner parts cannot be deleted. Measured 2026-11-02, Visio 2019 C2R x64 build 20527, COM out of process, glue by `GlueTo`/`GlueToPos`.
+
+- `GlueType = 8` (`visGlueTypeNoWalkingTo`): "Do not allow this 2-D shape to be connected to with dynamic glue" ([GlueType cell](https://learn.microsoft.com/en-us/office/client-developer/visio/gluetype-cell-glue-info-section)). Static glue to points/geometry stays possible; programs can establish dynamic glue anyway (same page). Set it on the group and on every sub-shape.
+- Inner 1D sub-shape glued to an outside shape (static, `EndX.GlueTo(<connection point>)`): `EndX`/`EndY` become `PAR(PNT(Sheet.n!Connections.X1,...))`; moving the group then stretches the inner line (10 mm -> 32.02 mm), the shape is deformed.
+- Same with `GUARD(...)` on the sub-shape's `BeginX/Y`, `EndX/Y` (and `Width`, `Height`, `PinX/Y`, `LocPinX/Y`, `Angle`): `GlueTo` throws nothing but makes no `Connect`; formulas and geometry unchanged after moving.
+- Outside line end `GlueToPos(<inner sub-shape>, 0.25, 0)` with `GlueType 8` everywhere: succeeds and Visio adds a connection row (`Connections.X1`) to the inner sub-shape. UI glue to shape geometry: _unverified_.
+- `LockGroup = 1` on the group: `Shape.Delete` of a sub-shape and `Selection.Delete` of a sub-selected one (`Window.Select(sub, 3)`, `visSubSelect`) throw `Shape protection, container, and/or layer properties prevent complete execution of this command.`; with `LockGroup = 0` it is deleted. Ungroup: [visio-ungroup](visio-ungroup.md).
 
 ## ContainerRelationshipAdded / Deleted
 
