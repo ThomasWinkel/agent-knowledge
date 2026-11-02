@@ -1,6 +1,6 @@
 ---
 title: Building Visio shapes and stencils by code
-description: Read when code builds Visio masters, groups or a stencil from scratch by COM (geometry rows, text fields, Shape Data, invisible Visio) - row tags, order of writes, errors.
+description: Read when code builds Visio masters, groups or a stencil from scratch by COM (geometry rows, text fields, Shape Data, invisible Visio) - row tags, order of writes, stable master IDs, errors.
 ---
 
 # Building Visio shapes and stencils by code
@@ -31,6 +31,24 @@ try {
 
 - Masters reference their own sheets by `Sheet.<n>`; Visio renumbers them consistently on drop.
 - The saved `.vssx` keeps the drawing's `Page-1` (harmless: a stencil window shows no pages).
+
+## Stable master IDs
+
+Every build gives each master a new `BaseID` and `UniqueID`; both are read-only in COM. Visio matches master versions by them ([visio-master-versions](visio-master-versions.md)), so a rebuilt stencil looks like new masters. Fix: patch `visio/masters/masters.xml` in the saved `.vssx` (a zip):
+
+- `BaseID`: a fixed GUID per master (`NameU`), kept in the script.
+- `UniqueID`: a hash of the master's content (its `<Master>` element without the two IDs + its `masterN.xml`, found via `visio/masters/_rels/masters.xml.rels`). Write it in Visio's form: Visio keeps only the first 8 bytes and replaces the rest with `8E40-00608CF305B2` when it reads the file (`{83A034C7-8A0A-90AE-F071-...}` reads back as `{83A034C7-8A0A-90AE-8E40-00608CF305B2}`).
+
+```powershell
+Add-Type -AssemblyName System.IO.Compression, System.IO.Compression.FileSystem
+$zip = [IO.Compression.ZipFile]::Open($path, 'Update')
+# per <Master ...>...</Master> in masters.xml:
+$hash = (New-Object Guid (,$md5.ComputeHash($contentBytes))).ToString().ToUpper()
+$unique = '{' + $hash.Substring(0, 18) + '-8E40-00608CF305B2}'
+# replace UniqueID='...' and BaseID='...', delete the entry, write it again, $zip.Dispose()
+```
+
+Measured: Visio opens the patched stencil and reports the patched IDs; a drop of an unchanged rebuild reuses the drawing's document master (no `Name.<n>`); a master edited in place (new `UniqueID`, same `BaseID`) still adds `Name.<n>`. Two builds then give the same XML; the zip still differs in timestamps.
 
 ## Rows
 
