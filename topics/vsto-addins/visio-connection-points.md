@@ -25,6 +25,7 @@ Measured 2026-10 and 2026-11, Visio 2019 C2R x64, COM, `Cell.GlueTo`. Section `v
 
 - Allowed: `a-z A-Z 0-9 _` only; refused (`1.1`, `L+`, `-`, `Ä1`, `A 1`, `+24V`, `X1:3`): `Cell names may consist of the characters a-z, A-Z, 0-9, and underscore symbol (_).` Names starting with a digit (`13`, `0V`) work. Unique ignoring case.
 - Naming one row names all others `Row_<n>`. `AddRow(7, 0, tag)` inserts at index 0 in an unnamed section, but appends in a named one.
+- Named ABCD rows: `AddNamedRow(7, name, 186)` fails (`Operation not allowed for this row type.`). Add the first row with `AddRow(7, -2, 186)`, then set `CellsSRC(7, row, 0).RowNameU`; once the section is named, `AddRow` with 186 (or 153) fails the same way: use 187 (`visTagCnnctNamedABCD`; 185 for normal rows), then rename `Row_<n>`.
 - Glue formula `PAR(PNT(Sheet.1!Connections.A2.X,Sheet.1!Connections.A2.Y))` and formulas like `Connections.A2.D` follow a rename, rows inserted or deleted before them, and the first naming (`Connections.X2` -> `Connections.Row_3.X`).
 - Glued row deleted: the glued end and formulas referencing the row become constants (`70 mm`, `"pin2"`).
 - `Connect.ToCell`: `RowNameU` = row name (empty in an unnamed section), `Row` = index. Glue events: [visio-glue-events.md](visio-glue-events.md).

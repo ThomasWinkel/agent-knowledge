@@ -1,6 +1,6 @@
 ---
 title: Building Visio shapes and stencils by code
-description: Read when code builds Visio masters, groups or a stencil from scratch by COM (geometry rows, text fields, Shape Data, invisible Visio) - row tags, order of writes, stable master IDs, errors.
+description: Read when code builds Visio masters, groups or a stencil by COM (geometry rows, text fields, Shape Data, groups from shapes, master from a shape) - row tags, write order, stable IDs, errors.
 ---
 
 # Building Visio shapes and stencils by code
@@ -63,6 +63,27 @@ Measured: Visio opens the patched stencil and reports the patched IDs; a drop of
 - `SETF(GETREF(cell),"="&other)` runs at once: if `other` is empty when written, it writes an empty formula into `cell` and the default formula is gone. Provide the source first (e.g. the document cell `other` reads).
 - `LockTextEdit = 1` also blocks code: `Shape.Text` and `Characters.AddCustomFieldU` throw `Requested operation is presently disabled.` Write the text first or unlock around the write.
 - `Characters.AddCustomFieldU(formula, 0)` with a reference to a missing cell throws `#NAME?`.
+
+## Group from shapes, master from a shape
+
+Recipe: copy the source shapes, move the copies into one group, freeze/delete rows, make a document master, put an instance in place. Measured 2026-11-02, Visio 2019 C2R x64 build 20527, COM.
+
+```powershell
+$sel.Duplicate()                       # window selection: all copies, same offset; the copies are selected now
+$group.CellsU('LockCalcWH').FormulaForceU = '1'   # BEFORE adding members
+foreach ($s in $members) { $s.Parent = $group }   # keeps the page position
+$m = $doc.Masters.Drop($group, 0, 0)   # document master; all formulas copied as local
+$m.NameU = 'MyShape'; $m.Name = 'MyShape'
+$x = $group.CellsU('PinX').ResultIU; $y = $group.CellsU('PinY').ResultIU
+$group.Delete()
+$inst = $page.Drop($m, $x, $y)         # pin at x, y; every cell inherited
+```
+
+- **`Shape.Parent = group` grows the group** to include the new member, unless the group has `LockCalcWH = 1`. Members get formulas relative to the group size (`Sheet.5!Width*0.246`), so members added earlier stretch with each growth.
+- `Masters.Drop(instance, 0, 0)` of a master instance: the new master's shape has no master link; formulas, deleted rows and sub-shapes are copied.
+- `Shape.ReplaceShape(master)` keeps the old shape's local values (`Width` not inherited): use `Page.Drop` + delete instead.
+- Instance of a master, inherited row deleted (`DeleteRow`): the row is gone (`CellExistsU` 0), but inherited formulas that read it keep the master formula, still pointing at it. Replace those references by values (write the cells locally) before deleting the row.
+- **`DeleteSection` on an instance whose master has that section** (also after deleting all its rows): `Masters.Drop` of the instance, or of a group holding it, brings row 0 of the master's section back. Delete rows only; delete empty sections later in the new master (`Master.Open()`, `DeleteSection`, `Close()`: its shapes are no instances).
 
 ## Gotchas
 
