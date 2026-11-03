@@ -1,6 +1,6 @@
 ---
 title: Visio connection point rows - row types, A/B/C/D, DirX/DirY/Type, row names
-description: Read when adding connection points by code, storing data in A/B/C/D cells, naming rows, or relying on connector direction or 2D point-to-point glue.
+description: Read when adding connection points by code, storing data in A/B/C/D cells, naming rows, or relying on connector direction or 2D point-to-point glue (chain limit 40).
 ---
 
 # Visio connection point rows
@@ -20,6 +20,15 @@ Measured 2026-10 and 2026-11, Visio 2019 C2R x64, COM, `Cell.GlueTo`. Section `v
 - A dynamic connector glued to the point leaves **opposite** to (DirX, DirY): `-1,0` -> right, `1,0` -> left (detour around the shape), `0,1` -> down, `0,-1` -> up, `0,0` -> free.
 - Type `1` (outward) or `2` (inward + outward): point can be the source of 2D glue: `src.CellsSRC(7, r, 0).GlueTo(tgt.CellsSRC(7, r2, 0))` writes a `PinX`/`PinY` formula (`PNTX(LOCTOPAR(PNT(Sheet.5!Connections.X1,...),Sheet.5!EventXFMod,EventXFMod))+5 mm`). Type `0` source or any ABCD row: `Inappropriate source object for this action.`; `PinX.GlueTo` too.
 - COM `GlueTo` of a 1D end to a point accepted every Type (0, 1, 2, text). UI glue rules per Type: unverified.
+
+## 2D glue chains stop after 40 shapes
+
+Measured 2026-11-03, Visio 2019 build 20527, COM: shapes glued side by side, each to the one before (`B.Connections.L.X.GlueTo(A.Connections.R.X)`).
+
+- Chain of 30 follows the first shape (move by `PinX` formula or `Selection.Move`, `Rotate90` with direction set). Chain of 60/100: shapes 1-40 follow, shape 41 on stays put. Same for groups and plain rectangles, both direction variants; reopening the file does not catch up. Writing shape 41's `PinX` formula again pulls 41-60 in (rest of a 60 chain); the next move leaves 41 behind again.
+- Cause: the transform dependency of `LOCTOPAR`, not the `Connect`. The glue formula written by hand without glue stops at 40 too, also with `prev!EventXFMod` as both refs. Plain cell formulas have no such limit: `PinX = prev!PinX-prev!LocPinX+prev!Connections.R.X+<half width>` (and `PinY` alike) followed a chain of 60, a plain `PinX` reference chain of 100.
+- Source: Mark Nelson (Microsoft), comment of 2007-06-17 on [When 2D Glue Breaks](https://www.visguy.com/2007/06/14/when-2d-glue-breaks/): 2D glue relies on a circular reference; Visio's hard-coded limit of recalc iterations for circular references is 40. Visio 2003/2007 broke after 10 shapes.
+- Copy of a glued 2D shape (`Selection.Duplicate`, `DoCmd(visCmdUFEditDuplicate)` 1024): the copy is not glued, `PinX`/`PinY` constant, default duplicate offset. UI drag of a chain: _unverified_.
 
 ## Row names
 
