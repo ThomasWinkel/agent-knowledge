@@ -21,6 +21,15 @@ Measured 2026-10 and 2026-11, Visio 2019 C2R x64, COM, `Cell.GlueTo`. Section `v
 - Type `1` (outward) or `2` (inward + outward): point can be the source of 2D glue: `src.CellsSRC(7, r, 0).GlueTo(tgt.CellsSRC(7, r2, 0))` writes a `PinX`/`PinY` formula (`PNTX(LOCTOPAR(PNT(Sheet.5!Connections.X1,...),Sheet.5!EventXFMod,EventXFMod))+5 mm`). Type `0` source or any ABCD row: `Inappropriate source object for this action.`; `PinX.GlueTo` too.
 - COM `GlueTo` of a 1D end to a point accepted every Type (0, 1, 2, text). UI glue rules per Type: unverified.
 
+## 2D glue: direction decides the angle, docking a 1D shape
+
+Measured 2026-11-03, Visio 2019 build 20527, COM `GlueTo`; target shape moved, turned 90 deg, flipped (`FlipX`).
+
+- 2D glue of a point (Type 1/2) to a target point: if either point has `DirX/DirY 0,0`, only `PinX`/`PinY` are glued; the shape follows moves but never turns. With directions on both, `Angle = ANGLETOPAR(<a>,<target>!EventXFMod,EventXFMod)` is glued too (2 `Connect`s): **opposite** directions (`0,-1` on the shape, `0,1` on the target; or `-1,0` / `1,0`) give angle 0, the **same** direction gives 180 deg (shape upside down).
+- Target flipped: the 2D-glued shape is turned 180 deg, not mirrored; with an off-center glue point it lands at the mirrored place but upside down, its glue point no longer on the target point.
+- Turning the glued shape itself drops the angle glue, the position glue stays.
+- 1D shape glued at both ends (`PAR(PNT(..))`): follows move, turn and flip if `Width`/`Angle` are the 1D defaults; ends on points that do not fit the length stretch the shape. With `Angle = GUARD(0DEG)` the body stays horizontal while the glued ends turn with the target: the ends lie outside the body. A self-repair `IF(<length>=Width,"",SETF("EndX","BeginX+Width*COS(Angle)")+SETF(..))` unglues an End that does not fit.
+
 ## 2D glue chains stop after 40 shapes
 
 Measured 2026-11-03, Visio 2019 build 20527, COM: shapes glued side by side, each to the one before (`B.Connections.L.X.GlueTo(A.Connections.R.X)`).
