@@ -1,6 +1,6 @@
 ---
 title: Visio connection point rows - row types, A/B/C/D, DirX/DirY/Type, row names
-description: Read when adding connection points by code, storing data in A/B/C/D cells, naming rows, or relying on connector direction or 2D point-to-point glue (chain limit 40).
+description: Read when adding connection points by code, storing data in A/B/C/D cells, naming rows, or relying on connector direction or 2D point-to-point glue (chain limit 40, F4 after a glued copy).
 ---
 
 # Visio connection point rows
@@ -38,6 +38,7 @@ Measured 2026-11-03, Visio 2019 build 20527, COM: shapes glued side by side, eac
 - Cause: the transform dependency of `LOCTOPAR`, not the `Connect`. The glue formula written by hand without glue stops at 40 too, also with `prev!EventXFMod` as both refs. Plain cell formulas have no such limit: `PinX = prev!PinX-prev!LocPinX+prev!Connections.R.X+<half width>` (and `PinY` alike) followed a chain of 60, a plain `PinX` reference chain of 100.
 - Source: Mark Nelson (Microsoft), comment of 2007-06-17 on [When 2D Glue Breaks](https://www.visguy.com/2007/06/14/when-2d-glue-breaks/): 2D glue relies on a circular reference; Visio's hard-coded limit of recalc iterations for circular references is 40. Visio 2003/2007 broke after 10 shapes.
 - Copy of a glued 2D shape (`Selection.Duplicate`, `DoCmd(visCmdUFEditDuplicate)` 1024): the copy is not glued, `PinX`/`PinY` constant, default duplicate offset. UI drag of a chain: _unverified_.
+- Ctrl+drag copy + F4 (Repeat) by the real mouse (measured 2026-11-03, Visio 2019, new metric drawing): without glue F4 repeats the drop offset exactly. If the dropped copy glued to a point of A (copy beside A, `PinX = PNTX(LOCTOPAR(PNT(A!Connections.R.X,..),..))+<half width>`), every F4 copy is glued to the **same** point of A with `+0 mm`: all land on top of each other, pin on A's point, not in a row. With directions set, their `Angle` is glued to the page (`ANGLETOPAR(0 deg,ThePage!EventXFMod,EventXFMod)`), not to A.
 
 ## Row names
 
