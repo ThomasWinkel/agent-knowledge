@@ -106,5 +106,5 @@ Verified with Visio Pro 2019 C2R x64, WiX 7.0.0, VS2022 (2026-07); registration 
 - [Calling a Visio add-in from the ShapeSheet](visio-shapesheet-calls.md) — Read when a ShapeSheet cell (EventDrop, EventDblClick, Actions) must run code in a Visio VSTO/COM add-in - marker events, context string format, QUEUEMARKEREVENT vs RUNADDONWARGS, redo.
 - [Visio undo scopes - rollback and nesting](visio-undo-scopes.md) — Read when Visio code uses BeginUndoScope/EndUndoScope (one Undo step, rollback, nesting) or must store document data that Undo does not take back.
 - [Visio Shape.Ungroup from code](visio-ungroup.md) — Read when a Visio add-in or script calls Shape.Ungroup - confirmation dialog for master instances, AlertResponse, errors for non-groups and locked groups, what is left of the group.
-- [WinForms dialogs in add-ins - DataGridView gotchas](winforms-dialogs.md) — Read when an add-in dialog edits values in a DataGridView: Esc closes the whole form (CancelButton), first focus on OK, error icons that do not show, check boxes that apply late.
+- [WinForms dialogs in add-ins - DataGridView gotchas](winforms-dialogs.md) — Read when an add-in dialog edits values in a DataGridView: Esc closes the whole form (CancelButton), first focus on OK, AltGr characters lost, error icons that do not show, late check boxes.
 <!-- END GENERATED CONTENTS -->
