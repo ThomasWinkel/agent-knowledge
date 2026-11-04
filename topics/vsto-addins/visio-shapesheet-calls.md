@@ -1,6 +1,6 @@
 ---
 title: Calling a Visio add-in from the ShapeSheet
-description: Read when a ShapeSheet cell (EventDrop, EventDblClick, Actions) must run code in a Visio VSTO/COM add-in - marker events, context string format, QUEUEMARKEREVENT vs RUNADDONWARGS, redo.
+description: Read when a ShapeSheet cell (EventDrop, EventDblClick, Actions) must run add-in code in Visio - marker events, context string, QUEUEMARKEREVENT vs RUNADDONWARGS, redo, stencil drop vs copy.
 ---
 
 # Calling a Visio add-in from the ShapeSheet
@@ -65,6 +65,27 @@ redone.Clear();
 ```
 
 Verified: drop / duplicate, Undo, Redo (twice) leaves `K2` (not `K3`); duplicate of the redone shape in the same idle round still runs (`K3`); a handler that ungroups the dropped group: Redo without error.
+
+## Stencil drop or copy
+
+`EventDrop` cannot tell a drop from a stencil from a paste or duplicate. The document's `ShapeAdded` can: `Application.CurrentScope` there is the command that adds the shape. Remember the shapes added by a drop the same way as the redo guard, e.g. to skip a counter that would only count up from the master's value.
+
+| Action | `CurrentScope` in `ShapeAdded` |
+|---|---|
+| Drag from a stencil (mouse), `Page.Drop(master)`, `Page.Drop(shape)` | 1246 `Drop On Page` |
+| Ctrl+V | 1022 `Paste` |
+| Ctrl+D, `DoCmd(1024)`; F4 after Ctrl+D (1024 inside 1019 `Repeat`) | 1024 `Duplicate` |
+| Ctrl+drag (mouse) | 1184 `Duplicate` |
+| `Shape.Duplicate()` | 1166 `Duplicate` |
+| Redo (`IsUndoingOrRedoing` `True`) | 1018 `Redo` |
+
+```csharp
+// Document ShapeAdded, top-level shapes; not during Undo/Redo
+if (!app.IsUndoingOrRedoing && app.CurrentScope == 1246)
+    dropped.Add((shape.ContainingPageID, shape.ID));   // clear at VisioIsIdle
+```
+
+Measured with `Application.EnterScope`/`ExitScope` and `ShapeAdded` handlers in a VSTO add-in, real mouse and keys (Visio Pro 2019 C2R x64, 2026-11). A counter in `EventDrop` guarded so: stencil drop by mouse keeps the master's value; Ctrl+V, Ctrl+D, F4 count up; Undo/Redo keep the values. _Unverified:_ drag of shapes between two drawing windows, Paste Special, other Visio versions (IDs are `visCmd*` command IDs).
 
 ## Test without the UI
 
