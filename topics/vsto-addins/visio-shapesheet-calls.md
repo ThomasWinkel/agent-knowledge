@@ -36,14 +36,34 @@ void OnMarkerEvent(Visio.Application app, int sequenceNum, string contextString)
 ## Gotchas
 
 - Event cells (`EventDblClick`, `EventDrop`, `Actions.X.Action`) fire only when triggered, not when the formula is set. A User cell fires as soon as the formula is set, then on each real change of a cell it depends on; an instance inheriting it from the master does not fire on drop, paste, duplicate or file open: [visio-cell-change-events](visio-cell-change-events.md).
-- `EventDrop` fires on dropping a master instance and on duplicating a shape. It **fires again on redo** of the drop (not on undo). `Application.IsUndoingOrRedoing` is `False` in the marker handler, so it is no guard.
+- `EventDrop` fires on dropping a master instance, on duplicating a shape and on `Page.Drop(shape)`. It **fires again on redo** of the drop (not on undo). `Application.IsUndoingOrRedoing` is `False` in the marker handler, so it is no guard: use the Redo guard below.
+- Duplicate of several selected shapes (`DoCmd` 1024): one copy fires `EventDrop`, the others `EventMultiDrop` (3 shapes: 1 + 2). A command that must run for every copy needs the formula in both cells.
 - Only the dropped shape fires: `EventDrop` of the sub-shapes of a group does not fire when the group is duplicated or dropped as a master instance, also not when the handler then ungroups it.
 - Changes the handler makes for `EventDrop` join the Undo step of the drop: one Undo removes the shape. After Redo **the handler's change is there twice** (redo fires `EventDrop` again): a handler that counts `K1` up to `K2` on drop leaves `K3` after Undo + Redo. Seen with the handler's change inside `BeginUndoScope`/`EndUndoScope`.
-- A handler that deletes or ungroups the dropped shape: Redo brings the handler's result back, then fires `EventDrop` for a `/shape` that no longer exists. `ItemFromID` throws (`An exception occurred.`); handle it.
+- A handler that deletes or ungroups the dropped shape: Redo brings the handler's result back, then fires `EventDrop` for a `/shape` that no longer exists. `ItemFromID` throws (`An exception occurred.`); the Redo guard below avoids it.
 - A handler change for `EventDblClick` inside one undo scope is one Undo step of its own. A scope without changes adds no Undo step, so the handler can open a scope for every command, also read-only ones.
 - Cell values joined into the formula arrive as text in the UI locale, with unit: `"/w="&Width` gave `/w=25,4MM`, `"/n="&(1/3)` gave `/n=0,33333333333333` (German Windows). Pass the cell name and read the cell in the add-in.
 - `""` in the formula gives `"` in the context string: `"/label=""two words"""` arrives as `/label="two words"`.
 - No listener (add-in not loaded): nothing happens, no error.
+
+## Redo guard
+
+On Redo of a drop, the document's `ShapeAdded` fires first, with `IsUndoingOrRedoing` `True`; the marker of `EventDrop` comes after the Redo and before the next `VisioIsIdle`. So: remember shapes added during Undo/Redo, skip markers from them, forget them at idle.
+
+```csharp
+// Document ShapeAdded (EventList.AddAdvise 0x8040 or EDocument_Event.ShapeAdded); top-level shapes only.
+if (app.IsUndoingOrRedoing)
+    redone.Add((shape.ContainingPageID, shape.ID));
+
+// MarkerEvent, after parsing /doc /page /shape (indexes -> IDs):
+if (redone.Contains((doc.Pages[pageIndex].ID, shapeId)))
+    return; // Visio has brought the command's result back already
+
+// VisioIsIdle
+redone.Clear();
+```
+
+Verified: drop / duplicate, Undo, Redo (twice) leaves `K2` (not `K3`); duplicate of the redone shape in the same idle round still runs (`K3`); a handler that ungroups the dropped group: Redo without error.
 
 ## Test without the UI
 
@@ -55,4 +75,4 @@ void OnMarkerEvent(Visio.Application app, int sequenceNum, string contextString)
 - `Application.ProcessID` is not the Windows process ID (seen: 747 for process 14740). Find the process of a new instance by comparing `Get-Process VISIO` before and after it starts.
 - Run it on an STA thread that pumps messages (`Application.DoEvents()` in a wait loop). C# compiled with `Add-Type` on its own STA thread works; a version in plain PowerShell hung.
 
-Verified with Visio Pro 2019 C2R x64 on German Windows (2026-10).
+Verified with Visio Pro 2019 C2R x64 on German Windows (2026-10; Redo guard and `EventMultiDrop` 2026-11, VSTO add-in, actions by COM).
