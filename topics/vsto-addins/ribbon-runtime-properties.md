@@ -11,6 +11,7 @@ A VSTO designer ribbon (`RibbonBase`) is loaded when its `Load` event runs. Afte
 
 - `Label`, `ScreenTip`, `SuperTip`, `KeyTip`, `Title` of tab, group, dialog launcher, button, toggle button, check box, split button, menu, gallery, drop-down (and its items), combo box, edit box, label: settable at any time (`RibbonPropertyStorage.SetDynamicValue`). Office updates the UI at once.
 - Drop-down items: `Items.Clear()` / `Items.Add(Factory.CreateRibbonDropDownItem())` and `SelectedItem` work at any time (verified: rebuilt many times after load); item `Label`, `Tag`, `OfficeImageId` dynamic.
+  - A drop-down with items always shows one: after a rebuild, without setting `SelectedItem`, with `SelectedItem = null` or `SelectedItemIndex = -1`, it shows the first item (Visio 2019, value read by UI Automation, 2026-11). Only an empty list shows nothing. So when the value to show is not among the items, decide which item stands for it (and make the app act on that one), or add an item for it.
 - **`RibbonDropDown.SizeString`: only before load** (`SetStaticValue`): set it in the designer. Value = sample text, not a character count: the control gets the width of this text (`20` -> two digits wide); e.g. `xxxxxxxxxxxxxxxxxxxx` for about 20 characters.
 - **`RibbonSeparator.Title`: only before load** (`TitleSetStaticValue`). Setting it in `Load` throws `InvalidOperationException: Component is read only. Cannot change value of this property.` Even setting it to its current value (`null`) throws.
 
