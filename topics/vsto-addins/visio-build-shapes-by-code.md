@@ -81,6 +81,7 @@ $inst = $page.Drop($m, $x, $y)         # pin at x, y; every cell inherited
 ```
 
 - **`Shape.Parent = group` grows the group** to include the new member, unless the group has `LockCalcWH = 1`. Members get formulas relative to the group size (`Sheet.5!Width*0.246`), so members added earlier stretch with each growth.
+- **`Shape.Parent = group` with `LockGroup = 1` on the group does nothing, without error**: the shape stays on the page (`ContainingShape` = page). Set `LockGroup = 0` before adding members, back to 1 after (measured 2026-11-05, same build, visible Visio).
 - `Masters.Drop(instance, 0, 0)` of a master instance: the new master's shape has no master link; formulas, deleted rows and sub-shapes are copied.
 - `Shape.ReplaceShape(master)` keeps the old shape's local values (`Width` not inherited): use `Page.Drop` + delete instead.
 - Instance of a master, inherited row deleted (`DeleteRow`): the row is gone (`CellExistsU` 0), but inherited formulas that read it keep the master formula, still pointing at it. Replace those references by values (write the cells locally) before deleting the row.
