@@ -16,7 +16,7 @@ description: Read when Visio code changes many shapes or cells and you weigh Scr
 | [`DeferRelationshipRecalc`](https://learn.microsoft.com/en-us/office/vba/api/visio.application.deferrelationshiprecalc) = true | `bool` | containers do not resize while members move or resize; `false` processes all deferred actions at once | - | diagrams with containers |
 | [`EventsEnabled`](https://learn.microsoft.com/en-us/office/vba/api/visio.application.eventsenabled) = 0 | `short` | Visio fires no events, runs no add-ons, does not execute `RUNADDON` code in cells | hits every add-in and VBA project, not only yours; **stays 0 in later Visio sessions** (also the user's own); `QueueMarkerEvent` throws while 0 | avoid; if used (e.g. a COM script that must not wake add-in handlers), put back `-1` in `finally` |
 | [`UndoEnabled`](https://learn.microsoft.com/en-us/office/vba/api/visio.application.undoenabled) = false | `bool` | no undo information is collected | **clears the existing undo history** (measured: a step before it no longer undoes) | avoid when the user must be able to undo; data outside Undo: [visio-undo-scopes](visio-undo-scopes.md#data-outside-undo) |
-| [`LiveDynamics`](https://learn.microsoft.com/en-us/office/vba/api/visio.application.livedynamics) | `bool` | recalculation on every mouse move of a drag, or only on release | - | mouse drags only, no gain for code |
+| [`LiveDynamics`](https://learn.microsoft.com/en-us/office/vba/api/visio.application.livedynamics) | `bool` | recalculation on every mouse move of a drag, or only on release | saved in the registry, stays in later sessions ([visio-application-settings](visio-application-settings.md)) | mouse drags only, no gain for code |
 
 ```csharp
 bool showChanges = application.ShowChanges;
