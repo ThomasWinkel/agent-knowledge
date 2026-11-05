@@ -45,3 +45,4 @@ Sub-shape (footer cell, text):
 - `Sheet.<group>!` references inside the master are remapped on each drop.
 - Text sizes (`Char.Size` in pt) and line weights are paper units: no scale factor.
 - New pages: an add-in drops the master in `PageAdded` (foreground only, no border yet).
+- Template that shows its document stencil (so a deleted border can be placed again): call `Document.OpenStencilWindow()` before `SaveAsEx`; `visio/windows.xml` then holds a `WindowType='Stencil'` window without `Document` attribute, and a new drawing from the template opens with `Document Stencil` shown (measured, invisible Visio). Docked stencils (`Documents.OpenEx(path, visOpenRO + visOpenDocked)`) are saved the same way, with their full path in `Document`.
