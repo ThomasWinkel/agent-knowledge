@@ -29,10 +29,10 @@ Measured on Visio 2019 C2R x64 (16.0), 2026-11: Visio started as `VISIO.EXE` (no
 Measured by COM in a new blank drawing (rectangles, `Shape.AutoConnect`):
 
 - `DeleteConnectorsEnabled = True`: `Window.Selection.Delete()` and `Shape.Delete()` of a glued shape left all connectors in place. The option acts on UI deletes only (_unverified_ by hand).
-- Connector splitting never happened by code, with any combination of `ConnectorSplittingEnabled`, `ShapeSplittable`, `ShapeSplit`: neither `Page.Drop(shape, x, y)` onto the connector nor moving a shape there by `PinX`/`PinY`.
+- Connector splitting never happens by code: [visio-connector-splitting](visio-connector-splitting.md).
 
 ## Document and shape level
 
 - `Document.DynamicGridEnabled` is saved in the file (`document.xml` `DocumentSettings/DynamicGridEnabled`) and comes from the template; new blank drawing: `True`. Set it in the template instead of per session.
 - Snap & Glue dialog, "Snap to" / "Glue to" check boxes (shape geometry, vertices, intersections, connection points, ...) and the Snap/Glue switches are per document: `Document.SnapSettings`, `GlueSettings`, `SnapExtensions`, saved in `document.xml` `DocumentSettings` and copied from the template into a new drawing (measured). Bits (`VisSnapSettings`): RulerSubdivisions 1, Grid 2, Guides 4, Handles 8, Vertices 16, ConnectionPoints 32, Geometry 256, AlignmentBox 512, Extensions 1024, Intersections 65536, Disabled 32768 (Snap off). `VisGlueSettings`: Guides 1, Handles 2, Vertices 4, ConnectionPoints 8, Geometry 32, Disabled 32768. New blank drawing: `SnapSettings = 65847`, `GlueSettings = 9`, `SnapExtensions = 34`.
-- Connector splitting needs, besides the application option, three cells to allow it: `PageShapeSplit` (PageSheet, Page Layout), `ShapeSplittable` on the dropped 2D shape, `ShapeSplit` on the connector. A drawn rectangle and an `AutoConnect` connector have `0` in their cells. Keep `ShapeSplittable = 0` in your masters (or `PageShapeSplit = 0` in the template pages) to rule splitting out regardless of the user's option (_unverified_ by mouse).
+- Connector splitting: application option plus page and shape cells: [visio-connector-splitting](visio-connector-splitting.md).
