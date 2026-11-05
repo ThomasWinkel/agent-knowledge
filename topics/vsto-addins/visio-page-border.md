@@ -13,7 +13,7 @@ Measured 2026-11-05, Visio 2019 C2R x64 build 20527, COM (`Visio.InvisibleApp`).
 
 - A background page keeps its own size: foreground `PageWidth` 420 -> 210 mm, its background page stays 420 x 297 mm. One background page serves pages of any size, so it cannot follow them. (Page Setup / Design > Size in the UI: not measured.)
 - Page field functions in a shape formula or text field:
-  - `PAGECOUNT()` counts foreground pages only (2 foreground + 1 background -> 2). `PAGENUMBER()&" / "&PAGECOUNT()` shows `2 / 3`.
+  - `PAGECOUNT()` counts foreground pages only (2 foreground + 1 background -> 2). `PAGENUMBER()&" / "&PAGECOUNT()` shows `3 / 3` on the last of three pages.
   - `TITLE()`, `CREATOR()` (File > Info: Title, Author; COM `Document.Title`, `.Creator`), `PAGENAME()`.
   - `DOCLASTSAVE()` / `DOCCREATION()` of a never saved document: the creation time.
   - Date picture: `FORMAT(DOCLASTSAVE(),"{{yyyy-MM-dd}}")` -> `2026-11-05`. Without braces `"yyyy-mm-dd"` gave `2026-04-05` (`mm` = minutes); `"YYYY-MM-DD"` gave `2026-11-` (`DD` unknown).
