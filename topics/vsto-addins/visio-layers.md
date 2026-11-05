@@ -64,6 +64,7 @@ Layers travel with the shape **by name**:
 
 ## Gotchas
 
+- **Redo loses page layers** (measured 2026-11-05, Visio 2019 C2R x64 build 20527, COM): `Pages.Add()` + `Page.Drop(master)` (master shape on a layer) in one undo unit, then Undo + Redo: page and shape come back, the page has **no layers**, `Shape.LayerCount` = 0. Same with or without a lock written in the unit, and with an add-in's `PageAdded` handler doing the drop. `Page.Duplicate()` + Undo + Redo: the layer comes back with `Lock` = 0 (was 1). Unaffected: Undo + Redo of a drop on an existing page; Undo of a page delete (layer and lock back). Code that relies on a page layer (e.g. a locked one) must check and repair it later (not during Redo: `IsUndoingOrRedoing`).
 - A `Layer` object got by `Layers.Item("dUp")` or `Layers.Add("DUP")` reports the string you passed as `Name` (`dUp`), not the stored name (`Dup`). Read names from `Layers.Item(index)`.
 - Removing shapes from all other layers makes hiding by layer reliable, but loses the user's layer assignments for good.
 
