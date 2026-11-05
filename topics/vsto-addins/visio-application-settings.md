@@ -20,6 +20,7 @@ Measured on Visio 2019 C2R x64 (16.0), 2026-11: Visio started as `VISIO.EXE` (no
 | `Settings.DeveloperMode` | Options > Advanced > Run in developer mode | `DeveloperTools` (`REG_DWORD`) | - |
 | `LiveDynamics` | none | `LiveMouseDynamics` | `True` |
 
+- `Settings.DeveloperMode` set by code shows (`True`) or hides (`False`) the Developer ribbon tab at once, also while a modal add-in dialog is open (UI Automation tab list, Visio 2019, 2026-11).
 - A value at its default is absent from the registry; Visio adds it when set by code. To restore a user's state exactly, delete the added values while Visio is not running (setting the old value by code leaves the value behind, harmless).
 - Visio writes the values only on quit: a second running Visio instance overwrites them on its own quit.
 - `Document.DiagramServicesEnabled` is not persisted (docs) and only affects code-triggered behaviors. The save/set/restore block around it in recorded macros is macro recorder boilerplate, not needed for settings.
