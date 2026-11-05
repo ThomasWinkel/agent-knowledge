@@ -14,7 +14,7 @@ A 2D shape dropped onto a connector splits it into two connectors, one on each s
 | Splitting shape | `ShapeSplit` (Shape Layout): "can split shapes that are splittable" | the 2D shape that is dropped | drawn rectangle: `0` |
 | Split shape | `ShapeSplittable` (Shape Layout): "this 1-D shape can be split" | the connector | `Shape.AutoConnect` connector: `1` |
 
-To rule splitting out for your own shapes regardless of the user's option, set `ShapeSplit = 0` on your 2D masters or `ShapeSplittable = 0` on your connectors (or `PageShapeSplit = 0` in the template pages).
+To rule splitting out for your own shapes regardless of the user's option, set `ShapeSplit = 0` or `GlueType = 8` on your 2D masters, `ShapeSplittable = 0` on your connectors, or `PageShapeSplit = 0` in the template pages.
 
 Measured 2026-11, Visio 2019 C2R x64 build 20527, new blank metric drawing, two rectangles joined by `Shape.AutoConnect`, a 20 x 8 mm rectangle with two connection points (left/right middle, or top/bottom middle for a vertical connector) and `ShapeSplit = 1`:
 
@@ -29,4 +29,5 @@ Measured 2026-11, Visio 2019 C2R x64 build 20527, new blank metric drawing, two 
 - Both halves are glued with dynamic (walking) glue to the shape: `Connect.ToCell` = `PinX`, `BeginX`/`EndX` = `_WALKGLUE(...)`. No `Connections.X<n>` glue.
 - Right after the split the ends sit exactly on the two connection points.
 - After the shape moved (+10/+10 mm by `PinX`/`PinY`), Visio reroutes: one end stayed on its connection point, the other walked to the middle of another side of the outline (horizontal case: bottom middle; vertical case: left middle).
+- `GlueType = 8` (`visGlueTypeNoWalkingTo`) on the dropped shape blocks splitting completely: the same mouse drag left 1 connector, unglued from the shape, whatever the connector had (`GlueType` 0 or 4, `ConFixedCode` 0 or 2; horizontal and vertical). Splitting needs dynamic glue to the shape; a shape that allows glue only to its connection points cannot split connectors with Visio's own feature.
 - So the information "which end on which connection point" is not kept. If it matters (e.g. a device inserted into a wire), re-glue each end to its connection point after the split (`Cell.GlueTo(shape.CellsSRC(visSectionConnectionPts, row, 0))`; _unverified_ for this case), e.g. in a `ConnectionsAdded` handler ([visio-glue-events](visio-glue-events.md)).
