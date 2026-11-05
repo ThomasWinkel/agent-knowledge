@@ -1,6 +1,6 @@
 ---
 title: Visio application settings vs document settings
-description: Read when code or a template should change Visio editing options (AutoConnect, connector splitting/delete, snap strength, dynamic grid) - registry, persistence, what has effect by COM.
+description: Read when code or a template changes Visio editing options (AutoConnect, connector split/delete, snap/glue to, snap strength, dynamic grid) - registry or document, persistence.
 ---
 
 # Visio application settings vs document settings
@@ -34,4 +34,5 @@ Measured by COM in a new blank drawing (rectangles, `Shape.AutoConnect`):
 ## Document and shape level
 
 - `Document.DynamicGridEnabled` is saved in the file (`document.xml` `DocumentSettings/DynamicGridEnabled`) and comes from the template; new blank drawing: `True`. Set it in the template instead of per session.
+- Snap & Glue dialog, "Snap to" / "Glue to" check boxes (shape geometry, vertices, intersections, connection points, ...) and the Snap/Glue switches are per document: `Document.SnapSettings`, `GlueSettings`, `SnapExtensions`, saved in `document.xml` `DocumentSettings` and copied from the template into a new drawing (measured). Bits (`VisSnapSettings`): RulerSubdivisions 1, Grid 2, Guides 4, Handles 8, Vertices 16, ConnectionPoints 32, Geometry 256, AlignmentBox 512, Extensions 1024, Intersections 65536, Disabled 32768 (Snap off). `VisGlueSettings`: Guides 1, Handles 2, Vertices 4, ConnectionPoints 8, Geometry 32, Disabled 32768. New blank drawing: `SnapSettings = 65847`, `GlueSettings = 9`, `SnapExtensions = 34`.
 - Connector splitting needs, besides the application option, three cells to allow it: `PageShapeSplit` (PageSheet, Page Layout), `ShapeSplittable` on the dropped 2D shape, `ShapeSplit` on the connector. A drawn rectangle and an `AutoConnect` connector have `0` in their cells. Keep `ShapeSplittable = 0` in your masters (or `PageShapeSplit = 0` in the template pages) to rule splitting out regardless of the user's option (_unverified_ by mouse).
