@@ -43,6 +43,8 @@ finally
 - Visio turns `ShowChanges`, `ScreenUpdating` and `InhibitSelectChange` back by itself when the user does something. Do not rely on it; for `DeferRecalc` the docs demand the reset.
 - `DeferRecalc`: Visio works off the pending recalculations when objects are released or many commands arrive. Keep the `Cell` objects in variables until the end and only set formulas or results in the deferred part.
 - `EventsEnabled = 0` is saved by Visio: a new `Visio.Application` or `Visio.InvisibleApp` started after a session that left it 0 reads 0, and every `Application.QueueMarkerEvent` throws `An exception occurred.` (also with an unknown marker text). Setting `-1` again fixes it, also for the next sessions. Measured with a script that quit Visio without resetting it.
+- It is the user option **File > Options > Advanced > `Enable Automation events`** (stored as `EventsEnabled` in `HKCU\Software\Microsoft\Office.0\Visio\Application`): COM `0` shows the box unchecked, `-1` checked. So a user can switch off every add-in's events by hand, and a script that leaves `0` unchecks it in the user's Visio. Microsoft's reference page names no check box.
+- With a stored `0`, Visio still loads VSTO COM add-ins (`Connect = True`) and their ribbon tabs; only the events (incl. `VisioIsIdle`) never arrive. An add-in that depends on events can check `Application.EventsEnabled` at ribbon load and warn.
 - Show a message box only after the switches are back: with `ShowChanges = false` Visio does not repaint its windows, also not when another window uncovered them.
 
 ## Measured: the switches gave nothing, the batch call did
@@ -71,6 +73,6 @@ Array results = new object[] { 1.25 /* , ... */ };
 short written = page.SetResults(ref streamArray, ref units, ref results, 0);
 ```
 
-Measured with Visio Pro 2019 C2R x64, Debug build, stopwatch in the add-in (2026-10). `EventsEnabled` persistence: same Visio, PowerShell COM, 2026-10. _Unverified:_ shapes with many formulas or sub-shapes, pages with connectors, what `SetResults` does with guarded cells.
+Measured with Visio Pro 2019 C2R x64, Debug build, stopwatch in the add-in (2026-10). `EventsEnabled` persistence: same Visio, PowerShell COM, 2026-10; check box and add-in load: build 20527, UI English, UI Automation, 2026-11. _Unverified:_ shapes with many formulas or sub-shapes, pages with connectors, what `SetResults` does with guarded cells.
 
 Other statements - source: the Microsoft reference pages linked above (2026-10); not tested. _Unverified_ (concluded, not stated there): marker events raised while `EventsEnabled = 0` are lost, not delivered later; in .NET the garbage collector decides when a `Cell` object is released, so `DeferRecalc` defers less reliably than in VBA; results read while `DeferRecalc` is on may be stale.
