@@ -1,6 +1,6 @@
 ---
 title: Visio application settings vs document settings
-description: Read when code or a template changes Visio editing options (AutoConnect, connector split/delete, snap/glue to, snap strength, dynamic grid) - registry or document, persistence.
+description: Read when code or a template sets Visio options (AutoConnect, connector split/delete, snap/glue, dynamic grid, page breaks, data graphic after linking) - registry or document, persistence.
 ---
 
 # Visio application settings vs document settings
@@ -37,3 +37,5 @@ Measured by COM in a new blank drawing (rectangles, `Shape.AutoConnect`):
 - `Document.DynamicGridEnabled` is saved in the file (`document.xml` `DocumentSettings/DynamicGridEnabled`) and comes from the template; new blank drawing: `True`. Set it in the template instead of per session.
 - Snap & Glue dialog, "Snap to" / "Glue to" check boxes (shape geometry, vertices, intersections, connection points, ...) and the Snap/Glue switches are per document: `Document.SnapSettings`, `GlueSettings`, `SnapExtensions`, saved in `document.xml` `DocumentSettings` and copied from the template into a new drawing (measured). Bits (`VisSnapSettings`): RulerSubdivisions 1, Grid 2, Guides 4, Handles 8, Vertices 16, ConnectionPoints 32, Geometry 256, AlignmentBox 512, Extensions 1024, Intersections 65536, Disabled 32768 (Snap off). `VisGlueSettings`: Guides 1, Handles 2, Vertices 4, ConnectionPoints 8, Geometry 32, Disabled 32768. New blank drawing: `SnapSettings = 65847`, `GlueSettings = 9`, `SnapExtensions = 34`.
 - Connector splitting: application option plus page and shape cells: [visio-connector-splitting](visio-connector-splitting.md).
+- Data tab > Data Graphics gallery drop-down > "Apply after Linking Data to Shapes" (default on) is the document cell `User.msvNoApplyDataGraphicAfterLink`: Visio adds it as `1` (`U='BOOL'`) when the box is cleared; missing = on. No registry change, no COM property. Set it in the template: `DocumentSheet` user row, formula `TRUE`. (Measured 2026-11: box cleared by hand, saved drawings and `HKCU\...\16.0\Visio` compared; a new drawing from a template with the cell has it.) The gallery stays disabled until the selection is linked to data; UI Automation reports it disabled even when Visio draws it enabled.
+- View > Page Breaks is `Window.ShowPageBreaks`, saved per window in `visio/windows.xml` (`<ShowPageBreaks>1</ShowPageBreaks>`); a new drawing from a template takes the template's value (measured in a visible Visio). In a template build script: set it on the drawing window (`Window.Type = visDrawing`) before `SaveAsEx`.
