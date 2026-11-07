@@ -64,6 +64,7 @@ Measured: Visio opens the patched stencil and reports the patched IDs; a drop of
 - `LockTextEdit = 1` also blocks code: `Shape.Text` and `Characters.AddCustomFieldU` throw `Requested operation is presently disabled.` Write the text first or unlock around the write.
 - `Characters.AddCustomFieldU(formula, 0)` with a reference to a missing cell throws `#NAME?`.
 - `Characters.AddCustomFieldU` also throws when the formula is valid but its result is an error right now (`Sheet.1!User.L*2` with `User.L = "?"` -> `#VALUE!`), e.g. a field that reads a value filled in later. Fix: add a placeholder field `""`, then write the field cell: `CellsSRC(visSectionTextField (8), 0, visFieldCell (0)).FormulaForceU = formula`. The cell keeps the formula (`Error` 47), the text is empty until the result is valid, then shows it (`5 A`). Unknown cells (`#NAME?`) and syntax errors are still refused there. `IFERROR(x,"?")` works in a field to show a placeholder instead. Measured 2026-11-03, Visio 2019 C2R x64 build 20527, invisible, COM.
+- A field that shows a fallback text while its inputs are placeholders: `IF(OR(STRSAME(User.a,"?"),STRSAME(User.b,"?")),"-",User.a*2&" A")`. `IF` ignores an error in the branch not taken, so `AddCustomFieldU` takes it directly (text `-`, no error); `STRSAME` works on a number too (`User.a = 2.5` -> `5 A`); `OR` with one argument works. Measured 2026-11-07, Visio 2019 C2R x64 build 20527, invisible, COM.
 
 ## Group from shapes, master from a shape
 
