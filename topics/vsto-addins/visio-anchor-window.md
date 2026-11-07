@@ -57,6 +57,9 @@ bool OnKey(Visio.MSGWrap m)
 - Closing the drawing window or the document fires **no** `BeforeWindowClosed` on the anchor window; only the control's `HandleDestroyed`. Listen to the parent window's `BeforeWindowClosed`. Quit with an open panel: no hang.
 - Anchor windows of add-ons are not saved: after save + reopen the drawing window has no panel. Reopen it from your own setting.
 - `Window.NewWindow()` (View > New Window) gives a second drawing window without the panel: one panel per drawing window.
+- Keep panels open in every drawing window from a setting: on `VisioIsIdle`, only when `Application.Windows.Count` changed (or a drawing window closed), add the panel to each window with `Type == visDrawing` and `SubType == visPageWin` (128; skips master and group edit windows) that has none. Measured: `NewWindow`, a reopened drawing, a new drawing and a Visio restart all get it.
+- Visio's own panes (Shape Data, Size & Position, External Data, Shapes) in `drawingWindow.Windows` report `Type == visAnchorBarAddon` too; hidden ones have `Caption` `""` and `WindowHandle32` 0. Find your own panels by `MergeID` or keep the reference.
+- `anchor.Caption = "..."` renames the pane at runtime (e.g. after a UI language switch).
 - Visio is DPI aware: the control gets physical pixels (at 125 %: anchor 580x400 inside, a DPI-unaware script sees 464x320). Test scripts that click need `SetProcessDPIAware()`.
 - Same merge ID for two anchor windows of one drawing window: one pane with tabs (as Shape Data / Size & Pos). `visWSAnchorMerged` with a unique ID: own pane under the others on the right.
 - Opening does not take the focus from the drawing. `Windows.Add` + control: 10-40 ms.
