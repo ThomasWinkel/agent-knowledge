@@ -66,4 +66,5 @@ bool OnKey(Visio.MSGWrap m)
 - Dark Office theme: the WinForms control stays light (system colors).
 - Drag inside a `TreeView` (`ItemDrag` -> `DoDragDrop`) works. Dropped onto the drawing page Visio refuses both a custom format and `DataFormats.Text` (`DoDragDrop` returns `None`, no shape made).
 - `VisioIsIdle` comes after Undo and Redo too; it may fire hundreds of times per second while the UI is busy: keep the handler a flag check.
+- UI tests: UI Automation sees the `TreeView` in the panel as a `Pane` without descendants (class `WindowsForms10.SysTreeView32...`; control, raw and content walker, `FindAll`: 0 items). Read the nodes in-process instead, e.g. by a debug-only marker command that gets the tree by `Control.FromHandle(<tree hwnd>)` and writes text, level, `ForeColor`, `ToolTipText` and the screen center of `node.Bounds` (`tree.PointToScreen`) to a file; click and drag at those points with the real mouse.
 - `TreeView` cost (8,689 nodes): `Nodes.Clear` + refill 196-274 ms with collapsed nodes, 1,032-1,876 ms with `ExpandAll`; changing 1-2,000 node texts in `BeginUpdate`/`EndUpdate` 69-133 ms. Update changed nodes instead of rebuilding.
