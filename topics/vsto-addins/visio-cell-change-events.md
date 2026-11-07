@@ -26,6 +26,7 @@ Two ways to learn that a cell changed: a marker cell in every shape (`DEPENDSON`
 - The marker arrives after `ExitScope` of the action. `IsUndoingOrRedoing` is `false` in the marker handler, also on Undo: it cannot tell Undo from a user change.
 - In the `CellChanged` handler `IsUndoingOrRedoing` is `true` on Undo/Redo. It needs no formula in the shapes, so it also covers shapes without master or built by the user.
 - A handler that writes the watched cell (e.g. `Prop.Name`) triggers itself once more: guard it.
+- Page order: `PageChanged` (`EventList.AddAdvise(visEvtPage + visEvtMod)`) fires for a rename and for `Background` on/off, but **not** when a page moves (`Page.Index = n` by COM; Visio 2019, in-process add-in, 2026-11). Reordering in the UI: not measured. To follow the order, compare the page IDs (`Pages[i].ID`) once Visio has been idle for a moment (e.g. a WinForms `Timer` of 500 ms restarted on every `VisioIsIdle`), not on every idle event.
 
 ## UI actions
 
