@@ -52,6 +52,24 @@ Measured with Visio 2019 C2R x64 (region de-DE):
 
 `User.x = 12.5` gives `ResultStr(visNoCast)` = `12,5000` (de-DE) and `12.5000` (en-US style). Read numbers with `Result(visNumber)` / `Result("mm")` / `ResultIU`, write them with `FormulaU` and `ToString(CultureInfo.InvariantCulture)`.
 
+## Text from a list into a number or color cell
+
+A formula like `LineWeight = INDEX(i,TheDoc!User.Weights)` puts text into a number cell; Visio parses it in the **region** syntax. Measured with Visio 2019 C2R x64, English UI, region `,`/`;` and `.`/`,`:
+
+| List item (text) | Target | `,` decimal, `;` list | `.` decimal, `,` list |
+|---|---|---|---|
+| `1.5 pt`, `1.5pt`, `1.5` (then `*1pt`) | `LineWeight` | 1.5 pt | 1.5 pt |
+| `1,5 pt`, `1,5` (then `*1pt`) | `LineWeight` | 1.5 pt | `#VALUE!` (Error 47) |
+| `4` | `LineColor` | color 4 | color 4 |
+| `RGB(0,112,192)` | `LineColor` | 0 (black, no error) | `RGB(0, 112, 192)` |
+| `#0070C0` | `LineColor` | 0 | 0 |
+| `2` / `4` | `LinePattern` / `EndArrow` | 2 / 4 | 2 / 4 |
+
+- Store numbers with `.` in the lists (write them with `InvariantCulture`).
+- Colors region-proof: keep `R,G,B` triplets in a `;` list and split with an explicit delimiter: `RGB(INDEX(0,INDEX(i,L),","),INDEX(1,INDEX(i,L),","),INDEX(2,INDEX(i,L),","))` worked in both regions.
+- The cells follow a list edit live and keep it after save + reopen.
+- `EVALTEXT(x)` evaluates a shape's text, not a string: `EVALTEXT("1.5 pt")`-style use gave 0.
+
 ## Test recipe
 
 - Change the separators with `SetLocaleInfo(LOCALE_USER_DEFAULT, LOCALE_SLIST / LOCALE_SDECIMAL, ...)` plus a `WM_SETTINGCHANGE "intl"` broadcast (not a raw registry write), back them up first, restart Visio, restore afterwards.
