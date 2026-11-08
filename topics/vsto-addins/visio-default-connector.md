@@ -17,6 +17,7 @@ Measured 2026-11, Visio 2019 C2R x64 build 20527, English UI; masters made by `D
 | own: Name + NameU `MyConnector` | built-in | _unverified_ |
 | own (Name `MyConnector`, NameU `Dynamic connector`) + another master Name `Dynamic connector`, NameU `Other` (a plain line) | takes the **other** one (Name match wins), then fails without message (`HRESULT -2032466954`), a line left unglued | _unverified_ |
 
+- Connector tool drag from a connection point to a connection point (real mouse, shapes with `GlueType 8`, drawing from the template above): both ends glued **static** to the points (`BeginX = PAR(PNT(A!Connections.P1.X,A!Connections.P1.Y))`), for named ABCD rows and normal rows alike; the connector is the own master. Drag from shape interior to interior (no points, `GlueType 0`): dynamic glue to the shapes (`PinX`).
 - Lookup: local `Name` `Dynamic connector` first, then `NameU`. So a built-in connector that gets into the drawing later (paste from another drawing; a drop of `ConnectorToolDataObject`, below) arrives as Name `Dynamic connector`, NameU `Dynamic connector.<n>` and may take over. _Unverified_ for paste and for the Connector tool.
 - Keep the local `Name` free (e.g. your product name); only `NameU` must be `Dynamic connector`.
 - `Application.ConnectorToolDataObject` is read-only and returns Visio's built-in connector in every case above; `Page.Drop` of it adds a new master `Dynamic connector` / `Dynamic connector.<n>` next to yours. It does not tell which master the tool will use.
