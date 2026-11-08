@@ -88,8 +88,28 @@ $inst = $page.Drop($m, $x, $y)         # pin at x, y; every cell inherited
 - Instance of a master, inherited row deleted (`DeleteRow`): the row is gone (`CellExistsU` 0), but inherited formulas that read it keep the master formula, still pointing at it. Replace those references by values (write the cells locally) before deleting the row.
 - **`DeleteSection` on an instance whose master has that section** (also after deleting all its rows): `Masters.Drop` of the instance, or of a group holding it, brings row 0 of the master's section back. Delete rows only; delete empty sections later in the new master (`Master.Open()`, `DeleteSection`, `Close()`: its shapes are no instances).
 
+## Connector master from the built-in connector
+
+Visio's Dynamic connector is built in (no stencil). Copy it into an own master, then change its cells. Measured 2026-11-08, Visio 2019 C2R x64 build 20527, invisible Visio.
+
+```powershell
+$s = $page.Drop($app.ConnectorToolDataObject, 2, 2)   # adds document master 'Dynamic connector'
+$s.CellsU('ShapeRouteStyle').FormulaU = '16'           # straight: a 2-point line for icon and drop
+$s.CellsU('BeginX').FormulaU = '0 mm';  $s.CellsU('BeginY').FormulaU = '10 mm'
+$s.CellsU('EndX').FormulaU   = '20 mm'; $s.CellsU('EndY').FormulaU   = '10 mm'
+$s.CellsU('ConFixedCode').FormulaU = '2'               # never reroute: keeps the straight line
+$m = $doc.Masters.Drop($s, 0, 0); $s.Delete()
+$doc.Masters.ItemU('Dynamic connector').Delete()
+$m.NameU = 'MyConnector'; $m.Name = 'MyConnector'      # then Master.Open(), set cells (ShapeRouteStyle 1, ...), Close()
+```
+
+- Without route style 16 + `ConFixedCode 2` before `Masters.Drop`, the master reroutes when its route style changes: the stencil line becomes a U or an L.
+- `Copyright` (Microsoft's text) is read-only; `HelpTopic` can be emptied. `LayerMember` = `""` + deleting the master's layers removes the `Connector` layer.
+- Ends moved by code (`BeginX`/`EndX` cells) on a `ConFixedCode 2` connector keep the old route: a stale segment stays.
+
 ## Gotchas
 
 - Reading a missing cell (`CellsU('User.X')`) throws `Unexpected end of file.`; check `CellExistsU(name, 0)`.
 - A killed script leaves `VISIO.EXE /Automation /Invisible -Embedding`; find it by command line (`Win32_Process`) and stop that PID only, never a user's Visio.
+- **PowerShell: a path from `Join-Path` passed to `Documents.OpenEx` hangs Visio without a message** (no dialog; Join-Path wraps its result in a PSObject). Cast it: `[string](Join-Path $dir 'My.vssx')`. Measured 2026-11-08, build 20527.
 - PowerShell: a helper function named `R` loses to the built-in alias `r` (`Invoke-History`); pick another name.
