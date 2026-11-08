@@ -37,7 +37,8 @@ Write a literal with `FormulaU`, read the evaluated value with `Result*`. Measur
 - `CellsU["User.X"]` of a missing row: COM exception `Unexpected end of file.` (does not name the cell). Check `CellExistsU(name, 0)` first.
 - `CellExistsU("User.X.Prompt", 0)` is true when the row `User.X` exists.
 - `PageSheet`: `Type` 1 (`visTypePage`), `NameU` `ThePage`, `ContainingPage` = the page. `DocumentSheet`: `Type` 6 (`visTypeDoc`), `NameU` `TheDoc`. Use the page or document name in messages.
-- An invalid formula set by code (unknown function, `AlertResponse` not set, invisible instance) opened a modal Visio dialog instead of throwing: the automation call hangs. _Unverified:_ whether `AlertResponse = 1` prevents it.
+- An invalid formula set by code (unknown function, `AlertResponse` not set, invisible instance) opened a modal Visio dialog instead of throwing: the automation call hangs. With `AlertResponse = 1` (invisible instance, events off, Visio 2019 build 20527) it throws a COM exception `Unknown function name.` instead.
+- A number kept as text (e.g. a code in a `Prompt` cell) read by a formula: compare it, `User.X.Prompt>0`, gives 0 for `""`, `"0"` and an empty formula, true for `"1"`, `"2"` (also for an unquoted `1`). Arithmetic (`*1`, `+0`, `INT()`) and `IF(User.X.Prompt,...)` work for digits but give `#VALUE!` (Error 47) for `""`. `VALUE()` and `LEN()` do not exist in the ShapeSheet (`Unknown function name.`). Measured Visio 2019 build 20527.
 
 ## Fixed list chosen by the user
 
