@@ -62,6 +62,9 @@ bool OnKey(Visio.MSGWrap m)
 - `anchor.Caption = "..."` renames the pane at runtime (e.g. after a UI language switch).
 - Visio is DPI aware: the control gets physical pixels (at 125 %: anchor 580x400 inside, a DPI-unaware script sees 464x320). Test scripts that click need `SetProcessDPIAware()`.
 - Same merge ID for two anchor windows of one drawing window: one pane with tabs (as Shape Data / Size & Pos). `visWSAnchorMerged` with a unique ID: own pane under the others on the right.
+  - Tabs in the order of `Windows.Add`; the first added is the shown tab when the pane opens. `anchorWindow.Activate()` brings its tab to the front. Both anchors report `Visible == True`; only the shown tab's control window is visible (`IsWindowVisible`). The pane caption is the shown tab's `Caption`.
+  - `Close()` of one tab's anchor fires that anchor's `BeforeWindowClosed`, as the pane's X does. Whether Visio closes the other tabs too: unverified (tested only with an add-in that closes all its tabs on this event). If one switch should rule the whole pane, close the others yourself.
+  - Each tab is its own reader of shared add-in state: a change list that one reader empties when it reads it loses changes for the other tabs (and for second windows of the drawing). Give every reader its own list.
 - Opening does not take the focus from the drawing. `Windows.Add` + control: 10-40 ms.
 - Dark Office theme: the WinForms control stays light (system colors).
 - Drag inside a `TreeView` (`ItemDrag` -> `DoDragDrop`) works. Dropped onto the drawing page Visio refuses both a custom format and `DataFormats.Text` (`DoDragDrop` returns `None`, no shape made).
