@@ -1,6 +1,6 @@
 ---
 title: Typed values in Visio ShapeSheet cells
-description: Read when Visio code writes or reads text, numbers, booleans or dates in ShapeSheet cells (empty cells, errors, new rows, master instances, fixed and variable lists, GUARD, read-only documents).
+description: Read when Visio code writes or reads text, numbers, booleans or dates in ShapeSheet cells (empty cells, errors, new rows, master instances, lists, typed units, GUARD, read-only files).
 ---
 
 # Typed values in Visio ShapeSheet cells
@@ -55,6 +55,18 @@ Measured with Visio 2019 C2R x64 build 20527 (2026-11), two shapes selected, Sha
 - A choice or a typed value in a variable list (`Prop.X.Type = 4`) also writes the **position**: `INDEX(n,Prop.X.Format)`. With several shapes selected, every shape gets it; one Undo step each (Format change included).
 - To store a value that is not in the list (typed, or the current value, e.g. `""` when the list has no empty item), Visio **replaces `Format` by a constant** with the value appended: `TheDoc!User.MyList` -> `"a;b;c;"` after the first choice, `"a;b;c;;BU/WH"` after typing `BU/WH`. The shape then no longer follows the document list. Choices of items already in the list keep the formula (`Format = ";"&TheDoc!User.MyList`, value `""`).
 - Fix in a `CellChanged` handler: replace the `INDEX` formula by its text first, then give `Format` its formula back (`FormulaU = ""` in a master instance to inherit again); same Undo step when written inside the event.
+- Number-like items show with the region's decimal separator (`1.5` as `1,5` in de-DE). Typing `1,5` stores the item `1.5`; a typed value not in the list stays as typed (`3,3`).
+
+## Number with unit typed by the user
+
+Measured with Visio 2019 C2R x64 build 20527 (2026-11), region de-DE, number row (`Prop.X.Type = 2`), Shape Data window by window messages ([visio-shape-data-window-test](visio-shape-data-window-test.md)).
+
+- Text with a unit is stored as typed: `2 m`, `150 cm`, `1500 mm`; `1,5 km` -> `1.5 km` (`Cell.Units` 71, 69, 70, 72). Convert with `Result("m")`.
+- A number without unit takes the unit of the current value: `2,5` after `150 cm` -> `2.5 cm`. If the current value is `""` or has no unit, it stays unitless (`Units` 32 = `visNumber`) and unit conversions read it as inches: `2` -> `Result("m")` = 0.0508.
+- Clearing the field deletes the formula: the value reads `0` (unitless), also when it was `""` before.
+- The decimal separator follows the region: `2.5` and `abc` in de-DE give a dialog `Field validation error: Entry must be a number.` (OK / Cancel).
+- `FORMAT(Prop.X,"0.## u")`: `2.5 m` -> `2,5 m`, unitless `2` -> `2 `, `""` -> ` `.
+- Fix in a `CellChanged` handler (same Undo step): unitless number -> `<number> <default unit>`, empty formula -> `""`.
 - Code per item (names in the list, codes aligned in its `Prompt`): `INDEX(LOOKUP(Prop.X,TheDoc!User.MyList),TheDoc!User.MyList.Prompt,";",Prop.X)`; `LOOKUP` ignores case (`Black` finds `black`), a value not in the list gives the value itself (4th argument of `INDEX`).
 
 ## Master instances
