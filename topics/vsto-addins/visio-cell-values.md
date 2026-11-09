@@ -57,6 +57,15 @@ Measured with Visio 2019 C2R x64 build 20527 (2026-11), two shapes selected, Sha
 - Fix in a `CellChanged` handler: replace the `INDEX` formula by its text first, then give `Format` its formula back (`FormulaU = ""` in a master instance to inherit again); same Undo step when written inside the event.
 - Number-like items show with the region's decimal separator (`1.5` as `1,5` in de-DE). Typing `1,5` stores the item `1.5`; a typed value not in the list stays as typed (`3,3`).
 
+## Number-like list items and the region
+
+Measured Visio 2019 build 20527 (2026-11), fixed (`Type 1`) and variable (`Type 4`) list behave the same, list `0.14;1.5;1,5;AWG 18;2x1.5;1.000`, regions with `,` and `.` as decimal symbol (recipe: [visio-region-settings](visio-region-settings.md)).
+
+- The drop-down formats items that read as numbers with `.` in the region's format: with `,` decimal it shows `0,14`, `1,5`, `1,5`, `AWG 18`, `2x1.5`, `1,000` (`1.000` looks like one thousand to a German reader). With `.` decimal every item shows as stored (`1,5` stays `1,5`, not 15).
+- A choice still writes the position; the result is the item text as stored, so the stored value is the same on every PC.
+- Two items that look equal in the region (`1.5` and `1,5` with `,` decimal): choosing the second writes the position of the **first** (`INDEX(2,...)` = `1.5`). Keep such lists free of look-alikes: store numbers with `.` (e.g. write them with `InvariantCulture` when a dialog edits the list) and treat `1,5` and `1.5` as duplicates.
+- A fixed list does not avoid this display; it only stops typed values.
+
 ## Number with unit typed by the user
 
 Measured with Visio 2019 C2R x64 build 20527 (2026-11), region de-DE, number row (`Prop.X.Type = 2`), Shape Data window by window messages ([visio-shape-data-window-test](visio-shape-data-window-test.md)).
