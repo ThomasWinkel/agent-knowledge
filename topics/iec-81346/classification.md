@@ -27,6 +27,7 @@ Standard: IEC 81346-2:2019. The tables are copyrighted: look codes up in the sta
 - 2009 table: `I` and `O` not used (confusion with 1 and 0) (Wikipedia DE).
 - Sector parts of the series exist, e.g. ISO/TS 81346-3 (infrastructure), ISO/IEC 81346-10 (power plants), ISO/IEC 81346-20 (vehicles, RDS-VE) (Wikipedia EN).
 - Sector- or project-specific letter code tables are allowed if structured like IEC 81346-2 (ISO/TS 81346-3:2012, 4.2). This is the way for own location and function codes.
+- Fluid power diagrams use IEC 81346-2 letters too (ISO 1219-2:2012 has no function letter): [fluid-power](../technical-diagrams/fluid-power.md#identification).
 
 ## Sources
 
