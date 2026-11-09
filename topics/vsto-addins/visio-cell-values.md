@@ -1,6 +1,6 @@
 ---
 title: Typed values in Visio ShapeSheet cells
-description: Read when Visio code writes or reads text, numbers, booleans or dates in ShapeSheet cells (empty cells, types, errors, new rows, master instances, fixed lists, GUARD, read-only documents).
+description: Read when Visio code writes or reads text, numbers, booleans or dates in ShapeSheet cells (empty cells, errors, new rows, master instances, fixed and variable lists, GUARD, read-only documents).
 ---
 
 # Typed values in Visio ShapeSheet cells
@@ -47,6 +47,15 @@ Measured with Visio 2019 C2R x64 build 20527, choices made in the Shape Data win
 - A choice in a fixed list (`Prop.X.Type = 1`) writes the **position**, not the text: `INDEX(n,Prop.X.Format)`. Through `Prop.X = SETATREF(User.Y.Prompt)` it lands as `User.Y.Prompt = INDEX(n,Prop.X.Format)`; same on a page sheet. One Undo step. A COM write of the text (`Prop.X.FormulaU = "\"B\""`) stores the text.
 - So the value follows the list: with `Format = TheDoc!User.MyList`, reorder `A;B` -> `B;A` turns the chosen `B` into `A`; an item inserted in front shifts it; a list too short gives `""`. No error. A shape copied to another document likely picks the item at that position of the target's list (_unverified_). If the list may change, store the text yourself (replace the `INDEX` formula by the text it shows, e.g. in a `CellChanged` handler) and convert existing ones before you rewrite the list.
 - The editor is a drop-down list: the user cannot type or clear the value (`WM_SETTEXT ""`, posted Del, a text not in the list: nothing written; real keyboard Del: _unverified_). To let the user go back to "nothing", give the list an empty first item: `Format = ";"&TheDoc!User.MyList`; choosing it writes `INDEX(0,...)` = `""`.
+
+## Variable list chosen by the user
+
+Measured with Visio 2019 C2R x64 build 20527 (2026-11), two shapes selected, Shape Data window by window messages.
+
+- A choice or a typed value in a variable list (`Prop.X.Type = 4`) also writes the **position**: `INDEX(n,Prop.X.Format)`. With several shapes selected, every shape gets it; one Undo step each (Format change included).
+- To store a value that is not in the list (typed, or the current value, e.g. `""` when the list has no empty item), Visio **replaces `Format` by a constant** with the value appended: `TheDoc!User.MyList` -> `"a;b;c;"` after the first choice, `"a;b;c;;BU/WH"` after typing `BU/WH`. The shape then no longer follows the document list. Choices of items already in the list keep the formula (`Format = ";"&TheDoc!User.MyList`, value `""`).
+- Fix in a `CellChanged` handler: replace the `INDEX` formula by its text first, then give `Format` its formula back (`FormulaU = ""` in a master instance to inherit again); same Undo step when written inside the event.
+- Code per item (names in the list, codes aligned in its `Prompt`): `INDEX(LOOKUP(Prop.X,TheDoc!User.MyList),TheDoc!User.MyList.Prompt,";",Prop.X)`; `LOOKUP` ignores case (`Black` finds `black`), a value not in the list gives the value itself (4th argument of `INDEX`).
 
 ## Master instances
 
