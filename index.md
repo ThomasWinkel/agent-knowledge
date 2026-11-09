@@ -10,6 +10,7 @@ Shared knowledge for AI agents: internal processes, private APIs, conventions an
 
 - [.NET Framework](topics/dotnet-framework/index.md) — .NET Framework 4.x (net48) runtime: where its classes behave differently from modern .NET or from the docs - gotchas and workarounds.
 - [IEC 81346 reference designation](topics/iec-81346/index.md) — IEC 81346 reference designations (device tags) for schematics: aspects and syntax, letter-code classification, how EPLAN implements it.
+- [Technical diagram kinds](topics/technical-diagrams/index.md) — Kinds of technical schematics (electric, fluid power, process/P&ID, layout): standards, minimum content, line and port conventions, how CAE tools group them and link one device across diagrams.
 - [Visio content deployment](topics/visio-content-deployment/index.md) — Installing Visio stencils and templates so Visio lists them: MSI PublishComponent (Solution Publishing), ConfigChangeID, content cache, file paths.
 - [VSTO Office add-ins](topics/vsto-addins/index.md) — VSTO Office add-ins: registration, MSI, signing, load failures, settings, localization, SDK refs; Visio: ShapeSheet, windows, layers, hidden pages, ungroup, performance, data; Excel tables; ribbon.
 - [WiX Toolset](topics/wix-toolset/index.md) — WiX Toolset v4+ (v7) MSI builds: SDK-style projects, HeatWave VS integration, OSMF EULA, file harvesting, package bitness.
