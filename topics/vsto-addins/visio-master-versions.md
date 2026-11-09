@@ -17,7 +17,7 @@ A drawing holds its own copy of every master it uses (document stencil). A chang
 Drop of the changed master into a drawing that has the old one (`Page.Drop(stencilMaster, x, y)`):
 
 - Default: a second document master `Board.4` (next free number) with the new content; old instances keep the old master. Every further version adds one more (`Board.5`, ...). Same for both ways of editing.
-- `MatchByName = true` on the **document** master: the drop reuses the old document master by name, the new content never arrives.
+- `MatchByName = true` on the **document** master: the drop reuses the old document master by name, the new content never arrives. The match uses the document master's local `Name` (it worked with `Name` = stencil name and a different `NameU`; measured 2026-11-09). Setting `MatchByName` gives the document master a new `UniqueID`.
 
 Bring a new version into a drawing: edit the **document** master (`docMaster.Open()`, change cells, `Close()`): every instance that inherits the cell gets the new value at once; instances with a local value keep it.
 
