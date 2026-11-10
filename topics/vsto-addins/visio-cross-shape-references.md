@@ -58,6 +58,12 @@ Chains: an edit is forwarded only through cells that hold `SETATREF` themselves 
 
 - One Undo takes back the forwarded write (target value restored, formulas kept).
 - A user edit in the Shape Data window behaves the same (`SETATREF` link cell; text and number row; one Undo step each; [visio-shape-data-window-test](visio-shape-data-window-test.md)).
+- Shape Data window on a source `Prop.X = SETATREF(Pages[A]!Sheet.1!Prop.X)` (Visio 2019 build 20527, measured):
+  - List choice (fixed or variable list) lands in the target as `INDEX(n,Pages[<source page>]!Sheet.n!Prop.X.Format)`: a position in the **source's** list. A value typed into a variable list that is not in it rewrites the source's `Format` to a constant (`";a;b;c;zz"`); the target gets `INDEX(4,...)`. Make the target's value text before you repair the source's `Format`, else the position points past the end (`""`).
+  - Cleared number row (empty formula): target cleared **and** the source's own formula emptied: link lost. Cleared text row: `""` lands in the target, link kept.
+  - Every forwarded edit (also a COM write into the target, Undo, Redo) fires `CellChanged` for both cells, target first. With two shapes selected (one linked, one not), one choice writes both.
+- `SETATREF(<ref>,SETATREFEVAL(SETATREFEXPR("")))` stores the edit in the source's own formula (`SETATREFEXPR(INDEX(2,Prop.X.Format))`) and pushes the evaluated value: a list choice lands as text (`"b"`). But a typed value not in a variable list lands as `""` (value lost), and a cleared number row still loses the link (target unchanged). Plain `SETATREF` plus a handler that makes the target text is the safer choice.
+- Copy keeps the link: a pasted source (same or other page) and a duplicated page still point to the old target (same page reads back `SETATREF(<target NameU>!Prop.X)`). Reset links on copy in code.
 - Code that rewrites a `SETATREF` cell itself (new target, constant, or back to the master) must use `FormulaForceU` or `Shape.SetFormulas` with `visSetBlastGuards` (2): that replaces the cell's own formula and forwards nothing. Plain `FormulaU` and `SetFormulas` without flag 2 always forward (measured on a master instance with local `User.L = SETATREF(Sheet.1!Prop.X)`):
 
   | Write to `User.L` | `FormulaU` / `SetFormulas` 0 or 8 | `FormulaForceU` / `SetFormulas` 2 or 10 |
