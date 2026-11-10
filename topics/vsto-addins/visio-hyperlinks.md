@@ -28,7 +28,7 @@ Measured 2026-11, Visio 2019 C2R x64 (build 20527), COM from PowerShell (`Hyperl
 - Link area in the PDF = the shape's own box: for a group its `Width` x `Height`; a sub-shape outside it (e.g. a text block beside a 5 x 5 mm symbol) gets no link area.
 - Formulas work in both cells: `Invisible = NOT(TheDoc!User.showLinks)` switches the PDF link on and off with a document cell; `SubAddress = User.target` with `User.target` = the cross-page formula below gave the same links.
 - Every link appeared twice in the PDF (two identical `/Link` annotations, same rect), with and without structure tags / document properties. Harmless in viewers.
-- So for PDF: page by its local name, shape by `Sheet.<ID>` (`Shape.ID`), e.g. `SubAddress = Pages[TargetPage]!Sheet.5!User.myPage & "/Sheet.5"`. Visio exports no zoom; only post-processing the PDF could set one (e.g. `/FitR`, _unverified_).
+- So for PDF: page by its local name, shape by `Sheet.<ID>`. Let the target build its own address, `User.myTarget = PAGENAME()&"/Sheet."&ID()`, and link to it: `SubAddress = Pages[TargetPage]!Sheet.5!User.myTarget`. `ID()` gives `Sheet.12` (no decimals), a pasted copy gets its own ID, a page rename follows (measured). Visio exports no zoom; only post-processing the PDF could set one (e.g. `/FitR`, _unverified_).
 
 ## Survive a page rename
 
