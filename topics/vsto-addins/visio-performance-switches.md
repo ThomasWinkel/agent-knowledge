@@ -1,6 +1,6 @@
 ---
 title: Visio performance switches for bulk changes
-description: Read when Visio code changes many shapes or cells and you weigh ScreenUpdating, ShowChanges, DeferRecalc, EventsEnabled, UndoEnabled or batch calls - effects, side effects, one measurement.
+description: Read when Visio code changes many shapes or cells and you weigh ScreenUpdating, ShowChanges, DeferRecalc, EventsEnabled, UndoEnabled or batch calls - effects, side effects, two measurements.
 ---
 
 # Visio performance switches for bulk changes
@@ -49,7 +49,7 @@ finally
 
 ## Measured: the switches gave nothing, the batch call did
 
-One case: a VSTO add-in (in-process), ribbon click handler, one undo scope, moves n plain rectangles on a new blank page by two cell writes each (`PinX`, `PinY` via `Cell.ResultIU`). Time of the handler:
+Case 1: a VSTO add-in (in-process), ribbon click handler, one undo scope, moves n plain rectangles on a new blank page by two cell writes each (`PinX`, `PinY` via `Cell.ResultIU`). Time of the handler:
 
 | Shapes | Single writes | `Page.SetResults` |
 |---|---|---|
@@ -73,6 +73,17 @@ Array results = new object[] { 1.25 /* , ... */ };
 short written = page.SetResults(ref streamArray, ref units, ref results, 0);
 ```
 
-Measured with Visio Pro 2019 C2R x64, Debug build, stopwatch in the add-in (2026-10). `EventsEnabled` persistence: same Visio, PowerShell COM, 2026-10; check box and add-in load: build 20527, UI English, UI Automation, 2026-11. _Unverified:_ shapes with many formulas or sub-shapes, pages with connectors, what `SetResults` does with guarded cells.
+Case 2, connectors that visibly change: a VSTO add-in (in-process), ribbon click handler, one undo scope, reads cells of 2,000 top-level shapes one by one (1,000 1D connectors, begin glued to one of 1,000 small 2D shapes, end free) and writes about 2,000 cells (one cross-shape reference per connector, one result cell that switches the line color and an end arrow by formula). While it runs, the connectors change color one after the other and the Undo button flickers. Time of the handler (stopwatch in the add-in), first run (all writes) / two runs without writes:
+
+| Switches during the handler | Run 1 | Runs 2, 3 |
+|---|---|---|
+| none | 8.0 s | 7.4-8.4 s |
+| `ScreenUpdating = 0` | 8.3 s | 7.2-7.7 s |
+| `ShowChanges = false` | 8.1 s | 7.2-7.6 s |
+| `ShowChanges = false` + `DeferRecalc = 1` | 8.6 s | 7.2-7.5 s |
+
+- Again **no measurable gain**: the visible redraw and the flickering Undo button cost nothing that shows in the time. The time goes to the COM reads (runs without writes take as long).
+
+Measured with Visio Pro 2019 C2R x64, Debug build, stopwatch in the add-in (case 1: 2026-10; case 2: build 20527, 2026-11, each variant in a fresh Visio with the same saved drawing). `EventsEnabled` persistence: same Visio, PowerShell COM, 2026-10; check box and add-in load: build 20527, UI English, UI Automation, 2026-11. _Unverified:_ shapes with many formulas or sub-shapes, pages with connectors, what `SetResults` does with guarded cells.
 
 Other statements - source: the Microsoft reference pages linked above (2026-10); not tested. _Unverified_ (concluded, not stated there): marker events raised while `EventsEnabled = 0` are lost, not delivered later; in .NET the garbage collector decides when a `Cell` object is released, so `DeferRecalc` defers less reliably than in VBA; results read while `DeferRecalc` is on may be stale.
