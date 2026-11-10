@@ -23,6 +23,8 @@ Measured 2026-11, Visio 2019 C2R x64, COM from PowerShell (`Hyperlink.Follow()`,
 | `Invisible` = 1 | `Follow()` by code still goes | **no link** |
 
 - Only the first hyperlink row of a shape reaches the PDF: a page link in row 2 after a shape link in row 1 was missing; an invisible page link in row 1 + a shape link in row 2 gave none.
+- Link area in the PDF = the shape's own box: for a group its `Width` x `Height`; a sub-shape outside it (e.g. a text block beside a 5 x 5 mm symbol) gets no link area.
+- Formulas work in both cells: `Invisible = NOT(TheDoc!User.showLinks)` switches the PDF link on and off with a document cell; `SubAddress = User.target` with `User.target` = the cross-page formula below gave the same links.
 - Every link appeared twice in the PDF (two identical `/Link` annotations, same rect), with and without structure tags / document properties. Harmless in viewers.
 - So for PDF: link to the page, by its local name. To reach the shape inside Visio, use code (e.g. `Window.CenterViewOnShape`).
 
