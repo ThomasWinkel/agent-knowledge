@@ -16,6 +16,7 @@ IEC 81346 defines reference designations (German: Referenzkennzeichen, formerly 
 - Letter codes from IEC 81346-2:2019 (products by inherent function, spaces, infrastructure; 1-3 letters); project-specific tables allowed if built the same way: [classification](classification.md).
 - The standard fixes syntax, not the number or meaning of levels, nor the order of aspects; each project documents its structure.
 - EPLAN model: `== = ++ + -`, identity ("Seitenstruktur") separate from display ("Vollständiges BMK"), identifier + description lists: [eplan](eplan.md).
+- Practice: mostly one function level `=` + one location level `+`, counter restarts per structure identifier, function-oriented page order recommended; aspects may change inside one path (IEC 81346-1 Annex D): [eplan](eplan.md#in-practice-frame-webinar-2021-an-eplan-consultant), [syntax](syntax.md#multi-level).
 
 <!-- BEGIN GENERATED CONTENTS: do not edit, run `python .knowledge-base/manage.py index` -->
 ## Contents

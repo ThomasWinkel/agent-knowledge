@@ -30,12 +30,15 @@ Standard: IEC 81346-1:2022 (replaces the 2009 edition). The full text is paid; p
 - Concatenate the single levels along the path, starting at the top: `=N1-A1-Q1` = breaker `Q1` inside assembly `A1` of function `N1` (ISO/TS 81346-3:2012, 4.2; example myelectrical.com).
 - Levels exist in every aspect: `+H1+A1` (building, cabinet), `=A1=B2`, `-U1-K1`. The standard fixes syntax, not how many levels there are or what they mean; the project defines and documents its structure and notation (ISO/TS 81346-3:2012, 4.1.3-4.1.4).
 - `+U1-K1` (K1 sits in U1) and `-U1-K1` (K1 is part of product U1) are different statements.
+- Product levels nest like the others: `-QA2-MB1` = solenoid 1 of valve 2 (FRAME webinar, 2.3).
+- One path may change aspect: IEC 81346-1:2009 has "Figure 22 - Examples of multi-level reference designations with multiple prefix signs", "Figure 19 - ... object identified by means of one aspect and with sub-objects identified by means of another aspect" and Annex D "Interpretation of reference designations using different aspects" (shifts function <-> product, product <-> location, function <-> location; the 1996 term "transition" was dropped) (table of contents and foreword of the preview). The rule text itself: _unverified_ (not in the preview).
 - Shortened form without repeated prefix (`=N-A1Q1`) appears in examples (myelectrical.com); _Unverified_ as a rule.
 
 ## Order
 
-- No fixed order of aspects in the standard (agent's reading of sources; examples differ: `=N-T1+L11` myelectrical.com, `=AP+ST1-M1` EPLAN).
-- EPLAN order: `== = ++ + -` ([eplan](eplan.md)).
+- No fixed order of aspects in the standard (agent's reading of sources; examples differ: `=N-T1+L11` myelectrical.com, `=AP+ST1-M1` EPLAN, `=A1-K3+U4` industrialmonitordirect.com).
+- EPLAN order: `== = ++ + -` ([eplan](eplan.md)); the usual practice.
+- An object may carry one designation per aspect side by side (reference designation set, IEC 81346-1:2009 clause 7, title only seen).
 
 ## Gotchas
 
@@ -47,3 +50,6 @@ Standard: IEC 81346-1:2022 (replaces the 2009 edition). The full text is paid; p
 - ISO/TS 81346-3:2012 preview: https://cdn.standards.iteh.ai/samples/59598/edd5fcaf82554181a625e70929f4365e/ISO-TS-81346-3-2012.pdf
 - IEC reference designations: https://myelectrical.com/notes/entryid/24/iec-reference-designations
 - Wikipedia DE: https://de.wikipedia.org/wiki/EN_IEC_81346
+- IEC 81346-1:2009 preview (contents, foreword): https://www.normservis.cz/download/view/iec/info_iec81346-1%7Bed1.0%7Db.pdf, https://shop.standards.ie/preview/98697315321.pdf?sku=873844_SAIG_NSAI_NSAI_2077624
+- FRAME Consulting, "Arbeiten nach IEC 81346", EPLAN webinar 2021-11-08: https://frame-engineering.de/wp-content/uploads/2021/11/Webinar-IEC-81346.pdf
+- Function-location-component guide: https://industrialmonitordirect.com/blogs/knowledgebase/iec-81346-aspect-notation-function-location-component-setup
