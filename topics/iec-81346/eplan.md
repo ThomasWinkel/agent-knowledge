@@ -31,6 +31,12 @@ EPLAN Electric P8 is the common reference for IEC 81346 in electrical CAD. Usefu
 - CTB (vendor article): a designation is unique within its plant/function aspect: `-K3` once inside `=A1`, again inside `=A2` allowed.
 - _Unverified_ how the location reaches a device in practice: pages carry `=` and `+` and devices inherit them (help says the blocks define the hierarchy of pages and of objects in the schematic); setting it from the panel layout placement not seen in a source.
 
+## Function text and extended reference designation (EPLAN help 2.9)
+
+- Function text (Funktionstext) = descriptive text of a function (symbol), not identifying: manual (property 20011), common (20120: automatic text of the function, else of its main function), automatic composed by block property (20545, since 2.8). Path function text: on logic pages the topmost/leftmost path text along the schematic path; connection lists show the text of the symbol the connection is attached to; device lists and parts lists output only the main function and its text.
+- Main function / auxiliary functions: one device appears as several functions (symbols); lists use the main function only (path text help).
+- "Erweiterte Referenzkennzeichnung" (EN 81346 mode): function aspect = Anlage `=`, location = Einbauort `+`, product = Produktkennzeichen `-`. The page structure is then not used to structure devices; structure boxes (Strukturkästen) pass the product designation on to elements inside; functions without visible device tag take the parent structures. Help tip: put a structure box around the whole page.
+
 ## Identity vs display
 
 - Project property "Seitenstruktur" (page structure) sets which parts identify a device uniquely.
@@ -48,5 +54,8 @@ EPLAN Electric P8 is the common reference for IEC 81346 in electrical CAD. Usefu
 - Aufbau des Betriebsmittelkennzeichens: https://www.eplan.help/de-de/Infoportal/Content/Plattform/2.9/Content/htm/devicetaggui_k_aufbauvonbm.htm
 - Structure identifier management in P8: https://eplan.help/en-us/Infoportal/Content/EECPro/2.9/Content/htm/eececad_k_structure_identifier_management_in_p8.htm
 - Kennzeichnungsblöcke (designation blocks, "beliebig kombinierbar"): https://www.eplan.help/de-de/Infoportal/Content/Plattform/2.9/Content/htm/pleditorgui_k_grundlagen.htm
+- Extended reference designation: https://www.eplan.help/de-de/Infoportal/Content/Plattform/2.9/Content/htm/projectstructure_k_referenzkennzeichnung.htm
+- Path function texts: https://www.eplan.help/de-de/Infoportal/Content/Plattform/2.9/Content/htm/gededitgui_k_pfadtextauswertung.htm
+- Properties list (function text IDs): https://www.eplan.help/de-DE/Infoportal/Content/Plattform/2022/Content/htm/properties_o_main.htm
 - FRAME Consulting webinar: https://frame-engineering.de/wp-content/uploads/2021/11/Webinar-IEC-81346.pdf
 - CTB, IEC 81346 reference designation system: https://www.ctb.co.at/en/knowledge/iec-81346-reference-designation-system/

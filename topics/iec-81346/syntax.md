@@ -38,7 +38,14 @@ Standard: IEC 81346-1:2022 (replaces the 2009 edition). The full text is paid; p
 
 - No fixed order of aspects in the standard (agent's reading of sources; examples differ: `=N-T1+L11` myelectrical.com, `=AP+ST1-M1` EPLAN, `=A1-K3+U4` industrialmonitordirect.com).
 - EPLAN order: `== = ++ + -` ([eplan](eplan.md)); the usual practice.
-- An object may carry one designation per aspect side by side (reference designation set, IEC 81346-1:2009 clause 7, title only seen).
+- An object may carry one designation per aspect side by side (reference designation set, clause 7).
+
+## Objects, names and reference designation sets (IEC 81346-1:2022, Annex B and C, preview text)
+
+- The norm prescribes no design process (C.1). An object is created when the designer needs it, "just a 'placeholder' for information, given a name and possibly identified by means of its reference designation" (C.2.1). Early on it "can be named in plain language, based on its place in the functional process, and codified by the reference designation based on the function-oriented structure" (B.2.3).
+- Location designation comes when the location structure exists; together with the function-oriented designation it "establishes a reference designation set" (B.2.4). A location designation that names only the room/area, not the space the object occupies, "is said to be ambiguous" (B.2.4).
+- One thing defined from three aspects (requirement = function, implementation = product, placement = location) = three closely related objects (C.2.3). Two ways: (a) keep them separate, relations kept by the CAx tool, three reference designations; (b) merge into one object addressed by a reference designation set; its designations are "alternative 'addresses' to the object under consideration, all equally valid" (C.2.4). How relations are kept: "a computer system implementation issue" (C.2.3).
+- Each designation of a set comes from its own structure (function tree, location tree, product tree), so each ends in a code of that structure; whether practice uses different counters per aspect for one object: _unverified_ (figures not in the preview).
 
 ## Gotchas
 
@@ -52,4 +59,5 @@ Standard: IEC 81346-1:2022 (replaces the 2009 edition). The full text is paid; p
 - Wikipedia DE: https://de.wikipedia.org/wiki/EN_IEC_81346
 - IEC 81346-1:2009 preview (contents, foreword): https://www.normservis.cz/download/view/iec/info_iec81346-1%7Bed1.0%7Db.pdf, https://shop.standards.ie/preview/98697315321.pdf?sku=873844_SAIG_NSAI_NSAI_2077624
 - FRAME Consulting, "Arbeiten nach IEC 81346", EPLAN webinar 2021-11-08: https://frame-engineering.de/wp-content/uploads/2021/11/Webinar-IEC-81346.pdf
+- IEC 81346-1:2022 preview (pages 57-58, 63-67): https://www.normsplash.com/Samples/BSI/136456632/BS-EN-IEC-81346-1-2022-en-2.pdf
 - Function-location-component guide: https://industrialmonitordirect.com/blogs/knowledgebase/iec-81346-aspect-notation-function-location-component-setup
