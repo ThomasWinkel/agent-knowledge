@@ -12,6 +12,7 @@ Measured 2026-10-26, Visio 2019 C2R x64, out-of-process C# (events on `Applicati
 - Fire once per glue change with the `Connect`s: `FromSheet`/`FromCell` (`BeginX`, `EndX`) and `ToSheet`/`ToCell` (`Connections.S2.X`; `ToCell.RowNameU` = `S2`, `ToCell.Row` = row index).
 - Row names, row types, A/B/C/D: [visio-connection-points.md](visio-connection-points.md).
 - Do **not** fire when the glued-to shape moves (glue stays).
+- The connector is not rerouted yet when `ConnectionsAdded` fires: its geometry is still the old route; `Width`, `PinX`, `PinY`, `Height`, `LocPinX/Y` `CellChanged` events of the reroute follow in the same action (in-process add-in, `Cell.GlueTo`, Visio 2019 build 20527, 2026-11). Geometry checks (e.g. [touching](visio-spatial-touching.md)) belong after those.
 - Undo/Redo fire them again with `Application.IsUndoingOrRedoing = true`. Skip those in the handler: Undo already restores your cell changes.
 - A cell written inside the handler (not undoing) lands in the **same Undo step** as the glue: one Undo takes back glue and write; Redo brings both.
 - **No event on paste**: pasting a copied 1D shape together with its target keeps the glue (between the copies), but fires no `ConnectionsAdded`. A 1D shape copied alone is pasted unglued, no event.
