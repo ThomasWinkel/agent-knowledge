@@ -78,6 +78,8 @@ Measured 2026-10-28/29, Visio 2019 C2R x64, VSTO add-in (Debug), actions by COM,
 
 - Written directly in the marker handler or the `CellChanged` handler (guarded by `IsUndoingOrRedoing`): **same Undo step** as the change that fired it, also when the handler opens its own undo scope. One Undo takes back both, Redo brings both.
 - Written later, in `VisioIsIdle` or in the next `ExitScope`: an Undo step of its own; one Undo takes back only the handler's write. So work cannot be collected and done once per user action without an extra Undo step.
+- Written in `VisioIsIdle` **without** an own undo scope (plain `FormulaForceU` from the add-in): afterwards Undo and Redo changed nothing, neither the write nor the user's action before it (Visio 2019 build 20527, VSTO add-in, action by COM `Selection.Move`, measured 2026-11-11). With `BeginUndoScope`/`EndUndoScope(id, true)` around the writes: an Undo step of its own as above. So wrap idle writes in a scope.
+- Same reads (~100 COM calls per shape) in the `CellChanged` handler of a COM `Selection.Move` vs in `VisioIsIdle` afterwards (2026-11-11, same laptop): 1,000 shapes on battery 7,438 vs 2,064 ms, on mains 5,585 vs 4,705 ms; 250 shapes on battery 1,448 vs 880-1,364 ms. No reliable gain, far below the 10x seen for `ShapeAdded` of a paste; together with the Undo behavior above, deferring to idle does not pay off for moves.
 - A write during Undo that changes a value clears the Redo stack. `CellChanged`: skip when `IsUndoingOrRedoing`. Marker: no guard possible; write only when the value differs (Undo already restored a value derived from the restored cells, so the write is a no-op and Redo survives).
 
 ## Gotchas
