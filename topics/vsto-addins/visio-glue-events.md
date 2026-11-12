@@ -48,6 +48,7 @@ Goal: connectors glue only to the shape's connection points, nothing glues to th
 ## ContainerRelationshipAdded / Deleted
 
 - `RelatedShapePairEvent`: `FromShapeID` = container, `ToShapeID` = member (IDs on `ContainingPage`).
-- Fire on `ContainerProperties.AddMember` and when a member is moved out by code. Moving it back in by code adds no membership and no event (UI drag: _unverified_).
+- Fire on every membership change: `ContainerProperties.AddMember`, member moved out by code, UI drag in/out, UI paste/duplicate into it, Undo/Redo of these (measured 2026-11-12, see [membership](visio-cross-shape-references.md#containersheetref)). No membership change, no event (moved in by code, `Page.Drop`). UI Delete of a container: `BeforeShapeDelete` per shape, no `ContainerRelationshipDeleted` for the deleted members.
+- A member's formula that reads the container (`CONTAINERSHEETREF`) fires `CellChanged` when its result changes by membership, Undo, container value or z-order: an add-in can follow the member's cell instead of the container events.
 
 Formulas that read the partner and what Visio does with them on copy/delete: [visio-cross-shape-references](visio-cross-shape-references.md).
