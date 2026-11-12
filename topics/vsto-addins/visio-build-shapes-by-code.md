@@ -48,6 +48,8 @@ $unique = '{' + $hash.Substring(0, 18) + '-8E40-00608CF305B2}'
 # replace UniqueID='...' and BaseID='...', delete the entry, write it again, $zip.Dispose()
 ```
 
+Copies keep the IDs: `Document.Masters.Drop(master)` and `Page.Drop(master)` into another document give the copy the source's `BaseID` (measured 2026-11-12 over two copies). A master made from a shape (`Masters.Drop(shape)`) gets new ones, so a stencil assembled from such masters needs the patch too; it works the same on copied masters.
+
 Measured: Visio opens the patched stencil and reports the patched IDs; a drop of an unchanged rebuild reuses the drawing's document master (no `Name.<n>`); a master edited in place (new `UniqueID`, same `BaseID`) still adds `Name.<n>`. Two builds then give the same XML; the zip still differs in timestamps.
 
 ## Rows
