@@ -49,6 +49,15 @@ EPLAN Electric P8 is the common reference for IEC 81346 in electrical CAD. Usefu
 - Descriptions are multilingual, format `'de_DE@Beschreibung A;en_US@Description A;'`; list syntax `=List{Pair{'A', '<description>'}, ...}` (EPLAN EEC).
 - Use for tools: users think in descriptions, the designation holds the short code.
 
+## Terminals and terminal strips
+
+- Terminal strip definition (Klemmenleistendefinition) identifies the strip and holds its device tag (`-X1`); a strip may exist without terminals (help 2.9, glossary).
+- Each terminal is defined by its device tag; terminals with the same tag + accessories form the strip (EPLAN blog). Terminal = strip tag + terminal designation, e.g. `=A+O-X100:1` (TechTip saddle jumpers).
+- Terminal designation is free text; sorting copes with mixed values (`PE`, `A10`, `10A`; dialog "Klemmenleiste bearbeiten"). Order in the strip: device position orders the terminal devices, sort ID inside one; new terminals go to the end (help 2.9, Verwaltung von Klemmen).
+- Multi-level terminal: terminals with the same tag, next to each other in the sort order, level values rising or falling; ascending sort -> lowest level = 1 (EPLAN blog).
+- Jumper types: jumper, wire jumper, insertable jumper, saddle jumper, switching jumper (help 2025). Manual saddle jumper is defined at its start (since 2.5); terminals inserted between two jumpered terminals change its target (TechTip).
+- Other practice (vendor blog, secondary, not checked against NFPA 79): Europe addresses a terminal point as `X1:14`; machine builders often use cable designation + terminal number instead of per-wire numbers; US-style wire numbers stay the same at every termination, terminal blocks prefixed `TB`.
+
 ## Sources
 
 - Aufbau des Betriebsmittelkennzeichens: https://www.eplan.help/de-de/Infoportal/Content/Plattform/2.9/Content/htm/devicetaggui_k_aufbauvonbm.htm
@@ -59,3 +68,10 @@ EPLAN Electric P8 is the common reference for IEC 81346 in electrical CAD. Usefu
 - Properties list (function text IDs): https://www.eplan.help/de-DE/Infoportal/Content/Plattform/2022/Content/htm/properties_o_main.htm
 - FRAME Consulting webinar: https://frame-engineering.de/wp-content/uploads/2021/11/Webinar-IEC-81346.pdf
 - CTB, IEC 81346 reference designation system: https://www.ctb.co.at/en/knowledge/iec-81346-reference-designation-system/
+- Klemmenleistendefinition (glossary 2.9): https://eplan.help/de-de/infoportal/content/Plattform/2.9/Content/htm/Glossary_o_klemmenleistendefinitionen.htm
+- Verwaltung von Klemmen (2.9): https://www.eplan.help/de-de/Infoportal/Content/Plattform/2.9/Content/htm/terminalgui_k_verwaltung.htm
+- Dialog Klemmenleiste bearbeiten (2.9): https://eplan.help/de-de/Infoportal/Content/Plattform/2.9/Content/htm/stripmanagementgui_d_klemmenleistebearbeiten.htm
+- Jumper types (2025): https://eplan.help/en-us/infoportal/content/Plattform/2025/Content/htm/terminalgui_k_verwendungbruecken.htm
+- TechTip manual saddle jumpers: https://www.eplan.help/techtipps/de-DE/Klemmen/TechTip-Behaviour-of-manual-saddle-jumpers.pdf
+- EPLAN blog, partial and multi-level terminals: https://www.eplan.com/de-de/blog/software/teilklemmen-tipps
+- Wire identification DIN vs UL 508A (vendor blog): https://industrialmonitordirect.com/blogs/knowledgebase/wire-identification-in-industrial-control-panels-din-vs-ul-508a
