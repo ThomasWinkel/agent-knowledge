@@ -50,7 +50,8 @@ Standard: IEC 81346-1:2022 (replaces the 2009 edition). The full text is paid; p
 ## Gotchas
 
 - A free name with a hyphen (`AB12-1`) inside a composed designation reads as two product levels (`-AB12-1` = `1` inside `AB12`). Use another separator in names that may end up in a designation.
-- _Unverified_ (common practice, not found in a source): `:` before a terminal (`-X1:3`, terminals: IEC 61666), `.` for a part of one object (`-K3.2` = contact 2 of relay K3), `&` before a document code (IEC 61355).
+- _Unverified_ (common practice, not found in a source): `:` before a terminal (`-X1:3`), `.` for a part of one object (`-K3.2` = contact 2 of relay K3), `&` before a document code (IEC 61355).
+- IEC 61666:2010 (preview, clauses 3-4): terminal = "point of access to an object intended for connection to an external network" (so each connection point is a terminal). Terminal designation = the manufacturer's terminal marking; if there is none or it is not unambiguous, the designer assigns one and explains it. Optional prefix `-`, `=`, `+` names the aspect of the terminal designation; letter symbols allowed for graphic markings (`PE`, colours per IEC 60757, `BU`). Annex A figures (titles only in the preview): four terminal blocks forming one terminal assembly (each block an object); one terminal block with eight terminals (whole unit an object); eight terminals with two entry points each. The separator sign and the resulting designations are not in the preview.
 
 ## Sources
 
@@ -61,3 +62,4 @@ Standard: IEC 81346-1:2022 (replaces the 2009 edition). The full text is paid; p
 - FRAME Consulting, "Arbeiten nach IEC 81346", EPLAN webinar 2021-11-08: https://frame-engineering.de/wp-content/uploads/2021/11/Webinar-IEC-81346.pdf
 - IEC 81346-1:2022 preview (pages 57-58, 63-67): https://www.normsplash.com/Samples/BSI/136456632/BS-EN-IEC-81346-1-2022-en-2.pdf
 - Function-location-component guide: https://industrialmonitordirect.com/blogs/knowledgebase/iec-81346-aspect-notation-function-location-component-setup
+- IEC 61666:2010 preview: https://cdn.standards.iteh.ai/samples/16796/c8a0d7a4fd8a4bdea8d9d83a2eb3a929/IEC-61666-2010.pdf

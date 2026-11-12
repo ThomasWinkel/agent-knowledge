@@ -55,7 +55,12 @@ EPLAN Electric P8 is the common reference for IEC 81346 in electrical CAD. Usefu
 - Each terminal is defined by its device tag; terminals with the same tag + accessories form the strip (EPLAN blog). Terminal = strip tag + terminal designation, e.g. `=A+O-X100:1` (TechTip saddle jumpers).
 - Terminal designation is free text; sorting copes with mixed values (`PE`, `A10`, `10A`; dialog "Klemmenleiste bearbeiten"). Order in the strip: device position orders the terminal devices, sort ID inside one; new terminals go to the end (help 2.9, Verwaltung von Klemmen).
 - Multi-level terminal: terminals with the same tag, next to each other in the sort order, level values rising or falling; ascending sort -> lowest level = 1 (EPLAN blog).
-- Jumper types: jumper, wire jumper, insertable jumper, saddle jumper, switching jumper (help 2025). Manual saddle jumper is defined at its start (since 2.5); terminals inserted between two jumpered terminals change its target (TechTip).
+- Connection points of one terminal: several connection designations per terminal (EPLAN: separated by paragraph marks); a partial terminal (Teilklemme) symbol shows one or more connections of it, so one terminal can appear in several places of the schematic. Terminal targets are evaluated only at connections that have a designation (help 2.9). 4-connection terminals commonly get connections `a`..`d` (CAD.de forum, old). Terminals have an internal and an external side.
+- Jumper types (help 2025; German help 2.9/2022): jumper, wire jumper (Drahtbrücke), insertable jumper (Einlegebrücke), saddle jumper (Stegbrücke), switching jumper (Schaltbrücke).
+  - Stegbrücke: default when two **adjacent** terminals of a strip are connected; needs terminals with a jumper option, not PE/PEN, no accessory between them. Otherwise (not adjacent, or a terminal without jumper option): Drahtbrücke, a real wire.
+  - Einlegebrücke: laid into the clamping space (Phoenix data sheet: "Einlegebrücken im Klemmraum"; Stegbrücke = fixed jumper in the terminal middle); forum: needs an external wire jumper definition where it is clamped.
+  - Schaltbrücke: switchable link to the next terminal, states open/closed, defined separately for the internal and external side.
+  - Manual Stegbrücke is defined at its start (since 2.5); terminals inserted between two jumpered terminals change its target (TechTip).
 - Other practice (vendor blog, secondary, not checked against NFPA 79): Europe addresses a terminal point as `X1:14`; machine builders often use cable designation + terminal number instead of per-wire numbers; US-style wire numbers stay the same at every termination, terminal blocks prefixed `TB`.
 
 ## Sources
@@ -75,3 +80,7 @@ EPLAN Electric P8 is the common reference for IEC 81346 in electrical CAD. Usefu
 - TechTip manual saddle jumpers: https://www.eplan.help/techtipps/de-DE/Klemmen/TechTip-Behaviour-of-manual-saddle-jumpers.pdf
 - EPLAN blog, partial and multi-level terminals: https://www.eplan.com/de-de/blog/software/teilklemmen-tipps
 - Wire identification DIN vs UL 508A (vendor blog): https://industrialmonitordirect.com/blogs/knowledgebase/wire-identification-in-industrial-control-panels-din-vs-ul-508a
+- Brücken erstellen (2.9): https://www.eplan.help/de-de/Infoportal/Content/Plattform/2.9/Content/htm/terminalgui_h_brueckenarbeiten.htm
+- Verwendung von Brücken (2022): https://www.eplan.help/de-DE/Infoportal/Content/Plattform/2022/Content/htm/terminalgui_k_verwendungbruecken.htm
+- Teilklemmen einfügen (2.9): https://www.eplan.help/de-de/Infoportal/Content/Plattform/2.9/Content/htm/terminalgui_h_teilklemmenzeichnen.htm
+- CAD.de forum, connection designations of terminals: https://ww3.cad.de/foren/ubb/Forum467/HTML/009766.shtml
