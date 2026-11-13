@@ -14,7 +14,7 @@ VSTO add-ins are .NET Framework COM add-ins for desktop Office (Word, Excel, Out
 - VSTO is maintained but frozen: .NET Framework 4.8 is the last runtime, no .NET (Core) support. Microsoft points new cross-platform work to Office Web Add-ins.
 - **Visio uses its own key** `Software\Microsoft\Visio\Addins`, not `...\Office\Visio\Addins`. MSI installs need `Manifest = file:///<path>.vsto|vstolocal`: [registration](registration.md).
 - Take the registry KeyName from `keyName` in the generated `.dll.manifest`, never from the class name.
-- Every build on a dev machine writes an HKCU registration that overrides the installed add-in. Delete it before installer tests: [dev-build-registration](dev-build-registration.md).
+- Every build on a dev machine writes an HKCU registration with the MSI's key name; with both present only one loads, and Visio 2019 loaded the installed one: uninstall the MSI to test a dev build, delete the HKCU keys to test the MSI: [dev-build-registration](dev-build-registration.md).
 - Files next to the add-in DLL: use `Assembly.CodeBase`, not `Location` (shadow copy): [addin-folder](addin-folder.md).
 - Sign the assembly before `VisualStudioForApplicationsBuild` generates the manifests: [signing](signing.md).
 - Office updates empty `Properties.Settings` unless `Upgrade()` runs: [user-settings](user-settings.md).
@@ -66,7 +66,7 @@ In one real case (Visio 2019 x64) all five causes occurred one after another; ea
 4. `Manifest` value without `file:///` ([registration](registration.md)).
 5. Expired manifest certificate, or assembly signed after manifest generation ([signing](signing.md)).
 
-On a dev machine also check that the HKCU dev registration is not overriding the installed one ([dev-build-registration](dev-build-registration.md)).
+On a dev machine also check which of dev build and installed add-in loaded ([dev-build-registration](dev-build-registration.md)).
 
 Verified with Visio Pro 2019 C2R x64, WiX 7.0.0, VS2022 (2026-07); registration and loading also with Excel 2019 C2R x64 (2026-10). Other Office apps are not tested. Statements marked _Unverified_ are untested.
 
@@ -74,7 +74,7 @@ Verified with Visio Pro 2019 C2R x64, WiX 7.0.0, VS2022 (2026-07); registration 
 ## Contents
 
 - [Folder of the add-in DLL at runtime](addin-folder.md) — Read when a VSTO add-in must find files next to its DLL or in its install folder (help, data, config) - Location is the shadow copy, CodeBase the real folder.
-- [Dev build registration overrides the installed add-in](dev-build-registration.md) — Read when testing an installed VSTO add-in on a development machine, or when Office loads the add-in from bin\Debug instead of the install folder.
+- [Dev build registration and the installed add-in - which one loads](dev-build-registration.md) — Read when a dev machine has both a VSTO dev build and the MSI installed - Office loads the wrong one, how to tell which one runs, what to remove before which test.
 - [Excel data validation by COM](excel-data-validation.md) — Read when code adds Excel data validation (drop-down lists, custom formulas) by COM - list separator by region, 255-character limit that breaks the file, booleans, case.
 - [Writing a table to Excel by COM](excel-write-table.md) — Read when code writes to an Excel table by COM - array write, text turning into numbers, dates, append, delete rows, add columns, filtered or protected sheets, names, open workbook, cleanup.
 - [Load diagnostics](load-diagnostics.md) — Read when a VSTO add-in is installed but does not appear or does not load, or to check that a dependency loaded - COMAddIns via COM, LoadBehavior, VSTO event log, VSTO_LOGALERTS.
