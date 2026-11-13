@@ -16,6 +16,7 @@ Measured on Visio 2019 C2R (Office16):
 - `Page.Export("<file>.emf")` writes vector EMF+ dual (bounds = page incl. line widths). So a picture drawn on a square page in Visio is a fitting replacement.
 - Replacing the part in the saved file works: Windows shell thumbnail shows the new picture, the template opens unchanged. `[Content_Types].xml` (`emf` default) and `_rels/.rels` already point to it; keep the part name.
 - Visio overwrites the part on its next save of that file. Patch it after the last `SaveAs` in a build script.
+- Stencils (`.vssx`): Visio's UI shows no picture of a stencil (More Shapes menu and the stencil list of the Shapes window are text only; Visio 2019). Only the Explorer and file dialogs show `docProps/thumbnail.emf`. A stencil saved by Visio gets an empty EMF there (no drawing records), shown as a blank white tile. Built-in stencils (all 725 `*.VSSX` in `Visio ContentC3`) have no such part, so the Explorer shows the Visio file icon. Fix: replace it as above (dropping the part and its relationship: _Unverified_).
 - File > New reads it via the content cache (`thumbs.dat`, see [index](index.md)): after a change, bump `ConfigChangeID` or delete the cache with Visio closed. _Unverified_ that the gallery shows the replaced picture.
 
 ## Recipe (PowerShell, Visio COM)
