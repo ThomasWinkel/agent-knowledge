@@ -22,6 +22,6 @@ Copying `.vssx`/`.vstx` files to disk is not enough: Visio shows stencils under 
 <!-- BEGIN GENERATED CONTENTS: do not edit, run `python .knowledge-base/manage.py index` -->
 ## Contents
 
-- [Preview picture of a template or stencil](preview-picture.md) — Read when a Visio template/stencil shows a blurry or empty picture in File > New or Explorer - where the picture lives, what Visio writes, how to replace it by a drawn vector picture.
+- [Preview picture of a template or stencil](preview-picture.md) — Read when a Visio template/stencil/drawing shows a blurry or empty picture in File > New or Explorer - where the picture lives, what Visio writes, replace it, keep it in drawings.
 - [Publishing via the PublishComponent table](publish-component.md) — Read when publishing Visio stencils/templates from an MSI - PublishComponent GUIDs per Visio version, Qualifier and AppData format, WiX <Category>, ConfigChangeID bump.
 <!-- END GENERATED CONTENTS -->
