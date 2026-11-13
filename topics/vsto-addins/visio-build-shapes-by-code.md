@@ -115,8 +115,12 @@ Measured 2026-11-13, Visio 2019 C2R, masters with `IconUpdate` automatic (defaul
 
 - The Shapes window draws each icon live from the master's content, scaled to fit, in color. The `<Icon>` stored in `masters.xml` (32 x 32, 4 bit ICO, 766 bytes; built-in `BASIC_M.VSSX` the same) is not what it shows.
 - Line weight and line pattern scale down with the master: a 100 x 60 mm rectangle, no fill, 0.5 pt dash-dot (`LinePattern` 4) shows only one faint edge; 40 x 24 mm the same. Visible: 20 x 12 mm, or 2 pt dash-dot, or a solid line (0.5 pt or 2 pt), or a light fill. Small masters with absolute weights (5 mm symbols) look bold.
-- So a big, thin, dashed, unfilled master (e.g. a container) needs a smaller default size, a bolder line or a fill to be recognizable.
-- `Master.ImportIcon(<hand-made 32 x 32 ICO, 32 bit or 4 bit>)` on a master of an open stencil failed: `Inappropriate source object for this action.` A manual icon would be 32 x 32 anyway.
+- So a big, thin, dashed, unfilled master (e.g. a container) needs a smaller default size, a bolder line or a fill, or an own icon.
+- Own icon (what Visio's icon editor writes): in `visio/masters/masters.xml`, set `IconUpdate='0'` (manual) on the `<Master>` and put a base64 ICO into its `<Icon>` element; patch the saved package (Visio rewrites it on save). Shown in the Shapes window as is:
+  - 32 x 32, 4 bit or 32 bit with alpha: shown, transparent background.
+  - 64 x 64 with `IconSize='1'`: scaled to 32 x 32; with `IconSize='4'` (double): shown 64 x 64. 256 x 256: blank.
+  - Colors are reduced to the 16-color VGA palette also for 32 bit (RGB 31,95,139 shown as 0,128,128). Draw with black, white, the VGA colors.
+- `Master.ImportIcon(<hand-made ICO>)` on a master of a stencil opened by COM failed: `Inappropriate source object for this action.` Patch the package instead.
 
 ## Gotchas
 
