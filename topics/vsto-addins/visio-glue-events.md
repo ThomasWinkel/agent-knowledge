@@ -49,6 +49,11 @@ Goal: connectors glue only to the shape's connection points, nothing glues to th
 
 - `RelatedShapePairEvent`: `FromShapeID` = container, `ToShapeID` = member (IDs on `ContainingPage`).
 - Fire on every membership change: `ContainerProperties.AddMember`, member moved out by code, UI drag in/out, UI paste/duplicate into it, Undo/Redo of these (measured 2026-11-12, see [membership](visio-cross-shape-references.md#containersheetref)). No membership change, no event (moved in by code, `Page.Drop`). UI Delete of a container: `BeforeShapeDelete` per shape, no `ContainerRelationshipDeleted` for the deleted members.
+- **Copy of a container with its members** (measured 2026-11-13, Visio 2019 build 20527, in-process VSTO add-in, real keys; container selected alone by a click on its edge, Ctrl+C/V or Ctrl+D copies its members too; also a container nested in the selected one):
+  - `ShapeAdded` fires for all copies first, then the marker events of `EventDrop`/`EventMultiDrop` run in z-order (here the container first, it lay behind its members). Only one copy fires `EventDrop` (here the backmost: the container), all others `EventMultiDrop`, also a copied inner container: a container command needs the formula in both cells ([visio-shapesheet-calls](visio-shapesheet-calls.md#gotchas)).
+  - At every marker the copies are already members of the copied container (`ContainerProperties.GetMemberShapes(0)`, `Shape.MemberOfContainers`), whatever the z-order: a member's handler can ask whether its container was copied in the same action (record `ShapeAdded` until `VisioIsIdle`).
+  - A cell written in a marker handler fires its `CellChanged` after the markers of all copies of the action, before `VisioIsIdle`.
+  - A copy that lands on another container (paste and duplicate offset the copy, here +12.6 mm x, -12.6 mm y) becomes its member too, with its own members. Ctrl+drag: not measured.
 - A member's formula that reads the container (`CONTAINERSHEETREF`) fires `CellChanged` when its result changes by membership, Undo, container value or z-order: an add-in can follow the member's cell instead of the container events.
 
 Formulas that read the partner and what Visio does with them on copy/delete: [visio-cross-shape-references](visio-cross-shape-references.md).
