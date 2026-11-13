@@ -1,6 +1,6 @@
 ---
 title: Visio master versions - stencil edits and documents with old copies
-description: Read when shipping a changed master in a stencil, or when code must bring a new master version into drawings that already use the old one - BaseID, UniqueID, drop, MatchByName, edit in place, Undo.
+description: Read when shipping a changed stencil master, or when code must bring a new master version into drawings using the old one - BaseID, UniqueID, MatchByName, edit in place, sync, Undo.
 ---
 
 # Visio master versions
@@ -49,6 +49,31 @@ Instances bind to the master's shapes by shape ID (`Shape.MasterShape`), and to 
 - Events: an edit of a master with 500 instances fired 0-10 `CellChanged`, one `BeforeShapeDelete` for a deleted sub-shape and no `ShapeAdded` for added sub-shapes: event handlers do not see the instances change.
 - Time with 500 instances (add-in loaded): 120-430 ms per `Open`/`Close` (one value, row add/delete, sub-shape add/delete, sub-shape geometry); Undo 30-310 ms.
 
+## Sync a document master to a newer version
+
+Brings a new version of a master (same `BaseID`, other `UniqueID`, e.g. a changed stencil master) into a drawing: make the document master equal to it in place, the instances follow and keep local values, glue and shape IDs.
+
+1. `copy = docMaster.Open()`. Pair shapes: top shape with top shape, sub-shapes by `NameU` without Visio's `.<n>` suffix (recursive). Keep a map new-master shape ID -> copy shape ID.
+2. Per shape pair, sections: 1 (object; fixed row indices, probe `RowExists` 0..120), 3-9, geometry (`visSectionFirstComponent + i`), 240-255; also the page sheets (`Master.PageSheet`).
+   - User, Prop, Actions, Controls, Connections, Hyperlink: pair rows by `CellsSRC(sec, row, 0).RowNameU`; `DeleteRow` what the new master lacks, `AddNamedRow(sec, name, newShape.RowType[sec, row])` what is missing (lands at the end).
+   - Other sections: pair by index. A different row count, geometry section count or sub-shape set cannot be fixed without losing instance data: report it.
+3. Per cell: differs in `FormulaU` or `IsInherited` -> `FormulaForceU = formula` (passes `GUARD`), or `""` if inherited in the new master. Rewrite `Sheet.<id>!` from new-master IDs to copy IDs (not inside quoted text).
+4. Check the structure in a first pass and change only without problems, so no master stays half synced; then `Close()`. Copy `Master.Prompt` too.
+
+```csharp
+var copy = docMaster.Open();
+var cell = copy.Shapes[1].CellsSRC[sec, row, i];
+var from = newMaster.Shapes[1].CellsSRC[sec, row, i];
+if (cell.FormulaU != from.FormulaU || cell.IsInherited != from.IsInherited)
+    cell.FormulaForceU = from.IsInherited != 0 ? "" : from.FormulaU;
+copy.Close();
+```
+
+- Result (6 masters, 23 instances): file export of each document master equal to the new one except master `ID`, `UniqueID` and the place of added rows; every local value of the instances kept; 0 error cells.
+- After `Close` the document master has a Visio-made `UniqueID` (e.g. `{0A74B211-0009-0000-8E40-00608CF305B2}`), not the new master's: a "current?" check by `UniqueID` still says stale. Patch it in the saved file (`visio/masters/masters.xml`) if it matters.
+- Time: in-process (add-in) 0.4-0.8 s per master (group + 1 sub-shape, ~40 User/Prop rows). Out of process from PowerShell ~10 ms per COM call (also from C# compiled by `Add-Type`), 30-60 s per master.
+- `Master.PageSheet.Characters` throws "Cannot create object." `Characters.Text` of two such masters with text fields differed although both printed the same: text is not compared this way (cause not found).
+
 ## Undo
 
 - Wrap every `Master.Open()`/`Close()` in its own `BeginUndoScope`/`EndUndoScope`. Then each Undo takes back one edit, master and instances together (deleted rows and sub-shapes come back with their local values), and Redo works, also with `FormulaU = ""` resets of instance cells in the same scope (measured up to 500 instances).
@@ -60,4 +85,4 @@ Instances bind to the master's shapes by shape ID (`Shape.MasterShape`), and to 
 - `BaseID` is the only ID that survives edits; it identifies "the same master in another version". The delete-and-redrag way of editing loses it; then only the name is left to match.
 - A master made from a shape (`Masters.Drop(shape, 0, 0)`) is named `Master.<n>` until renamed.
 
-Verified with Visio Pro 2019 C2R x64 by COM automation from PowerShell, 2026-10 (stencil opened read-write, drops by `Page.Drop`); edit in place, ReplaceShape, Undo, events: 2026-11, build 20527, master in the document stencil, top shape a group with sub-shapes. _Unverified:_ drop by mouse from the Shapes window (may differ from `Page.Drop`), `MatchByName` only on the stencil master, the document master's own `Edit` UI.
+Verified with Visio Pro 2019 C2R x64 by COM automation from PowerShell, 2026-10 (stencil opened read-write, drops by `Page.Drop`); edit in place, ReplaceShape, Undo, events, sync: 2026-11, build 20527, master in the document stencil, top shape a group with sub-shapes. _Unverified:_ drop by mouse from the Shapes window (may differ from `Page.Drop`), `MatchByName` only on the stencil master, the document master's own `Edit` UI.
