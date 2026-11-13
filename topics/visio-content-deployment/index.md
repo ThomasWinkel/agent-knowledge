@@ -17,6 +17,8 @@ Copying `.vssx`/`.vstx` files to disk is not enough: Visio shows stencils under 
 - Microsoft documents publishing only for Visio 2003/2007. **Visio 2016+ reads only the undocumented `...B30x` GUIDs** (verified on 2019 C2R); the "version-neutral" IDs from the docs are ignored.
 - The installer must change `ConfigChangeID` after install and uninstall, or Visio keeps its old cache. MSI cannot do this without a custom action.
 - Visio caches installed content per user in `%LocalAppData%\Microsoft\Visio\content16.dat` (thumbnails: `thumbs.dat`). Rebuilt when `HKLM\Software\Microsoft\Office\Visio\ConfigChangeID` changes; deleting the file with Visio closed forces a rebuild.
+- Stencils need a unit suffix (`_m`/`_M` metric, `_U` or none = US): More Shapes filters by the active drawing's units ([publish-component](publish-component.md), AppData).
+- Path discovery wins over publishing: a stencil/template in a file path option (e.g. a developer's repo folder) with the same file name as a published one keeps the published entry out of `content16.dat`. Clear the paths for installer tests. A document saved while its workspace stencil is missing at its path gets the path of the published file with that name in `visio/windows.xml` (verified on 2019).
 - Statements marked _Unverified_ are untested.
 
 <!-- BEGIN GENERATED CONTENTS: do not edit, run `python .knowledge-base/manage.py index` -->

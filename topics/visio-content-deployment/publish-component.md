@@ -45,6 +45,7 @@ Pattern: last digit = content type (`0` template, `1` stencil, `2` help, `3` add
 
 - `MenuPath`: category path with `\`, last part = display name, e.g. `My Company\Electrical`. Templates appear under "New" → Categories → first part. Empty or a part starting with `_` = hidden.
 - File name ending `_M` / `_U`: Visio appends " (Metric)" / " (US units)" to the display name (verified for `_M`). A `_M`/`_U` pair with the same name gives a unit choice. Lowercase `_m` gave no suffix (verified on 2019).
+- **More Shapes lists a stencil only if its suffix fits the units of the active drawing**; no suffix counts as US units. Not an application option: the drawing's units (set by the template, Page Setup). Verified on Visio 2019 (German Windows, 2026-11): metric drawing lists `X_M`, `X_m`; US drawing lists `X`, `X_U` and an unsuffixed published stencil, which the metric drawing hid. Applies to published stencils and to stencils found via the file path option. Metric-only product: name stencils `<Name>_m.vssx` (shows on metric drawings, no "(Metric)" in the name). File > New lists templates without a suffix.
 - `AltNames`: `;`-separated alternate names; Visio uses these, not the file's own `AlternateNames`.
 - `QuickShapes`: number of masters shown as quick shapes (`0` = default).
 - `Edition`: `-1` both, `32` or `64` Visio bitness only. Verified: `-1` works on 64-bit Visio.
