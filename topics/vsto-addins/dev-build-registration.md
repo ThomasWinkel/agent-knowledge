@@ -23,7 +23,7 @@ So: one of the two on a dev machine. Uninstall the MSI to test a dev build; dele
 ## Which one runs
 
 - `COMAddIns` `Description`: taken from the winning registry key; the MSI usually writes the product name, the build writes the assembly name.
-- VSTO shadow-copies the add-in DLL to `%LOCALAPPDATA%ssembly\dl3\...\<AssemblyName>.DLL`; the `__AssemblyInfo__.ini` next to it (UTF-16) holds version and origin URL (`file:///C:/Program Files/...` or `.../bin/Debug/...`), the DLL's time = last load. The DLL in the install or build folder is not locked by a running Office.
+- VSTO shadow-copies the add-in DLL to `%LOCALAPPDATA%\assembly\dl3\...\<AssemblyName>.DLL`; the `__AssemblyInfo__.ini` next to it (UTF-16) holds version and origin URL (`file:///C:/Program Files/...` or `.../bin/Debug/...`), the DLL's time = last load. The DLL in the install or build folder is not locked by a running Office.
 - A Debug-only behavior (e.g. a debug log) that never shows is the quickest hint.
 
 ## Symptoms when the dev build wins
