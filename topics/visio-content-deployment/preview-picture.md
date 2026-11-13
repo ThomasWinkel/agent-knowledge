@@ -1,6 +1,6 @@
 ---
 title: Preview picture of a template or stencil
-description: Read when a Visio template/stencil shows a blurry or empty picture in File > New or Explorer - where the picture lives, what Visio writes, how to replace it by a drawn vector picture.
+description: Read when a Visio template/stencil/drawing shows a blurry or empty picture in File > New or Explorer - where the picture lives, what Visio writes, replace it, keep it in drawings.
 ---
 
 # Preview picture of a template or stencil
@@ -18,6 +18,16 @@ Measured on Visio 2019 C2R (Office16):
 - Visio overwrites the part on its next save of that file. Patch it after the last `SaveAs` in a build script.
 - Stencils (`.vssx`): Visio's UI shows no picture of a stencil (More Shapes menu and the stencil list of the Shapes window are text only; Visio 2019). Only the Explorer and file dialogs show `docProps/thumbnail.emf`. A stencil saved by Visio gets an empty EMF there (no drawing records), shown as a blank white tile. Built-in stencils (all 725 `*.VSSX` in `Visio ContentC3`) have no such part, so the Explorer shows the Visio file icon. Fix: replace it as above (dropping the part and its relationship: _Unverified_).
 - File > New reads it via the content cache (`thumbs.dat`, see [index](index.md)): after a change, bump `ConfigChangeID` or delete the cache with Visio closed. _Unverified_ that the gallery shows the replaced picture.
+
+## Preview of drawings made from a template
+
+Measured 2026-11-13, Visio 2019 C2R, invisible Visio by COM:
+
+- Document ShapeSheet cells (`visio/document.xml`): `PreviewQuality` (0 draft = the 96 x 68 px bitmap, 1 detailed = vector EMF+ of page 1, sharp), `PreviewScope`, `LockPreview`. COM: `Document.SavePreviewMode` 1 = draft (default), 2 = detailed, 0 = no preview part at all; 3 = `Invalid parameter.`
+- A new drawing takes `PreviewQuality` from its template (template saved with mode 2 -> drawing mode 2). So a template can make all its drawings save a sharp page preview.
+- `LockPreview` is not taken over (template `1` -> new drawing `0`). Set by code in a new drawing without a picture: no preview part is saved, now or later.
+- `Document.CopyPreviewPicture(<other document>)` copies the preview of another open document (e.g. the template, `OpenEx` with `visOpenRO + visOpenHidden`). With `LockPreview` 1 the drawing keeps that picture on every later save. Also `Document.PreviewPicture` (IPictureDisp, get/set).
+- Visio keeps a drawing's file locked while it is open: the package cannot be patched from outside then.
 
 ## Recipe (PowerShell, Visio COM)
 
