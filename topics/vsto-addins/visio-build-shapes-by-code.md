@@ -1,6 +1,6 @@
 ---
 title: Building Visio shapes and stencils by code
-description: Read when code builds Visio masters, groups or a stencil by COM (geometry rows, text fields, Shape Data, groups from shapes, master from a shape) - row tags, write order, stable IDs, errors.
+description: Read when code builds Visio masters, groups or a stencil by COM (geometry rows, text fields, Shape Data, groups from shapes, master from a shape) - row tags, write order, stable IDs, icons, errors.
 ---
 
 # Building Visio shapes and stencils by code
@@ -108,6 +108,15 @@ $m.NameU = 'MyConnector'; $m.Name = 'MyConnector'      # then Master.Open(), set
 - Without route style 16 + `ConFixedCode 2` before `Masters.Drop`, the master reroutes when its route style changes: the stencil line becomes a U or an L.
 - `Copyright` (Microsoft's text) is read-only; `HelpTopic` can be emptied. `LayerMember` = `""` + deleting the master's layers removes the `Connector` layer.
 - Ends moved by code (`BeginX`/`EndX` cells) on a `ConFixedCode 2` connector keep the old route: a stale segment stays.
+
+## Master icons (Shapes window)
+
+Measured 2026-11-13, Visio 2019 C2R, masters with `IconUpdate` automatic (default):
+
+- The Shapes window draws each icon live from the master's content, scaled to fit, in color. The `<Icon>` stored in `masters.xml` (32 x 32, 4 bit ICO, 766 bytes; built-in `BASIC_M.VSSX` the same) is not what it shows.
+- Line weight and line pattern scale down with the master: a 100 x 60 mm rectangle, no fill, 0.5 pt dash-dot (`LinePattern` 4) shows only one faint edge; 40 x 24 mm the same. Visible: 20 x 12 mm, or 2 pt dash-dot, or a solid line (0.5 pt or 2 pt), or a light fill. Small masters with absolute weights (5 mm symbols) look bold.
+- So a big, thin, dashed, unfilled master (e.g. a container) needs a smaller default size, a bolder line or a fill to be recognizable.
+- `Master.ImportIcon(<hand-made 32 x 32 ICO, 32 bit or 4 bit>)` on a master of an open stencil failed: `Inappropriate source object for this action.` A manual icon would be 32 x 32 anyway.
 
 ## Gotchas
 
