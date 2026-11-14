@@ -52,7 +52,8 @@ Key matching on `Refresh()`:
 - Locked layers are no obstacle: `LinkToData`, `LinkShapesToDataRows` (one call with free and locked shapes) and `Refresh()` work on shapes on hidden + locked layers, on hidden pages (`UIVisibility` = 1) and background pages.
 - Time (COM from another process, shapes of one master with 8 shape data rows, 8 columns + `ID`, 5 pages, one undo scope): `LinkShapesToDataRows` once per page: 100 shapes 508 ms, 300 shapes 1,579-1,727 ms, 1,000 shapes 6,703 ms; `EndUndoScope` after it 92 / 290-303 / 1,202 ms. `LinkToData` per shape: 926 / 2,522 / 10,572 ms, `EndUndoScope` 5 ms. Grows linearly. Map key -> Visio row ID by `GetRowData` per row: 1,000 rows 451 ms.
 - One shape linked to two recordsets with the same column name (e.g. both have `ID`) shares one shape data row: the second link overwrites the first one's value.
-- Find multi-links: `Shape.GetLinkedDataRecordsetIDs(out ids)` (recordsets of a shape), `Page.GetShapesLinkedToDataRow(recordsetId, rowId, out shapeIds)` (shapes of a row), `Page.GetShapesLinkedToData(recordsetId, out shapeIds)`.
+- Find multi-links: `Shape.GetLinkedDataRecordsetIDs(out ids)` (recordsets of a shape), `Page.GetShapesLinkedToDataRow(recordsetId, rowId, out shapeIds)` (shapes of a row), `Page.GetShapesLinkedToData(recordsetId, out shapeIds)`. Free / once / more per row: `GetShapesLinkedToDataRow` per row and page (COM out of process: 128 calls 464 ms). PowerShell: pass `[ref]` to `[int[]]@()`; `[ref]$null` throws `Object reference not set to an instance of an object`.
+- External Data window: `Window.Windows.ItemFromID(2044)` (`visWinIDExternalData`), `.Visible = $true`. Linked rows show a chain icon; a row linked to two shapes looks the same as one linked once.
 
 ## Refresh and linked shapes
 
