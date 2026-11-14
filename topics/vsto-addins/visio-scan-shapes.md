@@ -117,6 +117,6 @@ page.GetResults(ref sids, (short)Visio.VisGetSetArgs.visGetStrings, ref units, o
 ## Gotchas
 
 - `AddRow(section, 0, ...)` on an instance with inherited rows did not insert in front: the row got the next free index (13 of 13).
-- PowerShell: a function named `Group` loses against the alias of `Group-Object`; `Page.DropMany` needs the out array initialized (`$ids = [int16[]]@()`, passed `[ref]`), `$null` gives `Object reference not set`.
+- PowerShell: `Page.DropMany` arrays and helper names that clash with aliases: [visio-powershell-com](visio-powershell-com.md).
 
 _Unverified:_ Release build, shapes with many formulas, documents with data graphics or containers.

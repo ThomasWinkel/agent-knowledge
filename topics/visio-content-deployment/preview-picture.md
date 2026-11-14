@@ -53,5 +53,5 @@ try {
 
 ## Gotchas
 
-- `DrawPolyline` from PowerShell: `[double[]]$xy = @(...)` passed directly works; `$page.DrawPolyline([ref]$xy, 0)` with a `New-Object 'double[]'` array failed ("Cannot convert ... value of type \"psobject\" to type \"Object\"").
+- `DrawPolyline` from PowerShell: build the array as `[double[]]`, not by `New-Object` ([vsto-addins/visio-powershell-com](../vsto-addins/visio-powershell-com.md)).
 - Design hint (not measured): tiles are small (~64 px); bold, flat shapes read better than thin real symbols.
