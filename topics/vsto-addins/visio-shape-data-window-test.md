@@ -9,7 +9,7 @@ A COM write (`Cell.FormulaU`) is not the same code path as a user edit. To test 
 
 - Show it by COM: `$app.ActiveWindow.Windows.ItemFromID(1658).Visible = $true` (`visWinIDCustProp`); select the shape first. With nothing selected (`DeselectAll`) it shows the page's Shape Data: pane name `Shape Data - ThePage` (2026-10-31).
 - UI Automation sees only a pane named `Shape Data - <shape name>` with a `ListBox` child (owner-drawn, no item elements). Take its `NativeWindowHandle`.
-- One list item per visible row, in section order. `LB_GETCOUNT` (0x018B) gives the count, `LB_GETITEMRECT` (0x0198) the item rectangle.
+- One list item per visible row (`Prop.<row>.Invisible` false), **sorted by `SortKey` as text** (`"07"` < `"09"` < `"50"`), equal keys in section order; rows without a key: not verified (seen 2026-11-14, Visio 2019 build 20527). Compute the item index the same way, not by section order. `LB_GETCOUNT` (0x018B) gives the count, `LB_GETITEMRECT` (0x0198) the item rectangle.
 - A click on the value part (right half of the item) opens an in-place editor: a new visible `RichEdit20W` child of the Visio main window (`VISIOA`).
 - Set its text with `WM_SETTEXT` and post `WM_KEYDOWN`/`WM_KEYUP` with `VK_RETURN`: Visio commits the value as a user edit, one Undo step.
 
@@ -26,6 +26,7 @@ Start-Sleep -Milliseconds 600                                # editor appears
 ```
 
 - The editor stays open after the click until Enter; a second click script finds no *new* editor, so look for the visible `RichEdit20W` too.
-- Fixed list row (`Type = 1`): the click opens a `REComboBox20W` (`CBS_DROPDOWNLIST`) as child of the Shape Data list box, not a `RichEdit20W`. Choose by `CB_SETCURSEL` (0x014E, wParam = item index), then post Enter to the combo; `WM_SETTEXT` does nothing. Items: `CB_GETCOUNT` (0x0146), `CB_GETLBTEXT` (0x0148). What the choice writes: [visio-cell-values](visio-cell-values.md#fixed-list-chosen-by-the-user).
+- Fixed list row (`Type = 1`): the click opens a `REComboBox20W` (`CBS_DROPDOWNLIST`) as child of the Shape Data list box, not a `RichEdit20W`. Choose by `CB_SETCURSEL` (0x014E, wParam = item index), then post Enter to the combo; `WM_SETTEXT` does nothing. Items: `CB_GETCOUNT` (0x0146), `CB_GETLBTEXT` (0x0148). Also variable lists (`Type = 4`) and Boolean rows (`Type = 3`, items `FALSE`, `TRUE` in an English UI); item texts readable with `CB_GETLBTEXTLEN` (0x0149) + `CB_GETLBTEXT`.
+- Editors of earlier edits stay as visible child windows: take the editor that appeared after the click (child list before vs. after), and post Esc only to it. Seen after an Esc posted to all editor windows: the window showed the page's Shape Data (selection gone), so the next click edited a page field. What the choice writes: [visio-cell-values](visio-cell-values.md#fixed-list-chosen-by-the-user).
 - Enter commits and moves the in-place editor to the next row (a new combo for a list row, showing that row's value): close it with Esc (`VK_ESCAPE` 0x1B) before the next click.
 - Verified: a text row and a number row (`7` -> `7`), each edit one Undo step; fixed list rows on a shape and on the page.
