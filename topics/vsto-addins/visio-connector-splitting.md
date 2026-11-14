@@ -21,7 +21,8 @@ Measured 2026-11, Visio 2019 C2R x64 build 20527, new blank metric drawing, two 
 ## Mouse only
 
 - By code nothing splits, even with all four levels on: `Page.Drop(shape, x, y)` onto the connector, or moving a shape there by `PinX`/`PinY`.
-- A real mouse drag of the shape onto the connector splits it: 2 connectors (`Dynamic connector` + a new `Dynamic connector.<n>`). With `ShapeSplit = 0` on the shape, or `ShapeSplittable = 0` on the connector, the same drag splits nothing.
+- A real mouse drag of the shape onto the connector splits it: 2 connectors (`Dynamic connector` + a new `Dynamic connector.<n>`). With `ShapeSplit = 0` on the shape, or `ShapeSplittable = 0` on the connector, the same drag splits nothing. AutoConnect plays no part: it splits with `Application.Settings.EnableAutoConnect` off and on.
+- A master dropped by an add-in's `DoDragDrop` (panel in Visio, real mouse; [visio-anchor-window](visio-anchor-window.md)) onto the connector's middle splits nothing, AutoConnect off or on, while an existing instance of the same master (`ShapeSplit` 1, `GlueType` 0) moved there by the mouse splits it. Need a split on such a drop: do it in code.
 - Connector from an own master (the document's default connector, [visio-default-connector](visio-default-connector.md)): both halves are instances of that master and keep the old connector's local cells (a local `ShapeSplittable = 1` was copied to the new half).
 - _Unverified:_ drop from a stencil window by mouse (only an existing shape was dragged); whether local Shape Data values are copied too.
 
