@@ -126,5 +126,4 @@ Measured 2026-11-13, Visio 2019 C2R, masters with `IconUpdate` automatic (defaul
 
 - Reading a missing cell (`CellsU('User.X')`) throws `Unexpected end of file.`; check `CellExistsU(name, 0)`.
 - A killed script leaves `VISIO.EXE /Automation /Invisible -Embedding`; find it by command line (`Win32_Process`) and stop that PID only, never a user's Visio.
-- **PowerShell: a path from `Join-Path` passed to `Documents.OpenEx` hangs Visio without a message** (no dialog; Join-Path wraps its result in a PSObject). Cast it: `[string](Join-Path $dir 'My.vssx')`. Measured 2026-11-08, build 20527.
-- PowerShell: a helper function named `R` loses to the built-in alias `r` (`Invoke-History`); pick another name.
+- **PowerShell: a path from `Join-Path` passed to `Documents.OpenEx` hangs Visio without a message**; more such traps (wrapped arguments, unrolled collections, alias names): [visio-powershell-com](visio-powershell-com.md).
