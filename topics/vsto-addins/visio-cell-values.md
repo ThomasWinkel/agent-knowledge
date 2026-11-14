@@ -19,7 +19,8 @@ Write a literal with `FormulaU`, read the evaluated value with `Result*`. Measur
 - `""` gives an empty string (not the same as a missing row).
 - Number: the `FormulaU` getter shows ~14 significant digits (`0.33333333333333`), but the value keeps the full double, also after save.
 - Number: exponents work as `"R"` writes them (`1E+300`, `1.5E-05`, `double.MaxValue`; the getter shows `1e300`). Denormal doubles (`double.Epsilon` = `4.94065645841247E-324`) fail: COM exception `#VALUE!`. NaN/infinity have no formula: check before writing.
-- Bool: comparisons give the same 1 / 0 (`1>0` -> 1). `ResultStr` gives `TRUE` / `FALSE`.
+- Bool: comparisons give the same 1 / 0 (`1>0` -> 1). `ResultStr` gives `TRUE` / `FALSE`. `FormulaForceU = "True"` is stored as `TRUE`.
+- Bool kept as text: `"TRUE"` (`Units` 231) still acts as true in `IF(...)` and `NOT(...)`, a Boolean Shape Data field (`Type` 3) on it by `SETATREF` shows it checked, and a write into that field replaces the text by the Boolean `FALSE`. So text is harmless, but code that copies a value as a constant must not quote a Boolean: write `ResultStrU(visNoCast)` unquoted when `Units != 231` and it is `TRUE`/`FALSE` (a `SETATREF` to a Boolean has `Units` 32). Code that tells constants from formulas must count `TRUE`/`FALSE` as constants: a Boolean field writes them through `SETATREF`. Measured Visio 2019 build 20527.
 - Date: Visio counts days since 1899-12-30, as OLE dates. `DATETIME("2026-10-18 13:45:30")` also works. `Result(visDate)` keeps milliseconds in memory; after save the date is rounded to whole seconds (the formula keeps only that). `ResultStr` formats it by region (`18.10.2026 13:45:30` in de-DE). `DATETIME` takes one argument: `DATETIME(2026,10,1)` gives no error and means `DATETIME(2026)` = 1905-07-18; use `DATE(2026,10,1)+TIME(13,30,0)`.
 
 ## Empty cells, types and errors on read
