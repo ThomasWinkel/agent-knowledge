@@ -21,6 +21,14 @@ Standard: IEC 81346-2:2019. The tables are copyrighted: look codes up in the sta
 - Code levels: 1 letter = entry class (`K`), 2 letters = sub-class (`KF`), 3 letters = sub-sub-class (`BAA`).
 - Codes can also be used alone as a generic type designation, e.g. in specifications.
 
+## Codes found (secondary sources)
+
+The preview of IEC 81346-2:2019 ends after Table 2, class C: classes F and X are not in it.
+
+- `XD` interface object for low voltage power: `XDA` terminal, `XDB` plug; `XG` interface object for electrical signals: `XGA` data plug, `XGB` data terminal; a third letter is optional (ibkastl.de blog on DIN EN IEC 81346-2:2020-10). Not checked against the standard.
+- Practice varies: some keep `X` for terminals and `XD` for plugs (CAD.de forum).
+- No source found (2026-11) for fuse terminals, disconnect terminals, component terminals (diode, LED, resistor) or relays in terminal-block form. They have two functions (connecting + protecting/switching), so `X` or the class of the built-in function both seem defensible: let the library author choose per symbol, do not hard-code it.
+
 ## Editions and other parts
 
 - 2019 added a third code level and changed classes; not compatible with 2009 (Wikipedia DE; comparison: annex D of the 2019 edition). Old single letters (`K`, `F`, `Q`) from earlier practice stay common.
@@ -33,4 +41,6 @@ Standard: IEC 81346-2:2019. The tables are copyrighted: look codes up in the sta
 
 - IEC 81346-2:2019 preview: https://cdn.standards.iteh.ai/samples/21908/1b996d119d0945b2b28359332ffa9b3f/IEC-81346-2-2019.pdf
 - ISO/TS 81346-3:2012 preview: https://cdn.standards.iteh.ai/samples/59598/edd5fcaf82554181a625e70929f4365e/ISO-TS-81346-3-2012.pdf
+- ibkastl.de, Neu: DIN EN IEC 81346-2: https://ibkastl.de/blog/neu-din-en-iec-81346-teil-2
+- CAD.de forum, EN DIN 81346 (EPLAN): https://ww3.cad.de/foren/ubb/Forum467/HTML/004553.shtml
 - Wikipedia DE: https://de.wikipedia.org/wiki/EN_IEC_81346, Wikipedia EN: https://en.wikipedia.org/wiki/IEC_81346
