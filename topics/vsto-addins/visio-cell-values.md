@@ -81,7 +81,7 @@ Measured with Visio 2019 C2R x64 build 20527 (2026-11), region de-DE, number row
 
 ## Master instances
 
-- `FormulaU = string.Empty` (also `FormulaForceU`) on a cell of a master instance does not empty it: it removes the local formula, the cell inherits again (`IsInherited` true, later master changes arrive). On a shape without master it empties the cell. To clear a value in an instance, write the formula `""` (two quote characters = empty text; C# `"\"\""`; _unverified_ in an instance).
+- `FormulaU = string.Empty` (also `FormulaForceU`) on a cell of a master instance does not empty it: it removes the local formula, the cell inherits again (`IsInherited` true, later master changes arrive). On a shape without master it empties the cell. To clear a value in an instance, write the formula `""` (two quote characters = empty text; C# `"\"\""`): the cell turns local (`IsInherited` false) with an empty result; a later `FormulaU = ""` makes it inherit again (User row Prompt cell, Visio 2019 build 20527, 2026-11-16).
 - `Shape.DeleteRow` on a row the instance inherits removes the row from the instance for good: it stays gone when the master changes later.
 - Adding a row to a section of an instance (`AddNamedRow`), or deleting a row it inherits, copies the whole section into the instance: every row there turns local (`IsInherited` false), and later master changes of any cell in that section no longer arrive. Setting one cell makes only that cell local. Deleting the added row again does not bring inheritance back (Undo does); `FormulaU = ""` on each value cell does for these cells (other columns not checked).
   - Rows that instances fill in (e.g. an ID per instance): add them to the master, empty; the instance only sets the value.
