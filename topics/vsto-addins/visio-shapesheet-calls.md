@@ -66,6 +66,8 @@ redone.Clear();
 
 Verified: drop / duplicate, Undo, Redo (twice) leaves `K2` (not `K3`); duplicate of the redone shape in the same idle round still runs (`K3`); a handler that ungroups the dropped group: Redo without error.
 
+One idle round covers the whole copy: on `Shape.Duplicate()` the document's `ShapeAdded`, the `EventDrop` marker and the `CellChanged` events of the cells the marker command writes all come before the next `VisioIsIdle` (in-process add-in, document `EventList`, out-of-process script with `Visio.InvisibleApp`; Visio 2019 build 20527, 2026-11-16). So what a handler remembers in `ShapeAdded` until idle (e.g. a value of the copy before the handler changed it) is still there when the marker command renames the copy, and the handler can decide again from it.
+
 ## Stencil drop or copy
 
 `EventDrop` cannot tell a drop from a stencil from a paste or duplicate. The document's `ShapeAdded` can: `Application.CurrentScope` there is the command that adds the shape. Remember the shapes added by a drop the same way as the redo guard, e.g. to skip a counter that would only count up from the master's value.
