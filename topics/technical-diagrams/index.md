@@ -21,6 +21,7 @@ Map of the schematic kinds a CAE/diagram tool may support beyond electric: which
 <!-- BEGIN GENERATED CONTENTS: do not edit, run `python .knowledge-base/manage.py index` -->
 ## Contents
 
+- [Cross-references in circuit diagrams](cross-references.md) — Read when showing where the other parts of a device are drawn (coil <-> contacts, contact image, interruption points) - IEC 61082-1 clauses, EPLAN, AutoCAD Electrical options.
 - [Fluid power diagrams](fluid-power.md) — Read when supporting hydraulic, pneumatic, cooling or lubrication circuit diagrams - ISO 1219 parts, identification of components, ports and piping, line kinds, how EPLAN Fluid models lines.
 - [Process flow diagrams and P&ID](process-pid.md) — Read when supporting process plant diagrams - ISO 10628-1 diagram kinds and minimum content, line widths, flow arrows, crossings, pipeline data (DEXPI, Visio), ISA-5.1 signal lines.
 - [Diagram kinds in CAE tools](tools.md) — Read when deciding which diagram kinds/disciplines a tool supports and how one device appears in several diagrams - EPLAN, Zuken E3, Aucotec EB, COMOS, Visio; line data compared across areas.
