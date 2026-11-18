@@ -1,6 +1,6 @@
 ---
 title: Visio side panel with a WinForms control (anchor window)
-description: Read when a Visio add-in shows its own docked panel (tree, list) - anchor window + WinForms control, keys Visio steals, close events, tabs by merge ID, DPI, drag, TreeView speed, UI tests.
+description: Read when a Visio add-in shows its own docked panel (tree, list) - anchor window + WinForms control, keys Visio steals, close events, merge ID tabs, context menus, DPI, drag, TreeView speed, UI tests.
 ---
 
 # Visio side panel with a WinForms control (anchor window)
@@ -65,6 +65,7 @@ bool OnKey(Visio.MSGWrap m)
   - Tabs in the order of `Windows.Add`; the first added is the shown tab when the pane opens. `anchorWindow.Activate()` brings its tab to the front. Both anchors report `Visible == True`; only the shown tab's control window is visible (`IsWindowVisible`). The pane caption is the shown tab's `Caption`.
   - `Close()` of one tab's anchor fires that anchor's `BeforeWindowClosed`, as the pane's X does. Whether Visio closes the other tabs too: unverified (tested only with an add-in that closes all its tabs on this event). If one switch should rule the whole pane, close the others yourself.
   - Each tab is its own reader of shared add-in state: a change list that one reader empties when it reads it loses changes for the other tabs (and for second windows of the drawing). Give every reader its own list.
+- Context menus in the panel: use `ContextMenu` + `MenuItem` (native `TrackPopupMenu`, own menu loop), not `ContextMenuStrip`. Seen with a `ContextMenuStrip` shown by `Show(tree, point)` on a right click (Visio 2019, 2026-11): a click into the drawing did nothing (no selection) and the menu stayed open; probable cause (unverified): the strip closes through WinForms' menu message filter, which does not work in Visio's message loop. Native menu: closes on a click outside, mouse normal again (verified by hand). Modal WinForms dialogs (own loop) are not affected.
 - Opening does not take the focus from the drawing. `Windows.Add` + control: 10-40 ms.
 - Dark Office theme: the WinForms control stays light (system colors).
 - Drag inside a `TreeView` (`ItemDrag` -> `DoDragDrop`) works. Dropped onto the drawing page Visio refuses both a custom format and `DataFormats.Text` (`DoDragDrop` returns `None`, no shape made).
