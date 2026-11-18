@@ -1,6 +1,6 @@
 ---
 title: Typed values in Visio ShapeSheet cells
-description: Read when Visio code writes or reads text, numbers, booleans or dates in ShapeSheet cells (empty cells, errors, new rows, master instances, lists, typed units, GUARD, read-only files).
+description: Read when Visio code writes or reads text, numbers, booleans or dates in ShapeSheet cells (empty cells, errors, new rows, master instances, lists, typed units, GUARD, read-only files, TextBkgnd).
 ---
 
 # Typed values in Visio ShapeSheet cells
@@ -87,6 +87,19 @@ Measured with Visio 2019 C2R x64 build 20527 (2026-11), region de-DE, number row
   - Rows that instances fill in (e.g. an ID per instance): add them to the master, empty; the instance only sets the value.
 - Renaming a master row (`Cell.RowNameU = "NewName"` in the master opened by `Master.Open()`) rewrites the references to it in the master and its sub-shapes (`Sheet.5!Prop.Name` -> `Sheet.5!Prop.NewName`); instances keep their local values of that row (seen 2026-10-28, `Prop` rows, 7 instances). The instance row takes the new name too, and a local formula that names the row follows (`INDEX(1,Prop.Old.Format)` -> `INDEX(1,Prop.New.Format)`); same after save + reopen (Visio 2019 build 20527, 2026-11-13, 5 instances). So a document master's row is renamed for all instances by one `RowNameU` on the master, no per-instance step. A sync that instead deletes the old row and adds the new one loses the local values.
 - Measured with `User` and `Prop` rows, master in the document stencil, master changed by `Master.Open()`/`Close()` (section copy: 2026-10, Visio 2019 C2R x64).
+
+## Text background (`TextBkgnd`)
+
+Value = color + 1; `0` = no background (transparent). Measured 2026-11, Visio 2019 C2R x64, PNG export:
+
+| Formula | Result |
+|---|---|
+| `RGB(255,255,255)+1` | white |
+| `2` | white (palette index 1 + 1) |
+| `IF(<cond>,RGB(255,255,255),0)`, `IF(<cond>,RGB(254,254,254),0)`, `IF(<cond>,THEMEGUARD(RGB(255,255,255)),0)` (no `+1`) | grey (`ResultStr` `RGB(128; 128; 128)` / `RGB(127; 127; 127)`) |
+
+- A background only for some text (e.g. a mark shown by a text field): set `TextBkgnd = RGB(255,255,255)+1` constant and let the field formula return `""` when hidden: empty text draws no box.
+- The box covers the text plus `LeftMargin`/`RightMargin`, not the whole `TxtWidth`.
 
 ## Read-only documents
 
