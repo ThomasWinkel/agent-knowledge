@@ -43,11 +43,13 @@ Measured with Visio 2019 C2R x64 (region de-DE):
 | `INDEX(1,"a||b||c","||")` | `b`: the delimiter may have several characters |
 | `LEN(L)-LEN(SUBSTITUTE(L,";",""))+1` | item count, but `1` for `L = ""`: wrap in `IF(LEN(L)=0,0,...)` |
 | `"+"&SUBSTITUTE("S1;X1",";","+")` | `+S1+X1` (all occurrences without a 4th argument) |
+| `SUBSTITUTE("a b a","a","-",2)` / `SUBSTITUTE("aAaA","a","-")` / `SUBSTITUTE("x.n","X.N","-")` | `a b -` / `-A-A` / `x.n` (case-sensitive, no flag for it) |
 | `STRSAME("s1","S1")` / `STRSAME("s1","S1",TRUE)` | `FALSE` / `TRUE` (case-sensitive unless the 3rd argument is `TRUE`) |
 | `FIND("S2","S1;S2")` / `FIND("Q","S1;S2")`, `FIND("S2","")` | `4` / `#VALUE!` (no hit is an error, not 0) |
 | `FIND("s2","S1;S2")` / `FIND("s2","S1;S2",1,TRUE)` | `#VALUE!` / `4` (case-sensitive unless the 4th argument is `TRUE`) |
 | `IFERROR(FIND("Q","S1;S2"),0)`, `ISERROR(FIND("Q","S1;S2"))` | `0`, `TRUE`: test a hit with `IFERROR(FIND(...),0)>0` |
 
+- A cell reference typed in any case is stored in Visio's spelling: `user.myname&"!"` written to `FormulaU` (also `Formula`) reads back as `User.myName&"!"` (the row's own spelling), `USER.MYNAME.PROMPT` as `User.myName.Prompt`. Text **inside** a formula string (e.g. a formula text kept in a cell and run by `SETF`) is not touched: `SUBSTITUTE` on such text misses other spellings; normalize the text before storing it. Measured Visio 2019 build 20625 (2026-11).
 - Delimiter for lists of formula texts (which contain `;` themselves): a rare printable char such as `␞` (U+241E) or `¦` works and survives save + reopen. Control chars (`CHAR(30)`) work live but are **lost on save** to `.vsdx` (after reopen `INDEX` finds nothing). String constants of 1,000,000 chars in a cell work (written, read back, `INDEX` finds the last item).
 - Is code `C` an item of a list of `code description` items `L` (`S1 Cabinet;S2`)? `IFERROR(FIND(";"&C&" ",";"&SUBSTITUTE(L,";"," ;")&" ",1,TRUE),0)>0`: every item starts after `;` and ends before ` `, so `S1` does not match `S10` or a word of a description (codes without spaces and `;`).
 - Cut a known head `H` off a list `L`: `IF(STRSAME(L,H),"",IF(STRSAME(LEFT(L,LEN(H)+1),H&";"),MID(L,LEN(H)+2,999),L))`. Compare with `H&";"`, not `H` alone (`S1` must not match `S10;X1`), and handle `L = H` on its own.
