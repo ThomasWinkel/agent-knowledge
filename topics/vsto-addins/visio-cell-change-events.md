@@ -32,7 +32,7 @@ Two ways to learn that a cell changed: a marker cell in every shape (`DEPENDSON`
 
 - Shape Data window with 50 shapes selected, one field changed: one Undo step `Shape Data`; 50 filtered `CellChanged`, 50 markers. One Ctrl+Z / Ctrl+Y takes back / brings back all 50 changes together with the handler's writes; `IsUndoingOrRedoing` true in every `CellChanged` call.
 - Ctrl+C/Ctrl+V of 50: `ShapeAdded` 50, nothing else. Delete 50: `BeforeShapeDelete` 50. Dragging 100 shapes: unfiltered `CellChanged` 208, filtered 0.
-- Multiple selection shows only Shape Data rows with a `Label` ("No common data fields" otherwise).
+- Multiple selection shows only Shape Data rows with a `Label` ("No common data fields" otherwise). Rows of the shapes are matched by `Label` only (measured Visio 2019 build 20625, 2026-11, instances of different masters, value typed by window messages): `Prop.P1` and `Prop.P2` both labeled `Same` give one field, a typed value goes into both; `Prop.Q` labeled `L1` and `L2` gives no common field. Row order, `SortKey` and a hidden extra row in one shape do not matter. Each shape keeps its own row formula: `Prop.N = SETATREF(User.N.Prompt)` in one shape and `SETATREF(User.N)` in another, one typed value lands in the Prompt resp. the value cell.
 - Editing the master (3 Prop labels): filtered `CellChanged` for every instance (303 with 100 instances).
 
 ## Filter CellChanged in Visio
