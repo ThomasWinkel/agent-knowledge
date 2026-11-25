@@ -7,6 +7,8 @@ description: Read when Visio code reads cells or row names of many shapes across
 
 Reading cells shape by shape gets slower per call as the document grows, because every `Shape` and `Cell` object stays alive in .NET until the garbage collector runs. **Release them right after use** (`Marshal.ReleaseComObject`): an exact scan of 20,000 shapes took 4.6 s instead of 17-18.5 s. A batch read (`Page.GetResults`) is faster still, but a failing call can block `GetResults` on that page for the rest of the session.
 
+**Take collection items by index, never by `foreach`.** An object that came out of a `foreach` over a Visio collection (`Documents`, `Pages`, `Shapes`, ...), and every object and cell read through it, was 3.5-7x slower in-process ([measured](#foreach-vs-index)). The .NET wrapper (RCW) of a COM object is cached per object: once a document was first taken by `foreach`, a later `ActiveDocument` returns the same slow wrapper.
+
 ## Recipe: exact scan, one shape at a time
 
 Looks at every top-level shape, assumes nothing about masters or row positions.
@@ -16,8 +18,10 @@ using System.Runtime.InteropServices;
 
 const short anywhere = (short)Visio.VisExistsFlags.visExistsAnywhere;
 
-foreach (Visio.Page page in doc.Pages)
+var pages = doc.Pages;
+for (int p = 1; p <= pages.Count; p++)   // by index, not foreach
 {
+    var page = pages[p];
     var shapes = page.Shapes;            // top-level shapes only
     int n = shapes.Count;
     for (int i = 1; i <= n; i++)
@@ -33,10 +37,13 @@ foreach (Visio.Page page in doc.Pages)
         Marshal.ReleaseComObject(shape);
     }
     Marshal.ReleaseComObject(shapes);
+    Marshal.ReleaseComObject(page);
 }
 ```
 
 ## Measured
+
+The tables of drawings 1 and 2 were measured with `foreach` over `Pages` (shapes by index): absolute times there are probably too high ([foreach vs index](#foreach-vs-index)); the ratios between variants hold (_unverified_).
 
 VSTO add-in (in-process), Debug build, stopwatch in a marker event handler, 3 runs each, Visio Pro 2019 C2R x64 (2026-10).
 
@@ -110,6 +117,22 @@ Visio Pro C2R x64 build 20625, Debug add-in, in-process, 2026-11. Drawing: 20 pa
 - With many cells per shape the batch calls cost about as much per cell as one-by-one reads in a fresh pass (~20 us per cell for formula + result); they only stay stable over repeated passes. A page-wide stream is no faster than one per shape. Same formulas and results in all variants.
 - Why the one-by-one variants got slower in passes 2-3: unknown.
 - **"Local or inherited" by comparing the formula with the master shape's is wrong for sub-shapes**: inherited formulas name the instance's own sheet IDs (`Sheet.22!FlipX` in the instance, `Sheet.5!FlipX` in the master): 23,000 of 476,009 inherited cells differed this way. Map `Sheet.<id>!` from master to instance IDs first, or use `Cell.IsInherited`. `IsInherited` was 0 on exactly the 2,000 cells set locally.
+
+## foreach vs index
+
+Same drawing and setup as the table above (27,521 shapes, 303,009 `Prop` + `User` rows), every object released, each variant in a fresh Visio unless noted, 2026-11. ms:
+
+| Variant | ms |
+|---|---|
+| `RowNameU` of all rows; document by `ActiveDocument`, pages + shapes by index | 5,113-5,489 (first pass after opening 9,617-17,567) |
+| same, pages by `foreach` (same session, right after the line above) | 39,150 |
+| same as line 1, but the document first taken by `foreach` over `Documents` (then by `ActiveDocument`, same wrapper) | 37,297-39,373 |
+| full read (row names, `GetFormulasU` + `GetResults` per shape, text, master), `foreach` over masters, pages, shapes, connects | 75,825-76,170 |
+| same, all by index | 21,491-22,897 |
+| same by index + `IsInherited` per cell (390,681 cells), no `Master` for sub-shapes of instances | 24,248-24,859 |
+
+- Cost stays with the object: a `foreach` over `Documents` after the document was already taken by `ActiveDocument` changed nothing (5.3 s before and after); `GC.Collect` changed nothing.
+- Cause not known; `foreach` goes through `IEnumVARIANT`.
 
 ## Batch read by master: how and why it is risky
 
