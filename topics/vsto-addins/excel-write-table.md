@@ -71,6 +71,7 @@ list.Resize(sheet.Range[sheet.Cells[range.Row, left], sheet.Cells[below + n - 1,
 - New rows appended while filtered stay visible; an array write into all-visible rows is fine with `FilterMode` on.
 - Insert into a range crossing a merged cell: with `DisplayAlerts = true` Excel shows a message box and **the COM call waits until the user closes it**; with `false` it inserts and silently unmerges the cell.
 - `Workbook.Save()` onto a file whose read-only attribute was set after it was opened: Excel shows "Save As" even with `DisplayAlerts = false`; the call waits.
+- `Workbook.SaveAs(path)` onto an existing file with `DisplayAlerts = true`: Excel asks whether to replace it, the call waits. While such a dialog is open, every other COM call into that Excel throws `RPC_E_CALL_REJECTED` (0x80010001), `Quit()` too: a script can no longer close it. Delete the file first or set `DisplayAlerts = false`.
 - A table with a total row grows by `ListRows.Add()` into empty sheet rows below the total row without moving anything; a cell right below the total row is moved down.
 - Undo an append in a user's open workbook: `ListRows[i].Delete()` from the end, `ClearContents` on cells you filled in reused rows (only your columns: a calculated formula stays), then `Workbook.Saved = true`.
 
