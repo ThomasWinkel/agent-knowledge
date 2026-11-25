@@ -14,6 +14,18 @@ A drawing holds its own copy of every master it uses (document stencil). A chang
 | Delete master, drag the shape back into the stencil (new master) | **new** | new |
 | Set `MatchByName` + save | kept | new |
 
+Document master (in a drawing), checked as "is it still the same?" between two copies of one file (Visio build 20625, 2026-11):
+
+| Action on the document master | `UniqueID` |
+|---|---|
+| Save, reopen, file copy, save without change | kept |
+| A local cell in an instance | kept |
+| `Open()` + `Close()` without change | kept |
+| `Open()` + cell change + `Close()` | new (`BaseID` kept) |
+| `Name` changed by COM (`NameU` left) | **kept**, also after save + reopen |
+
+So equal `UniqueID` on both sides does not prove equal masters: compare names on their own. Why the rename differs from the stencil row above (there `Name`/`NameU` of a stencil master; renaming the document master's `NameU`: new, [visio-default-connector](visio-default-connector.md)): not checked.
+
 Drop of the changed master into a drawing that has the old one (`Page.Drop(stencilMaster, x, y)`):
 
 - Default: a second document master `Board.4` (next free number) with the new content; old instances keep the old master. Every further version adds one more (`Board.5`, ...). Same for both ways of editing.

@@ -1,6 +1,6 @@
 ---
 title: Scanning all shapes of a Visio document fast
-description: Read when Visio code reads cells or row names of many shapes across all pages (find by type, key or row name prefix, build an index) - release COM objects, batch reads, GetResults failures.
+description: Read when Visio code reads cells or row names of many shapes across all pages (find, index, compare) - release COM objects, batch reads, IsInherited, GetResults failures.
 ---
 
 # Scanning all shapes of a Visio document fast
@@ -92,6 +92,24 @@ Measured as above (in-process, Debug, Visio 2019, 2026-10): drawing 2 with 21 Us
 
 - The first touch of all shapes after opening a large document is slow whatever is read (here 6.7 s, 11.5 s in the scan above).
 - A list cell is fast but must be kept in step with the rows by hand; a per-master cache misses rows an instance renamed or replaced with the same count.
+
+## Reading many cells of every shape (e.g. a full compare)
+
+Visio Pro C2R x64 build 20625, Debug add-in, in-process, 2026-11. Drawing: 20 pages x 200 instances of 8 group masters (3-5 sub-shapes each) = 27,521 shapes incl. sub-shapes; all `Prop` + `User` rows of each (303,009 rows), 478,009 cells read (`Prop` Value, Label, Invisible; `User` Value); every object released. ms, run 1 / runs 2-3:
+
+| Variant | ms |
+|---|---|
+| first pass after opening (structure) | 11,099 |
+| structure: `SectionExists`, `RowCount`, `CellsSRC(...).RowNameU` per row | 2,848 / 5,066-5,123 |
+| + `Shape.MasterShape` per shape (master key) | 3,060 / 5,619-5,735 |
+| + per cell `IsInherited` only | +3,569 / +6,350-6,473 |
+| + per cell `IsInherited`, `FormulaU`, `ResultStr` | +10,732 / +19,324-19,734 |
+| + `Shape.GetFormulasU` + `Shape.GetResults` per shape | +10,463 / +10,462-10,558 |
+| + `Page.GetFormulasU` + `Page.GetResults` per page (one stream of ~24,000 cells) | +9,759 / +9,971-10,052 |
+
+- With many cells per shape the batch calls cost about as much per cell as one-by-one reads in a fresh pass (~20 us per cell for formula + result); they only stay stable over repeated passes. A page-wide stream is no faster than one per shape. Same formulas and results in all variants.
+- Why the one-by-one variants got slower in passes 2-3: unknown.
+- **"Local or inherited" by comparing the formula with the master shape's is wrong for sub-shapes**: inherited formulas name the instance's own sheet IDs (`Sheet.22!FlipX` in the instance, `Sheet.5!FlipX` in the master): 23,000 of 476,009 inherited cells differed this way. Map `Sheet.<id>!` from master to instance IDs first, or use `Cell.IsInherited`. `IsInherited` was 0 on exactly the 2,000 cells set locally.
 
 ## Batch read by master: how and why it is risky
 
