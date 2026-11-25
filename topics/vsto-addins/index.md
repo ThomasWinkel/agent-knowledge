@@ -75,7 +75,7 @@ Verified with Visio Pro 2019 C2R x64, WiX 7.0.0, VS2022 (2026-07); registration 
 ## Contents
 
 - [Folder of the add-in DLL at runtime](addin-folder.md) — Read when a VSTO add-in must find files next to its DLL or in its install folder (help, data, config) - Location is the shadow copy, CodeBase the real folder.
-- [Calls between Office processes - COMAddIn.Object and events of another Office app](cross-process-calls.md) — Read when a VSTO add-in calls the add-in of another Office instance (COMAddIn.Object) or handles events of another Office app (Excel in Visio) - start time, threads, string size.
+- [Calls between Office processes - COMAddIn.Object and events of another Office app](cross-process-calls.md) — Read when a VSTO add-in calls the add-in of another Office instance (COMAddIn.Object), handles events of another Office app, or finds a Visio document open in any instance (ROT).
 - [Dev build registration and the installed add-in - which one loads](dev-build-registration.md) — Read when a dev machine has both a VSTO dev build and the MSI installed - Office loads the wrong one, how to tell which one runs, what to remove before which test.
 - [Excel data validation by COM](excel-data-validation.md) — Read when code adds Excel data validation (drop-down lists, custom formulas) by COM - list separator by region, 255-character limit that breaks the file, booleans, case.
 - [Writing a table to Excel by COM](excel-write-table.md) — Read when code writes to an Excel table by COM - array write, text turning into numbers, dates, append, delete rows, add columns, filtered or protected sheets, names, open workbook, cleanup.
