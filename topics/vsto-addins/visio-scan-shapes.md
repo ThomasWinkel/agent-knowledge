@@ -120,6 +120,28 @@ Visio Pro C2R x64 build 20625, Debug add-in, in-process, 2026-11. Drawing: 20 pa
 - Why the one-by-one variants got slower in passes 2-3: unknown.
 - **"Local or inherited" by comparing the formula with the master shape's is wrong for sub-shapes**: inherited formulas name the instance's own sheet IDs (`Sheet.22!FlipX` in the instance, `Sheet.5!FlipX` in the master): 23,000 of 476,009 inherited cells differed this way. Map `Sheet.<id>!` from master to instance IDs first, or use `Cell.IsInherited`. `IsInherited` was 0 on exactly the 2,000 cells set locally.
 
+## Cost per cell call
+
+What makes a read slow is the **formula text**, not the number of calls: `FormulaU` (also in `GetFormulasU`) costs ~5x `ResultStr`. Read formulas only where needed; for "is it empty?" see [visio-cell-values](visio-cell-values.md#empty-cells-types-and-errors-on-read) (result first).
+
+Add-in in-process, Debug, Visio Pro 2019 C2R x64, 2026-11; 20 pages x 200 group instances (4,001 top-level shapes), all 135,009 `User` rows (Value column), one pass per kind after a warm-up pass, every object released:
+
+| Call per cell | ms (135,009 cells) | ~us per cell |
+|---|---|---|
+| `CellsSRC` + release (base of the lines below) | 1,242-1,648 | 9-12 |
+| + `RowNameU` | +490-1,510 | 4-11 |
+| + `Section[s][r].NameU` instead (`Row` object) | 3,312 total | 25 |
+| + `FormulaU` | +5,980-6,180 | 44-46 |
+| + `ResultStr(visNoCast)` | +1,080-1,450 | 8-11 |
+| + `ResultIU` | +280-870 | 2-6 |
+| + `Error` / `IsInherited` | +130-640 | 1-5 |
+| `CellExistsU(name)` / `CellsU(name)` | 1,283-1,301 / 817-835 | 6-10 |
+| `Shape.GetResults` per shape (strings, no cast), all rows | 688-706 | 5 |
+| `Shape.GetFormulasU` per shape, all rows | 5,884-6,233 | 44-46 |
+
+- A batch of results (`GetResults`, `visGetStrings`, units `visNoCast`) reads the same text as `ResultStr(visNoCast)` per cell, **except errors**: `1/0` and `NA()` read `0,0000` in a number cell, `""` in a string cell (no error text, no flag). To get exactly the one-by-one text: trust a batch result only if it has a letter, is not `FALSE` and does not start with a zero number (`^\s*[-+]?0+([.,]0*)?(\D|$)`); read every other cell again one by one (`ResultStr`, and `FormulaU` if it could be empty). Checked alike on 270,018 `User` Value and Prompt cells of the drawing above and on 1,646 test cells.
+- Batch only the cells you need, after the row names: reading Value + Prompt of all rows with `GetFormulasU` + `GetResults` made a scan slower (10.7 s) than one-by-one reads of the needed cells (6.3 s); a `GetResults` batch of the needed cells only, after the names one by one: 4.1 s (2.7 s of it row names).
+
 ## foreach vs index
 
 Same drawing and setup as the table above (27,521 shapes, 303,009 `Prop` + `User` rows), every object released, each variant in a fresh Visio unless noted, 2026-11. ms:

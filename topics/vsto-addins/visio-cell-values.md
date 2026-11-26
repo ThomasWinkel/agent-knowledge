@@ -33,6 +33,7 @@ Write a literal with `FormulaU`, read the evaluated value with `Result*`. Measur
 | Error | `Cell.Error != 0` | `1/0` -> 39, `ResultStr` `#DIV/0!`; `NA()` -> 74, `#N/A`. `Units` is not reliable then. |
 | Type | `Cell.Units` | text 231 (`visUnitsString`); number and TRUE/FALSE 32 (`visNumber`, no unit for bool); `3 mm` 70; `3 in` 65; date 40 (`visDate`) |
 
+- Fast empty check, same result as `FormulaU.Length == 0 ? "" : ResultStr(visNoCast)`: `FormulaU` costs ~5x `ResultStr` ([measured](visio-scan-shapes.md#cost-per-cell-call)), so read `ResultStr(visNoCast)` first. An empty cell reads `0,0000` (number cell, de-DE), `""` (string cell: `Prompt`, `Label`) or `FALSE` (empty Boolean cell, seen in `Prop` columns 9-13); read `FormulaU` only if the result has no letter or is `FALSE`. Checked alike on 1,646 cells (`User` rows with numbers, units, text, Booleans, dates, errors; `Prop` rows of every type, empty and filled, all columns). Visio 2019, 2026-11.
 - Without the type check: `Result(visNumber)` of the text `"5"` gives 5, of `"abc"` 0; of `3 mm` gives inches (0.118...).
 - Row added by `AddNamedRow` (sections `User`, `Prop`): its value formula is `0`, not empty. Set it to `""` if a new row should read as "no value".
 - `CellsU["User.X"]` of a missing row: COM exception `Unexpected end of file.` (does not name the cell). Check `CellExistsU(name, 0)` first.
