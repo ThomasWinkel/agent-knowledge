@@ -48,7 +48,9 @@ $unique = '{' + $hash.Substring(0, 18) + '-8E40-00608CF305B2}'
 # replace UniqueID='...' and BaseID='...', delete the entry, write it again, $zip.Dispose()
 ```
 
-Copies keep the IDs: `Document.Masters.Drop(master)` and `Page.Drop(master)` into another document give the copy the source's `BaseID` (measured 2026-11-12 over two copies). A master made from a shape (`Masters.Drop(shape)`) gets new ones, so a stencil assembled from such masters needs the patch too; it works the same on copied masters.
+Copies keep the IDs: `Document.Masters.Drop(master)` and `Page.Drop(master)` into another document give the copy the source's `BaseID` (measured 2026-11-12 over two copies).
+
+`Masters.Drop(master)` also adds document User rows to the target: in-process (VSTO) only the rows the master's formulas read (here 14 of 19, in reading order), but all User rows of the source in source order once other masters of the source document were taken as objects in the process, even if released again; out-of-process (PowerShell) always all (Visio 2019, 2026-11). The row order of the built stencil thus depends on how the code took the masters: take each master right before its drop (index loop) for a stable result. A master made from a shape (`Masters.Drop(shape)`) gets new ones, so a stencil assembled from such masters needs the patch too; it works the same on copied masters.
 
 Measured: Visio opens the patched stencil and reports the patched IDs; a drop of an unchanged rebuild reuses the drawing's document master (no `Name.<n>`); a master edited in place (new `UniqueID`, same `BaseID`) still adds `Name.<n>`. Two builds then give the same XML; the zip still differs in timestamps.
 

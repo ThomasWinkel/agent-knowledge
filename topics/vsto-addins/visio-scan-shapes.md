@@ -1,11 +1,13 @@
 ---
 title: Scanning all shapes of a Visio document fast
-description: Read when Visio code reads cells or row names of many shapes across all pages (find, index, compare) - release COM objects, batch reads, IsInherited, GetResults failures.
+description: Read when Visio code reads cells or row names of many shapes across all pages (find, index, compare) - release COM objects, foreach vs index, batch reads, IsInherited, GetResults failures.
 ---
 
 # Scanning all shapes of a Visio document fast
 
 Reading cells shape by shape gets slower per call as the document grows, because every `Shape` and `Cell` object stays alive in .NET until the garbage collector runs. **Release them right after use** (`Marshal.ReleaseComObject`): an exact scan of 20,000 shapes took 4.6 s instead of 17-18.5 s. A batch read (`Page.GetResults`) is faster still, but a failing call can block `GetResults` on that page for the rest of the session.
+
+Live objects also make **`Delete` and `Save` slower**, long after the scan ([measured](#live-objects-slow-delete-and-save)): release in every loop that touches many shapes, also in helpers that read one cell (`CellsU[...]` returns a new `Cell` object each time).
 
 **Take collection items by index, never by `foreach`.** An object that came out of a `foreach` over a Visio collection (`Documents`, `Pages`, `Shapes`, ...), and every object and cell read through it, was 3.5-7x slower in-process ([measured](#foreach-vs-index)). The .NET wrapper (RCW) of a COM object is cached per object: once a document was first taken by `foreach`, a later `ActiveDocument` returns the same slow wrapper.
 
@@ -135,6 +137,22 @@ Same drawing and setup as the table above (27,521 shapes, 303,009 `Prop` + `User
 - Cause not known; `foreach` goes through `IEnumVARIANT`.
 - **The whole add-in shares the cached wrapper.** A `VisioIsIdle` handler that took `Application.Documents` by `foreach` and kept each document (to attach event handlers) made a later scan of that document, taken by index in another command, 3.7x slower: 57-58 s instead of 15-16 s (20 pages, 4,001 shapes, 218,181 cells). By index in the idle handler: 15-16 s on every run. Which wrapper a document gets depends on which call creates it first while no live wrapper exists: a document already taken by `ActiveWindow.Document` (another idle handler, run first) kept its fast wrapper through the `foreach`; once its wrapper was collected, the `foreach` made a new, slow one. So a scan can be fast or slow depending on idle timing. Rule: take items by index everywhere, above all where the object is kept.
 - The same idle handler's own scan got faster too: 28.5 s -> 15.2 s (first pass after opening) and 32.2 s -> 4.2 s (later pass).
+
+- Guard against regressions: a unit test that compiles the add-in sources with Roslyn (`CSharpCompilation` + the Visio interop from the GAC as reference; other compile errors ignored) and fails on every `ForEachStatement` whose expression type is in `Microsoft.Office.Interop.Visio`, every LINQ extension call (`this` parameter `IEnumerable`) on such a type, and every implicit conversion of one to `IEnumerable`. A text search misses `var` and LINQ. Fail also on a `foreach` whose type is unresolved, so a missing reference cannot hide one.
+
+## Live objects slow Delete and Save
+
+VSTO add-in, Debug, Visio Pro 2019 C2R x64, 2026-11. Drawing: 20 pages x 200 group instances (4,001 top-level shapes). Columns: scan = one pass over all shapes and sub-shapes reading their layers (`Shape.Layer[i].Name`); delete step = one more such pass, then `Shape.Delete` of 20 shapes and `Page.Delete` of one page with 200 shapes; save = `Document.Save` after the whole sequence (more passes and layer changes before). Fresh Visio each, ms:
+
+| Variant | scan | delete step | save |
+|---|---|---|---|
+| `foreach` over shapes and sub-shapes, nothing released | 13,115 | 28,346 | ~9,000 |
+| by index, nothing released | 8,445 | 58,814 | 25,000-28,000 |
+| by index, nothing released, `GC.Collect` + `WaitForPendingFinalizers` before the delete | 8,644 | 19,085 | 5,700 |
+| by index, every `Shape`, `Shapes`, `Layer`, `Cell` released | 904 | 1,319 | 850 |
+
+- Switching to index loops alone made deleting and saving slower here; releasing made everything fast. Why the index-taken objects cost more than enumerated ones while alive: unknown.
+- A `Page.Delete(1)` with many live objects of that page's shapes is the slowest case seen (_unverified_ which part of the step dominates).
 
 ## Batch read by master: how and why it is risky
 
