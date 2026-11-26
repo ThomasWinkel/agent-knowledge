@@ -1,6 +1,6 @@
 ---
 title: Scanning all shapes of a Visio document fast
-description: Read when Visio code reads cells or row names of many shapes (find, index, compare, event handlers) - release COM objects, foreach vs index, batch reads, slow Shape.Parent, GetResults failures, pages loaded at first access after opening.
+description: Read when Visio code reads cells or row names of many shapes - release COM objects, foreach vs index, batch reads, slow Shape.Parent, GetResults failures, page load at first access.
 ---
 
 # Scanning all shapes of a Visio document fast
