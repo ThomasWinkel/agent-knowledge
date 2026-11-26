@@ -1,6 +1,6 @@
 ---
 title: Scanning all shapes of a Visio document fast
-description: Read when Visio code reads cells or row names of many shapes (find, index, compare, event handlers) - release COM objects, foreach vs index, batch reads, slow Shape.Parent, GetResults failures.
+description: Read when Visio code reads cells or row names of many shapes (find, index, compare, event handlers) - release COM objects, foreach vs index, batch reads, slow Shape.Parent, GetResults failures, pages loaded at first access after opening.
 ---
 
 # Scanning all shapes of a Visio document fast
@@ -10,6 +10,8 @@ Reading cells shape by shape gets slower per call as the document grows, because
 Live objects also make **`Delete` and `Save` slower**, long after the scan ([measured](#live-objects-slow-delete-and-save)): release in every loop that touches many shapes, also in helpers that read one cell (`CellsU[...]` returns a new `Cell` object each time). Do not keep `Cell` objects in a list to write later: keep page ID, shape ID and cell name.
 
 **Take collection items by index, never by `foreach`.** An object that came out of a `foreach` over a Visio collection (`Documents`, `Pages`, `Shapes`, ...), and every object and cell read through it, was 3.5-7x slower in-process ([measured](#foreach-vs-index)). The .NET wrapper (RCW) of a COM object is cached per object: once a document was first taken by `foreach`, a later `ActiveDocument` returns the same slow wrapper.
+
+**The first scan after opening pays Visio's page loading.** Visio loads a page of an opened `.vsdx` at the first COM access to it (`Pages.Item`, `Pages.ItemFromID`), not at `Documents.Open`: 140-750 ms per page of ~200 shapes ([measured](#first-access-to-a-page-after-opening)). No code change avoids it; it only moves (scan page by page in idle time, or only the pages needed).
 
 ## Recipe: exact scan, one shape at a time
 
@@ -230,6 +232,23 @@ page.GetResults(ref sids, (short)Visio.VisGetSetArgs.visGetStrings, ref units, o
 - **One missing cell fails the whole call** (missing row, missing section, missing shape ID): COM exception `An exception occurred.` or `Unexpected end of file.`, no partial results.
 - **After such a failure, `GetResults` on that page can keep failing** with `Out of memory. Try closing Visio windows or other applications you aren't using.`, in-process too: seen after a one-entry stream with a missing row (also one past the last row). Other pages, `Shape.GetResults` and `CellsSRC` still worked; `ReleaseComObject` of the page and a new `Page` object did not help. From PowerShell, a new process worked again. After a failing multi-entry stream (one missing row among 130 cells) later calls on that page worked (with garbage collection in between). Rule not found: send only cells that certainly exist.
 - `GetIDs` returns `int`, the SRC stream takes `short`: IDs above 32,767 do not fit (_unverified_ what Visio does then).
+
+## First access to a page after opening
+
+Drawing: 20 pages, 200 group instances per page (4,001 top-level shapes, ~34 User rows each), `.vsdx`; Visio Pro 2019 C2R x64, 2026-11. Out of process (PowerShell), no add-in reads at open:
+
+| Step | Time |
+|---|---|
+| `Documents.Open` | 829-1,014 ms |
+| `Pages.Item(i)`, first time per page (3 s after opening) | 140-750 ms each (9 ms for a nearly empty page), 6,610 ms in all |
+| `Pages.Item(i)` again | 0-17 ms each, 84 ms in all |
+| after reopening: `Pages.ItemFromID(id)` first | 6,658 ms in all (same per-page times) |
+| then `Pages.Item(i)` + `Name` | 138 ms in all |
+
+- The cost sits in the first call that returns the `Page` object; `Shapes.Count` after it was 0-43 ms per page.
+- Close and reopen in the same Visio: paid again. Seen in an add-in too: an index scan of all shapes right after opening took 8.9-9.3 s, 6.5-6.8 s of it in `Pages.Item`; the reads of the shapes ~2.4 s.
+- This probably explains the slower "first run after opening" times in the tables above (_unverified_: not split then).
+- No Visio option to load all pages at open was found (web search 2026-11).
 
 ## Gotchas
 
