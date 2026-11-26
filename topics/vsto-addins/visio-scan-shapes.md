@@ -7,7 +7,7 @@ description: Read when Visio code reads cells or row names of many shapes (find,
 
 Reading cells shape by shape gets slower per call as the document grows, because every `Shape` and `Cell` object stays alive in .NET until the garbage collector runs. **Release them right after use** (`Marshal.ReleaseComObject`): an exact scan of 20,000 shapes took 4.6 s instead of 17-18.5 s. A batch read (`Page.GetResults`) is faster still, but a failing call can block `GetResults` on that page for the rest of the session.
 
-Live objects also make **`Delete` and `Save` slower**, long after the scan ([measured](#live-objects-slow-delete-and-save)): release in every loop that touches many shapes, also in helpers that read one cell (`CellsU[...]` returns a new `Cell` object each time).
+Live objects also make **`Delete` and `Save` slower**, long after the scan ([measured](#live-objects-slow-delete-and-save)): release in every loop that touches many shapes, also in helpers that read one cell (`CellsU[...]` returns a new `Cell` object each time). Do not keep `Cell` objects in a list to write later: keep page ID, shape ID and cell name.
 
 **Take collection items by index, never by `foreach`.** An object that came out of a `foreach` over a Visio collection (`Documents`, `Pages`, `Shapes`, ...), and every object and cell read through it, was 3.5-7x slower in-process ([measured](#foreach-vs-index)). The .NET wrapper (RCW) of a COM object is cached per object: once a document was first taken by `foreach`, a later `ActiveDocument` returns the same slow wrapper.
 
@@ -198,6 +198,17 @@ VSTO add-in, Debug, Visio Pro 2019 C2R x64, 2026-11. Drawing: 20 pages x 200 gro
 
 - Switching to index loops alone made deleting and saving slower here; releasing made everything fast. Why the index-taken objects cost more than enumerated ones while alive: unknown.
 - A `Page.Delete(1)` with many live objects of that page's shapes is the slowest case seen (_unverified_ which part of the step dominates).
+- **Objects kept on purpose cost the same.** A list of 4,000 `Cell` objects kept to write later (one per shape) made `CellExistsU` on every other shape 3.6x slower: one pass over 4,001 shapes 98-104 ms before, 374 ms while kept, 102 ms right after releasing them (same setup, one Visio session). A loop that keeps one cell per shape slows itself as it grows. Keep where the cell is instead (page ID, shape ID, cell name) and get it again for the write:
+
+```csharp
+// Read: keep the text and the place, not the Cell object.
+var cell = shape.CellsU[cellName];
+var item = (PageId: pageId, ShapeId: shape.ID, Text: cell.ResultStr[Visio.VisUnitCodes.visNoCast]);
+Marshal.ReleaseComObject(cell);
+// Write later: get the cell again.
+var page = document.Pages.ItemFromID[item.PageId];   // release Pages, Shapes, page, shape, cell after use
+var target = page.Shapes.ItemFromID[item.ShapeId];
+```
 
 ## Batch read by master: how and why it is risky
 
