@@ -133,6 +133,8 @@ Same drawing and setup as the table above (27,521 shapes, 303,009 `Prop` + `User
 
 - Cost stays with the object: a `foreach` over `Documents` after the document was already taken by `ActiveDocument` changed nothing (5.3 s before and after); `GC.Collect` changed nothing.
 - Cause not known; `foreach` goes through `IEnumVARIANT`.
+- **The whole add-in shares the cached wrapper.** A `VisioIsIdle` handler that took `Application.Documents` by `foreach` and kept each document (to attach event handlers) made a later scan of that document, taken by index in another command, 3.7x slower: 57-58 s instead of 15-16 s (20 pages, 4,001 shapes, 218,181 cells). By index in the idle handler: 15-16 s on every run. Which wrapper a document gets depends on which call creates it first while no live wrapper exists: a document already taken by `ActiveWindow.Document` (another idle handler, run first) kept its fast wrapper through the `foreach`; once its wrapper was collected, the `foreach` made a new, slow one. So a scan can be fast or slow depending on idle timing. Rule: take items by index everywhere, above all where the object is kept.
+- The same idle handler's own scan got faster too: 28.5 s -> 15.2 s (first pass after opening) and 32.2 s -> 4.2 s (later pass).
 
 ## Batch read by master: how and why it is risky
 
