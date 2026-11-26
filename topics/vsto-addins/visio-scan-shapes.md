@@ -1,6 +1,6 @@
 ---
 title: Scanning all shapes of a Visio document fast
-description: Read when Visio code reads cells or row names of many shapes across all pages (find, index, compare) - release COM objects, foreach vs index, batch reads, IsInherited, GetResults failures.
+description: Read when Visio code reads cells or row names of many shapes (find, index, compare, event handlers) - release COM objects, foreach vs index, batch reads, slow Shape.Parent, GetResults failures.
 ---
 
 # Scanning all shapes of a Visio document fast
@@ -141,6 +141,29 @@ Add-in in-process, Debug, Visio Pro 2019 C2R x64, 2026-11; 20 pages x 200 group 
 
 - A batch of results (`GetResults`, `visGetStrings`, units `visNoCast`) reads the same text as `ResultStr(visNoCast)` per cell, **except errors**: `1/0` and `NA()` read `0,0000` in a number cell, `""` in a string cell (no error text, no flag). To get exactly the one-by-one text: trust a batch result only if it has a letter, is not `FALSE` and does not start with a zero number (`^\s*[-+]?0+([.,]0*)?(\D|$)`); read every other cell again one by one (`ResultStr`, and `FormulaU` if it could be empty). Checked alike on 270,018 `User` Value and Prompt cells of the drawing above and on 1,646 test cells.
 - Batch only the cells you need, after the row names: reading Value + Prompt of all rows with `GetFormulasU` + `GetResults` made a scan slower (10.7 s) than one-by-one reads of the needed cells (6.3 s); a `GetResults` batch of the needed cells only, after the names one by one: 4.1 s (2.7 s of it row names).
+
+## Top-level check: not by `Parent`
+
+`Shape.Parent` is slow on a big drawing: **~0.9 ms per call** (8,002 shapes: 7.1-7.5 s), while `ContainingShape` costs ~0.01 ms (72-83 ms), same drawing and setup as above. In event handlers that ask "is it top-level?" per event, `Parent` was most of the handler time (18,500 `CellChanged` events: 11.8 s -> 3.1 s with the check below). Same answer as `shape.Parent is Visio.Page` for page shapes, sub-shapes, master shapes of all levels, page, master and document sheets:
+
+```csharp
+static bool IsTopLevel(Visio.Shape shape)
+{
+    // Master shape or sheet, document sheet. A top-level master shape is contained by the master's sheet,
+    // which is of page type too.
+    if (shape.ContainingPageID == -1)
+        return false;
+    // A page's sheet (Parent: the page); its ContainingShape is null.
+    if (shape.Type == (short)Visio.VisShapeTypes.visTypePage)
+        return true;
+    var container = shape.ContainingShape;
+    var top = container.Type == (short)Visio.VisShapeTypes.visTypePage;
+    Marshal.ReleaseComObject(container);
+    return top;
+}
+```
+
+- Why `Parent` is slow: unknown (not measured: whether it grows with the shape count of the page).
 
 ## foreach vs index
 
