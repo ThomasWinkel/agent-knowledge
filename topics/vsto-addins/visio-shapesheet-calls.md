@@ -45,7 +45,8 @@ void OnMarkerEvent(Visio.Application app, int sequenceNum, string contextString)
 - A handler change for `EventDblClick` inside one undo scope is one Undo step of its own. A scope without changes adds no Undo step, so the handler can open a scope for every command, also read-only ones.
 - Cell values joined into the formula arrive as text in the UI locale, with unit: `"/w="&Width` gave `/w=25,4MM`, `"/n="&(1/3)` gave `/n=0,33333333333333` (German Windows). Pass the cell name and read the cell in the add-in.
 - `""` in the formula gives `"` in the context string: `"/label=""two words"""` arrives as `/label="two words"`.
-- No listener (add-in not loaded): nothing happens, no error.
+- No listener (add-in not loaded): nothing happens, no error, no cost.
+- **A listener makes every queued marker cost Visio time inside the action, outside the handler.** Paste of 1,000 master instances whose `EventDrop`/`EventMultiDrop` call `RUNADDONWARGS("QueueMarkerEvent",...)`, 20-page drawing with 4,001 shapes, all pages loaded (Visio 2019 C2R x64, 2026-11): the `Paste` call took 15.3-15.5 s with a marker listener vs 7.7 s without; same with interop `Application.MarkerEvent +=` and with `EventList.AddAdvise(0x1100)`. The handler itself took 0.1-0.5 s for all 1,000; the markers arrived in one burst at the end of the paste. So ~8 ms per copied shape is Visio's: a marker in `EventDrop` is costly for mass copies. An empty document `ShapeAdded` handler cost ~1 s per 1,000 in the same test (single runs). A marker listener without any `VisioIsIdle` handler cost less (+2 s instead of +8 s, one run; _unverified_).
 
 ## Redo guard
 

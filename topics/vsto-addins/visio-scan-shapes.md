@@ -248,6 +248,7 @@ Drawing: 20 pages, 200 group instances per page (4,001 top-level shapes, ~34 Use
 - The cost sits in the first call that returns the `Page` object; `Shapes.Count` after it was 0-43 ms per page.
 - Close and reopen in the same Visio: paid again. Seen in an add-in too: an index scan of all shapes right after opening took 8.9-9.3 s, 6.5-6.8 s of it in `Pages.Item`; the reads of the shapes ~2.4 s.
 - This probably explains the slower "first run after opening" times in the tables above (_unverified_: not split then).
+- **Loaded pages make copy and paste slower**, no add-in loaded: select all + `Copy` + `Paste` of 1,000 instances on a new page took 13.2-14.0 s with only page 1 and the new page touched, 21.6-25.2 s after touching every page first (`Copy` 17.4-17.5 s, `Paste` 7.7 s); `DropMany` of the 1,000 2.2-2.4 s vs 3.7-4.5 s. Any full scan (index, Refresh, explorer) loads all pages, so later mass copies in that session pay it.
 - No Visio option to load all pages at open was found (web search 2026-11).
 
 ## Gotchas
