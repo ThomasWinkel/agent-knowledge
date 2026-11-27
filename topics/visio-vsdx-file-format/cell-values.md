@@ -10,6 +10,7 @@ description: Read when code turns a .vsdx <Cell V F U> into the text or value CO
 | XML | COM |
 |---|---|
 | `U="STR"`, no `F` | constant string: `ResultStr` = `V` exactly |
+| User `Prompt`, no `U` (`V="1"`, `V="(none)"`) | string column: `ResultStr` = `V` exactly |
 | `U="STR"`, `F="<formula>"` | string result: `ResultStr` = `V` exactly |
 | `V=""`, no `F` | formula `""` |
 | `F="No Formula"` | empty formula (`FormulaU` = `""`) |
@@ -21,6 +22,7 @@ description: Read when code turns a .vsdx <Cell V F U> into the text or value CO
 | `U="MM"`, `V="0.787..."` | `V` in inches; `ResultStr` `20,0000 mm` |
 
 - Strings and Booleans: take `V` (BOOL -> `TRUE`/`FALSE`).
+- Text-only columns carry no `U="STR"`: decide by the column, not by `U`. User `Prompt`: all 135,031 cells of the measured file equal `ResultStr` as `V`, also digits (`V="1"`). Other text columns (Shape Data `Label`/`Prompt`/`Format`): unverified.
 - Numbers: the `ResultStr` text cannot be made from `V`: its format depends on the formula, which `V`/`U` do not show. Two formula cells without `U` read `1,0000` (`IF(...)`, `V="1"`) and `0` (`SETF(...)`, `V="0"`, not `0,0000`). Compare numbers as numbers (`V` is invariant culture, internal units = inches), or read their text by COM.
 - No `F` attribute = the cell's formula is the constant in `V`. The XML does not keep the formula text of a constant with units (`20 mm` is `V="0.787..." U="MM"`); `FormulaU` would show `20 mm`.
 - A cell missing from a row = inherited from the master row, or the default if no master row has it.
