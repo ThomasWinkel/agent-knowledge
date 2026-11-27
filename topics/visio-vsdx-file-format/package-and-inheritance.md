@@ -48,4 +48,5 @@ List<Row> Merge(List<Row> inherited, List<Row> local)
 - This order gave the same row index as COM for every row (named sections such as `User`).
 - A local row lists only the cells it overrides; the rest come from the master row.
 - A shape without `Master` has only its local rows (minus `Del` rows).
+- Connection points: `<Section N='Connection'>`, named rows `<Row T='ConnectionABCD' N='a'>` (`T` = row type; ABCD columns `A`..`D` with `U='STR'`); an instance that changes nothing has no own section and gets all rows from the master. Measured on Visio 2019 stencils and drawings; normal rows (`T='Connection'`) and unnamed rows by `IX`: unverified.
 - Unverified: masters with several top-level shapes (instance = group, which shape it inherits from), rows inherited from style sheets (`LineStyle`/`FillStyle`/`TextStyle`), unnamed sections (Geometry, Connection: rows by `IX`).
