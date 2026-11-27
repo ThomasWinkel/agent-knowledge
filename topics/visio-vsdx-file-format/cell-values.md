@@ -16,11 +16,12 @@ description: Read when code turns a .vsdx <Cell V F U> into the text or value CO
 | `F="Inh"` | formula inherited from the master; `V` is the local result |
 | `U="BOOL"`, `V="0"`/`"1"` | `ResultStr` `FALSE`/`TRUE` |
 | no `U`, `V="1"`, no `F` | constant `1`: `ResultStr` `1,0000` |
+| no `U`, `V="1"`, `F="IF(...)"` | `ResultStr` `1,0000` |
 | no `U`, `V="0"`, `F="SETF(...)"` | `ResultStr` `0` |
 | `U="MM"`, `V="0.787..."` | `V` in inches; `ResultStr` `20,0000 mm` |
 
 - Strings and Booleans: take `V` (BOOL -> `TRUE`/`FALSE`).
-- Numbers: the `ResultStr` text cannot be made from `V`: two cells with the same `V` and no `U` read `1,0000` and `0`. Compare numbers as numbers (`V` is invariant culture, internal units = inches), or read their text by COM.
+- Numbers: the `ResultStr` text cannot be made from `V`: its format depends on the formula, which `V`/`U` do not show. Two formula cells without `U` read `1,0000` (`IF(...)`, `V="1"`) and `0` (`SETF(...)`, `V="0"`, not `0,0000`). Compare numbers as numbers (`V` is invariant culture, internal units = inches), or read their text by COM.
 - No `F` attribute = the cell's formula is the constant in `V`. The XML does not keep the formula text of a constant with units (`20 mm` is `V="0.787..." U="MM"`); `FormulaU` would show `20 mm`.
 - A cell missing from a row = inherited from the master row, or the default if no master row has it.
 - `V` is the result at save time: a formula that depends on other shapes, the page or the document was not recalculated after that.
