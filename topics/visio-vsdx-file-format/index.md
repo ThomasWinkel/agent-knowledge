@@ -11,7 +11,7 @@ A `.vsdx` is an Open Packaging (ZIP) file of XML parts. Reading it directly need
 
 ## Key facts
 
-- Parts: `visio/document.xml` -> rels -> `pages/pages.xml`, `masters/masters.xml`; each `<Page>`/`<Master>` has `<Rel r:id>` to its own part. Top-level shapes = direct `Shape` children of `PageContents/Shapes`: [package-and-inheritance](package-and-inheritance.md).
+- Parts: `visio/document.xml` -> rels -> `pages/pages.xml`, `masters/masters.xml`; each `<Page>`/`<Master>` has `<Rel r:id>` to its own part. Top-level shapes = direct `Shape` children of `PageContents/Shapes`. `pages.xml` lists background pages first; COM `Pages` has the foreground pages first: [package-and-inheritance](package-and-inheritance.md).
 - An instance gets its rows from the master's top-level shape; merge rows by `N`, cells by `N`, `Del="1"` removes. With the right merge order the row index equals COM's: [package-and-inheritance](package-and-inheritance.md).
 - `V` is the cached result. Strings (`U="STR"`) and Booleans map 1:1 to `ResultStr`; number texts cannot be rebuilt from `V`: [cell-values](cell-values.md).
 - No `F` attribute = the formula is the constant `V`; `F="No Formula"` = empty formula; `F="Inh"` = formula inherited, `V` still local: [cell-values](cell-values.md).
