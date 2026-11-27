@@ -23,6 +23,7 @@ Namespaces: main `http://schemas.microsoft.com/office/visio/2012/main`, `r:` = `
 - Find parts through the rels, not by file name; resolve `Target` relative to the folder of the part.
 - Shape attributes: `ID` (= COM `Shape.ID`), `NameU`, `Name`, `Type`, `Master` (master ID, on an instance's top shape), `MasterShape` (shape ID inside the master, on sub-shapes).
 - Page `ID` = COM `Page.ID`.
+- Page order: COM `Document.Pages` lists the foreground pages in the order of `pages.xml`, then the background pages by `ID` (`Background='1'`). Visio writes the background pages first in `pages.xml`, so file order != `Pages` order. Measured by permuting the `<Page>` elements of a saved file and reopening it (backgrounds in file, `NameU` and `Name` order all differed from `ID` order: COM gave `ID` order). Unverified: whether it is `ID` or the order of the `r:id`s / `pageN.xml` (same in these files).
 
 ## Rows of an instance
 
