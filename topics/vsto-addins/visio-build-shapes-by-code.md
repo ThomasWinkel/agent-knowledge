@@ -128,4 +128,6 @@ Measured 2026-11-13, Visio 2019 C2R, masters with `IconUpdate` automatic (defaul
 
 - Reading a missing cell (`CellsU('User.X')`) throws `Unexpected end of file.`; check `CellExistsU(name, 0)`.
 - A killed script leaves `VISIO.EXE /Automation /Invisible -Embedding`; find it by command line (`Win32_Process`) and stop that PID only, never a user's Visio.
+- `Shape.Ungroup()` keeps a sub-shape's guarded place as a number: `PinX = GUARD(1.016MM)` (relative to the group) is read on the page afterwards, the piece lands at x = 1 mm. Plain `Sheet.<group>!Width*0.5` formulas convert right. Before `Ungroup`, write the current value into guarded `PinX`, `PinY`, `Width`, `Height`, `LocPinX`, `LocPinY`, `Angle` (`FormulaForceU = <ResultIU>`) (Visio 2019 build 20625).
+- `Page.Drop(shape)` with a shape of a document opened hidden (`visOpenHidden`): `Inappropriate source object for this action.`; `Ungroup` + `Selection.Group` there gave a wrong group size. Do such work in a document with a window.
 - **PowerShell: a path from `Join-Path` passed to `Documents.OpenEx` hangs Visio without a message**; more such traps (wrapped arguments, unrolled collections, alias names): [visio-powershell-com](visio-powershell-com.md).
